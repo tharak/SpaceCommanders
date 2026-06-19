@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#07101e" />
+    <title>Space Commanders</title>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="game" aria-label="Space Commanders tactical map"></canvas>
+      <div id="hud">
+        <header class="topbar"><div><span class="eyebrow">FLEET COMMAND // 01</span><h1>SPACE <b>COMMANDERS</b></h1></div><div id="status"></div><button id="debug-toggle" class="icon-button debug" aria-label="Open debug settings">⌘</button></header>
+        <section id="command-deck">
+          <div class="command-group"><span>FORMATION</span><div id="formation-controls" class="icon-row"></div></div>
+          <div class="command-group tightness"><span>COHESION <output id="tightness-value">70%</output></span><input id="tightness" type="range" min="25" max="100" value="70" aria-label="Formation cohesion" /></div>
+          <div class="command-group"><span>ENGAGEMENT</span><div id="fire-controls" class="icon-row"></div></div>
+        </section>
+        <div id="order-readout">SELECT A FORMATION, THEN TAP THE MAP TO ISSUE AN ORDER</div>
+        <aside id="debug-panel" aria-label="Debug controls"><div class="panel-title">SIMULATION TUNING <button id="reset-game" aria-label="Reset simulation">↻</button></div><label>BATTLESHIPS <input id="ship-count" type="range" min="3" max="20" value="10"><output></output></label><label>PLANETS <input id="planet-count" type="range" min="2" max="8" value="5"><output></output></label><label>ASTEROID FIELDS <input id="asteroid-count" type="range" min="0" max="6" value="3"><output></output></label><label>GAME SPEED <input id="game-speed" type="range" min="0.5" max="2" step="0.25" value="1"><output></output></label><p>Changes apply on reset. Celestial bodies currently act as collision obstacles.</p></aside>
+      </div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
