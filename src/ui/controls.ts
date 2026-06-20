@@ -5,15 +5,12 @@ import type { Config } from "../game/types";
 type Controls = {
   formationControls: HTMLElement;
   fireControls: HTMLElement;
-  cohesionControl: HTMLElement;
-  tightnessValue: HTMLElement;
   readout: HTMLElement;
 };
 
 type ControlCallbacks = {
   onFormationChange: (formation: Formation) => void;
   onFireModeChange: (mode: FireMode) => void;
-  onCohesionChange: (cohesion: number) => void;
   onReset: () => void;
 };
 
@@ -21,8 +18,6 @@ export function getControls(): Controls {
   return {
     formationControls: requiredElement("#formation-controls"),
     fireControls: requiredElement("#fire-controls"),
-    cohesionControl: requiredElement("#cohesion-control"),
-    tightnessValue: requiredElement("#tightness-value"),
     readout: requiredElement("#order-readout"),
   };
 }
@@ -32,13 +27,11 @@ export function setupControls(
   callbacks: ControlCallbacks,
   initialFormation: Formation,
   initialFireMode: FireMode,
-  initialCohesion: number,
 ): void {
   createFormationButtons(controls, callbacks.onFormationChange);
   createFireModeButtons(controls, callbacks.onFireModeChange);
   selectActive(controls.formationControls, initialFormation);
   selectActive(controls.fireControls, initialFireMode);
-  setupCohesionControl(controls, callbacks.onCohesionChange, initialCohesion);
   requiredElement("#debug-toggle").addEventListener("click", () =>
     document.body.classList.toggle("debug-open"),
   );
@@ -57,56 +50,6 @@ export function readConfig(): Config {
 
 export function showReadout(controls: Controls, message: string): void {
   controls.readout.textContent = message;
-}
-
-export function showCohesion(controls: Controls, cohesion: number): void {
-  const percent = Math.round(cohesion * 100);
-  controls.tightnessValue.textContent = percent + "%";
-  controls.cohesionControl.setAttribute("aria-valuenow", String(percent));
-}
-
-function setupCohesionControl(
-  controls: Controls,
-  onChange: (cohesion: number) => void,
-  initialCohesion: number,
-): void {
-  let cohesion = initialCohesion;
-  let startX = 0;
-  let startCohesion = cohesion;
-
-  const update = (value: number) => {
-    cohesion = Math.min(1, Math.max(0.25, value));
-    showCohesion(controls, cohesion);
-    onChange(cohesion);
-  };
-
-  controls.cohesionControl.addEventListener("pointerdown", (event) => {
-    startX = event.clientX;
-    startCohesion =
-      Number(controls.cohesionControl.getAttribute("aria-valuenow")) / 100;
-    cohesion = startCohesion;
-    controls.cohesionControl.setPointerCapture(event.pointerId);
-  });
-  controls.cohesionControl.addEventListener("pointermove", (event) => {
-    if (!controls.cohesionControl.hasPointerCapture(event.pointerId)) return;
-    update(startCohesion + (event.clientX - startX) / 200);
-  });
-  controls.cohesionControl.addEventListener("pointerup", (event) => {
-    if (controls.cohesionControl.hasPointerCapture(event.pointerId)) {
-      controls.cohesionControl.releasePointerCapture(event.pointerId);
-    }
-  });
-  controls.cohesionControl.addEventListener("keydown", (event) => {
-    cohesion =
-      Number(controls.cohesionControl.getAttribute("aria-valuenow")) / 100;
-    if (event.key === "ArrowLeft") update(cohesion - 0.05);
-    else if (event.key === "ArrowRight") update(cohesion + 0.05);
-    else if (event.key === "Home") update(0.25);
-    else if (event.key === "End") update(1);
-    else return;
-    event.preventDefault();
-  });
-  update(initialCohesion);
 }
 
 function createFormationButtons(

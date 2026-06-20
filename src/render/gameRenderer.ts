@@ -137,14 +137,6 @@ function drawFormationPreview(
   context.arc(center.x, center.y, 10, 0, 7);
   context.stroke();
   context.setLineDash([]);
-  context.fillStyle = "#74eaff";
-  context.font = "600 10px Rajdhani";
-  context.fillText(
-    "COHESION " + Math.round(state.cohesion * 100) + "%",
-    center.x + 14,
-    center.y - 12,
-  );
-
   for (const slot of slots) {
     context.fillStyle = "#62e8ff77";
     context.beginPath();

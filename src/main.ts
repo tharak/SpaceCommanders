@@ -7,7 +7,6 @@ import {
   getControls,
   readConfig,
   setupControls,
-  showCohesion,
   showReadout,
 } from "./ui/controls";
 
@@ -51,14 +50,10 @@ setupControls(
             : "WEAPONS FREE — ENGAGING HOSTILES IN RANGE";
       showReadout(controls, message);
     },
-    onCohesionChange: (cohesion) => {
-      state.cohesion = cohesion;
-    },
     onReset: reset,
   },
   state.formation,
   state.fireMode,
-  state.cohesion,
 );
 
 function updateViewport(): void {
@@ -82,9 +77,8 @@ canvas.addEventListener("pointermove", (event) => {
   }
   state.cohesion = Math.min(
     1,
-    Math.max(0.25, dragStartCohesion + offsetX / 200),
+    Math.max(0.25, dragStartCohesion - offsetX / 200),
   );
-  showCohesion(controls, state.cohesion);
 });
 
 canvas.addEventListener("pointerleave", () => {
@@ -114,7 +108,7 @@ canvas.addEventListener("pointerup", (event) => {
   canvas.releasePointerCapture(event.pointerId);
   showReadout(
     controls,
-    `FLEET MOVING IN ${state.formation.toUpperCase()} FORMATION — COHESION ${Math.round(state.cohesion * 100)}%`,
+    "FLEET MOVING IN " + state.formation.toUpperCase() + " FORMATION",
   );
 });
 
@@ -122,7 +116,6 @@ canvas.addEventListener("pointercancel", (event) => {
   state.previewCenter = null;
   state.previewRotation = state.formationRotation;
   state.cohesion = dragStartCohesion;
-  showCohesion(controls, state.cohesion);
   state.pointer = null;
   if (canvas.hasPointerCapture(event.pointerId)) {
     canvas.releasePointerCapture(event.pointerId);
