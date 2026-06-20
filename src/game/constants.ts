@@ -17,6 +17,8 @@ export const COLORS: Record<Side, string> = {
   [Side.Player]: "#5de5ff",
   [Side.Enemy]: "#ff6d91",
 };
+export const FORMATION_ARRIVAL_DISTANCE = 4;
+
 export const DEFAULT_CONFIG: Config = {
   ships: 10,
   planets: 5,

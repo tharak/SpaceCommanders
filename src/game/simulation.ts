@@ -1,4 +1,8 @@
-import { DEFAULT_CONFIG, FORMATIONS } from "./constants";
+import {
+  DEFAULT_CONFIG,
+  FORMATION_ARRIVAL_DISTANCE,
+  FORMATIONS,
+} from "./constants";
 import { formationSlots } from "./formations";
 import { clamp, distance, normalize, randomBetween } from "./math";
 import {
@@ -247,6 +251,15 @@ function moveShip(
   viewport: Viewport,
   deltaTime: number,
 ): void {
+  if (
+    ship.target &&
+    distance(ship.pos, ship.target) <= FORMATION_ARRIVAL_DISTANCE
+  ) {
+    ship.pos = { ...ship.target };
+    ship.vel = { x: 0, y: 0 };
+    return;
+  }
+
   let force = steeringForce(ship);
 
   for (const other of state.ships) {
