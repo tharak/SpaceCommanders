@@ -3,6 +3,7 @@ export { FireMode } from "./fire-mode";
 export { Formation } from "./formation";
 export { ShipRole } from "./ship-role";
 export { Side } from "./side";
+export { SupplyMission } from "./supply-mission";
 export type { Body } from "./body";
 export type { Config } from "./config";
 export type { Flash } from "./flash";

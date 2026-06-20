@@ -3,6 +3,7 @@ import type { Side } from "./side";
 import type { Vec } from "./vector";
 
 export type Body = {
+  id: number;
   kind: BodyKind;
   pos: Vec;
   radius: number;

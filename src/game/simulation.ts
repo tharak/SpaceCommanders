@@ -6,6 +6,7 @@ import {
 import { formationSlots } from "./formations";
 import { clamp, distance, normalize, randomBetween } from "./math";
 import {
+  Body,
   Config,
   GameState,
   Ship,
@@ -14,6 +15,7 @@ import {
   BodyKind,
   Formation,
   FireMode,
+  SupplyMission,
   Vec,
   Viewport,
 } from "./types";
@@ -61,9 +63,11 @@ export function resetGame(
     x: randomBetween(viewport.width * 0.72, viewport.width - margin),
     y: randomBetween(margin, viewport.height - margin),
   };
+  let bodyId = 0;
 
   state.bodies.push(
     {
+      id: bodyId++,
       kind: BodyKind.Planet,
       pos: playerBase,
       radius: 37,
@@ -73,6 +77,7 @@ export function resetGame(
       weight: 2.5,
     },
     {
+      id: bodyId++,
       kind: BodyKind.Planet,
       pos: enemyBase,
       radius: 37,
@@ -85,6 +90,7 @@ export function resetGame(
 
   for (let index = 2; index < config.planets; index++) {
     state.bodies.push({
+      id: bodyId++,
       kind: BodyKind.Planet,
       pos: {
         x: randomBetween(120, viewport.width - 120),
@@ -99,6 +105,7 @@ export function resetGame(
 
   for (let index = 0; index < config.asteroids; index++) {
     state.bodies.push({
+      id: bodyId++,
       kind: BodyKind.Asteroids,
       pos: {
         x: randomBetween(100, viewport.width - 100),
@@ -135,11 +142,17 @@ export function updateGame(
 
   const deltaTime = elapsed * state.config.speed;
   replenishPlanets(state, deltaTime);
+  spawnResupplyShips(state);
   assignFormationTargets(state);
 
   for (const ship of state.ships) {
     ship.cooldown -= deltaTime;
-    collectPlanetSupplies(state, ship, deltaTime);
+    if (ship.role === ShipRole.Supply) {
+      updateSupplyMission(state, ship);
+      if (ship.hp <= 0) continue;
+    } else {
+      collectPlanetSupplies(state, ship, deltaTime);
+    }
     moveShip(state, ship, viewport, deltaTime);
     fireWeapons(state, ship);
   }
@@ -194,6 +207,107 @@ function replenishPlanets(state: GameState, deltaTime: number): void {
   }
 }
 
+function spawnResupplyShips(state: GameState): void {
+  let nextShipId = Math.max(-1, ...state.ships.map((ship) => ship.id)) + 1;
+
+  for (const planet of state.bodies) {
+    if (
+      planet.kind !== BodyKind.Planet ||
+      !planet.base ||
+      (planet.stock ?? 0) < 1
+    ) {
+      continue;
+    }
+    const activeMission = state.ships.some(
+      (ship) =>
+        ship.role === ShipRole.Supply &&
+        ship.homeBodyId === planet.id &&
+        ship.hp > 0,
+    );
+    const target = findLeastSuppliedBattleship(state, planet.base);
+    if (activeMission || !target || target.supplies >= 10) continue;
+
+    planet.stock = (planet.stock ?? 0) - 1;
+    state.ships.push(
+      spawnSupplyShip(planet.base, planet, target, nextShipId++),
+    );
+  }
+}
+
+function spawnSupplyShip(
+  side: Side,
+  homePlanet: Body,
+  target: Ship,
+  id: number,
+): Ship {
+  return {
+    ...spawnShip(side, ShipRole.Supply, homePlanet.pos, id),
+    hp: 40,
+    maxHp: 40,
+    speed: 78,
+    supplies: 1,
+    range: 0,
+    homeBodyId: homePlanet.id,
+    resupplyTargetId: target.id,
+    supplyMission: SupplyMission.Delivering,
+    target: { ...target.pos },
+  };
+}
+
+function updateSupplyMission(state: GameState, ship: Ship): void {
+  const homePlanet = state.bodies.find((body) => body.id === ship.homeBodyId);
+  if (!homePlanet) {
+    ship.hp = 0;
+    return;
+  }
+
+  if (ship.supplyMission === SupplyMission.Returning) {
+    ship.target = { ...homePlanet.pos };
+    if (distance(ship.pos, homePlanet.pos) <= homePlanet.radius + 12) {
+      ship.hp = 0;
+    }
+    return;
+  }
+
+  const currentTarget = state.ships.find(
+    (candidate) =>
+      candidate.id === ship.resupplyTargetId &&
+      candidate.role === ShipRole.Battleship &&
+      candidate.side === ship.side &&
+      candidate.hp > 0,
+  );
+  const target = currentTarget ?? findLeastSuppliedBattleship(state, ship.side);
+  if (!target) {
+    ship.supplyMission = SupplyMission.Returning;
+    ship.target = { ...homePlanet.pos };
+    return;
+  }
+
+  ship.resupplyTargetId = target.id;
+  ship.target = { ...target.pos };
+  if (distance(ship.pos, target.pos) > 16) return;
+
+  const transferred = Math.min(ship.supplies, 10 - target.supplies);
+  target.supplies += transferred;
+  ship.supplies -= transferred;
+  ship.supplyMission = SupplyMission.Returning;
+  ship.target = { ...homePlanet.pos };
+}
+
+function findLeastSuppliedBattleship(
+  state: GameState,
+  side: Side,
+): Ship | undefined {
+  return state.ships
+    .filter(
+      (ship) =>
+        ship.side === side && ship.role === ShipRole.Battleship && ship.hp > 0,
+    )
+    .reduce<
+      Ship | undefined
+    >((lowest, ship) => (!lowest || ship.supplies < lowest.supplies ? ship : lowest), undefined);
+}
+
 function assignFormationTargets(state: GameState): void {
   const playerBase = state.bodies.find((body) => body.base === Side.Player);
   if (!playerBase) return;
@@ -219,7 +333,7 @@ function assignFormationTargets(state: GameState): void {
       ship.target = targets[index];
     });
     fleet
-      .filter((ship) => ship.role !== ShipRole.Battleship)
+      .filter((ship) => ship.role === ShipRole.Captain)
       .forEach((ship, index) => {
         ship.target = { x: center.x + (index ? 20 : -20), y: center.y + 60 };
       });

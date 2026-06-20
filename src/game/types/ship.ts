@@ -1,5 +1,6 @@
 import type { ShipRole } from "./ship-role";
 import type { Side } from "./side";
+import type { SupplyMission } from "./supply-mission";
 import type { Vec } from "./vector";
 
 export type Ship = {
@@ -19,4 +20,7 @@ export type Ship = {
   range: number;
   cooldown: number;
   target?: Vec;
+  homeBodyId?: number;
+  resupplyTargetId?: number;
+  supplyMission?: SupplyMission;
 };

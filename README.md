@@ -24,7 +24,7 @@ fleet is composed of 10 battleships and 1 captain
 captain has a favorite formation and provides a bonus to his ships if its in that formation.
 
 battleship starts with 10 supplies. each time it shoots it loses 1.
-planets can give supplies to ships near it.
+when an owned planet stores at least one supply, it launches a supply ship to the allied battleship with the least supplies. the ship transfers one supply, returns to its home planet, and then despawns.
 
 ships movement will use boids implementation to move and get into formation.
 ships can collide with allies, enemies and celestial bodies. so they should try to avoid those. ships have the following attributes: hit-points, attack, defense, speed, sight, moral, supplies, range.
