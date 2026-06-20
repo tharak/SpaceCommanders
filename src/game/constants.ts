@@ -20,6 +20,7 @@ export const COLORS: Record<Side, string> = {
 export const FORMATION_ARRIVAL_DISTANCE = 4;
 export const SUPPLY_TRANSFER_DISTANCE = 32;
 export const SUPPLY_SHIP_CAPACITY = 1;
+export const ENEMY_FORMATION_SPACING = 45;
 
 export const DEFAULT_CONFIG: Config = {
   ships: 5,

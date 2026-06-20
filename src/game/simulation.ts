@@ -1,5 +1,6 @@
 import {
   DEFAULT_CONFIG,
+  ENEMY_FORMATION_SPACING,
   FORMATION_ARRIVAL_DISTANCE,
   FORMATIONS,
   SUPPLY_TRANSFER_DISTANCE,
@@ -142,7 +143,9 @@ export function resetGame(
       base,
       Formation.Circle,
       config.ships,
-      clamp(80 - state.cohesion * 50, 25, 70),
+      side === Side.Player
+        ? clamp(80 - state.cohesion * 50, 25, 70)
+        : ENEMY_FORMATION_SPACING,
     );
     for (let index = 0; index < config.ships; index++) {
       state.ships.push(
@@ -377,7 +380,10 @@ function assignFormationTargets(state: GameState): void {
     const battleships = fleet.filter(
       (ship) => ship.role === ShipRole.Battleship,
     );
-    const spacing = clamp(80 - state.cohesion * 50, 25, 70);
+    const spacing =
+      side === Side.Player
+        ? clamp(80 - state.cohesion * 50, 25, 70)
+        : ENEMY_FORMATION_SPACING;
     const targets = formationSlots(
       center,
       formation,
