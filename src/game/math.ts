@@ -13,3 +13,20 @@ export const normalize = (vector: Vec): Vec => {
 
 export const clamp = (value: number, minimum: number, maximum: number) =>
   Math.max(minimum, Math.min(value, maximum));
+
+export const distanceToSegment = (point: Vec, start: Vec, end: Vec) => {
+  const segment = { x: end.x - start.x, y: end.y - start.y };
+  const lengthSquared = segment.x * segment.x + segment.y * segment.y;
+  if (lengthSquared === 0) return distance(point, start);
+
+  const progress = clamp(
+    ((point.x - start.x) * segment.x + (point.y - start.y) * segment.y) /
+      lengthSquared,
+    0,
+    1,
+  );
+  return distance(point, {
+    x: start.x + segment.x * progress,
+    y: start.y + segment.y * progress,
+  });
+};

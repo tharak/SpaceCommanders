@@ -7,7 +7,13 @@ import {
   SUPPLY_SHIP_CAPACITY,
 } from "./constants";
 import { formationSlots } from "./formations";
-import { clamp, distance, normalize, randomBetween } from "./math";
+import {
+  clamp,
+  distance,
+  distanceToSegment,
+  normalize,
+  randomBetween,
+} from "./math";
 import {
   Body,
   Config,
@@ -480,11 +486,35 @@ function steeringForce(ship: Ship): Vec {
   };
 }
 
+function hasLineOfSight(
+  state: GameState,
+  ship: Ship,
+  target: Vec,
+  targetShip?: Ship,
+  targetBody?: Body,
+): boolean {
+  const allyBlocksLine = state.ships.some(
+    (other) =>
+      other !== ship &&
+      other !== targetShip &&
+      other.side === ship.side &&
+      distanceToSegment(other.pos, ship.pos, target) < 10,
+  );
+  if (allyBlocksLine) return false;
+
+  return !state.bodies.some(
+    (body) =>
+      body !== targetBody &&
+      distanceToSegment(body.pos, ship.pos, target) < body.radius,
+  );
+}
+
 function fireWeapons(state: GameState, ship: Ship): void {
   const targets = state.ships.filter(
     (candidate) =>
       candidate.side !== ship.side &&
-      distance(candidate.pos, ship.pos) < ship.range,
+      distance(candidate.pos, ship.pos) < ship.range &&
+      hasLineOfSight(state, ship, candidate.pos, candidate),
   );
   const canFire =
     ship.role === ShipRole.Battleship &&
@@ -530,7 +560,8 @@ function attackBases(state: GameState, deltaTime: number): void {
         ship.side !== base.base &&
         ship.role === ShipRole.Battleship &&
         ship.supplies > 0 &&
-        distance(ship.pos, base.pos) < ship.range,
+        distance(ship.pos, base.pos) < ship.range &&
+        hasLineOfSight(state, ship, base.pos, undefined, base),
     );
     if (attackers.length === 0 || Math.random() >= deltaTime * 3) continue;
 
