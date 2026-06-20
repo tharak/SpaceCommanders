@@ -10,6 +10,7 @@ import type { Vec } from "./vector";
 export type GameState = {
   config: Config;
   formation: Formation;
+  selectedFormation: Formation;
   fireMode: FireMode;
   command: Vec | null;
   previewCenter: Vec | null;

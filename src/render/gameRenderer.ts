@@ -209,7 +209,7 @@ function drawFormationPreview(
   if (!center) return;
   const slots = formationSlots(
     center,
-    state.formation,
+    state.selectedFormation,
     state.config.ships,
     clamp(80 - state.cohesion * 50, 25, 70),
     state.previewCenter ? state.previewRotation : state.formationRotation,

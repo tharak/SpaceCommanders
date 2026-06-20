@@ -31,10 +31,7 @@ setupControls(
   controls,
   {
     onFormationChange: (formation) => {
-      state.formation = formation;
-      state.command = null;
-      state.previewCenter = null;
-      state.formationRotation = 0;
+      state.selectedFormation = formation;
       showReadout(
         controls,
         `${formation.toUpperCase()} SELECTED — TAP MAP TO SET FLEET POSITION`,
@@ -52,7 +49,7 @@ setupControls(
     },
     onReset: reset,
   },
-  state.formation,
+  state.selectedFormation,
   state.fireMode,
 );
 
@@ -94,7 +91,7 @@ canvas.addEventListener("pointerdown", (event) => {
   dragStartCohesion = state.cohesion;
   showReadout(
     controls,
-    `DRAG TO ROTATE ${state.formation.toUpperCase()} FORMATION — RELEASE TO ISSUE ORDER`,
+    `DRAG TO ROTATE ${state.selectedFormation.toUpperCase()} FORMATION — RELEASE TO ISSUE ORDER`,
   );
 });
 
@@ -103,12 +100,13 @@ canvas.addEventListener("pointerup", (event) => {
 
   state.pointer = mapPoint(event);
   state.command = { ...state.previewCenter };
+  state.formation = state.selectedFormation;
   state.formationRotation = state.previewRotation;
   state.previewCenter = null;
   canvas.releasePointerCapture(event.pointerId);
   showReadout(
     controls,
-    "FLEET MOVING IN " + state.formation.toUpperCase() + " FORMATION",
+    "FLEET MOVING IN " + state.selectedFormation.toUpperCase() + " FORMATION",
   );
 });
 

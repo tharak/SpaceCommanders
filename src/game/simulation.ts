@@ -24,6 +24,7 @@ export function createGameState(): GameState {
   return {
     config: { ...DEFAULT_CONFIG },
     formation: Formation.Arrow,
+    selectedFormation: Formation.Arrow,
     fireMode: FireMode.AtWill,
     command: null,
     previewCenter: null,
