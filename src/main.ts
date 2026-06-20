@@ -1,5 +1,10 @@
 import "./style.css";
-import { createGameState, resetGame, updateGame } from "./game/simulation";
+import {
+  createGameState,
+  issueFormationOrder,
+  resetGame,
+  updateGame,
+} from "./game/simulation";
 import { FireMode, Side } from "./game/types";
 import type { Vec, Viewport } from "./game/types";
 import { renderGame, resizeCanvas } from "./render/gameRenderer";
@@ -136,10 +141,7 @@ canvas.addEventListener("pointerup", (event) => {
   if (!matchActive || !state.previewCenter) return;
 
   state.pointer = mapPoint(event);
-  state.command = { ...state.previewCenter };
-  state.formation = state.selectedFormation;
-  state.formationRotation = state.previewRotation;
-  state.cohesion = state.previewCohesion;
+  issueFormationOrder(state, state.previewCenter);
   state.previewCenter = null;
   canvas.releasePointerCapture(event.pointerId);
   showReadout(

@@ -3,6 +3,7 @@ import type { Config } from "./config";
 import type { FireMode } from "./fire-mode";
 import type { Projectile } from "./projectile";
 import type { Formation } from "./formation";
+import type { FormationStage } from "./formation-stage";
 import type { Ship } from "./ship";
 import type { Side } from "./side";
 import type { Vec } from "./vector";
@@ -13,6 +14,8 @@ export type GameState = {
   selectedFormation: Formation;
   fireMode: FireMode;
   command: Vec | null;
+  destination: Vec | null;
+  formationStage: FormationStage | null;
   previewCenter: Vec | null;
   previewRotation: number;
   formationRotation: number;

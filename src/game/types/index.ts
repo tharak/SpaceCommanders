@@ -1,6 +1,7 @@
 export { BodyKind } from "./body-kind";
 export { FireMode } from "./fire-mode";
 export { Formation } from "./formation";
+export { FormationStage } from "./formation-stage";
 export { ShipRole } from "./ship-role";
 export { Side } from "./side";
 export { SupplyMission } from "./supply-mission";
