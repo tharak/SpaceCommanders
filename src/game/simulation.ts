@@ -1,6 +1,10 @@
 import {
+  ALLY_SEPARATION_DISTANCE,
+  ALLY_SEPARATION_STRENGTH,
   DEFAULT_CONFIG,
   ENEMY_DEPLOYMENT_DELAY,
+  ENEMY_SEPARATION_DISTANCE,
+  ENEMY_SEPARATION_STRENGTH,
   FORMATION_ARRIVAL_DISTANCE,
   FORMATIONS,
   SUPPLY_TRANSFER_DISTANCE,
@@ -437,13 +441,22 @@ function moveShip(
   for (const other of state.ships) {
     if (other === ship) continue;
     const separation = distance(ship.pos, other.pos);
-    if (separation >= 42) continue;
+    const isAlly = other.side === ship.side;
+    const separationDistance = isAlly
+      ? ALLY_SEPARATION_DISTANCE
+      : ENEMY_SEPARATION_DISTANCE;
+    if (separation >= separationDistance) continue;
+
     const direction = normalize({
       x: ship.pos.x - other.pos.x,
       y: ship.pos.y - other.pos.y,
     });
-    force.x += direction.x * (42 - separation) * 3;
-    force.y += direction.y * (42 - separation) * 3;
+    const avoidanceStrength = isAlly
+      ? ALLY_SEPARATION_STRENGTH
+      : ENEMY_SEPARATION_STRENGTH;
+    const avoidance = (separationDistance - separation) * avoidanceStrength;
+    force.x += direction.x * avoidance;
+    force.y += direction.y * avoidance;
   }
 
   for (const body of state.bodies) {
