@@ -261,9 +261,7 @@ function drawShips(context: CanvasRenderingContext2D, state: GameState): void {
     context.fill();
     context.restore();
 
-    context.fillStyle = "#000a";
-    context.fillRect(ship.pos.x - 11, ship.pos.y - 17, 22, 3);
-    context.fillStyle = ship.side === Side.Player ? "#69eaff" : "#ff6e91";
+    context.fillStyle = COLORS[ship.side];
     context.fillRect(
       ship.pos.x - 11,
       ship.pos.y - 17,
