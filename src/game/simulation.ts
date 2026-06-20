@@ -23,6 +23,7 @@ export function createGameState(): GameState {
     previewCenter: null,
     previewRotation: 0,
     formationRotation: 0,
+    cohesion: 0.7,
     pointer: null,
     bodies: [],
     ships: [],
@@ -120,14 +121,13 @@ export function resetGame(
 export function updateGame(
   state: GameState,
   viewport: Viewport,
-  cohesion: number,
   elapsed: number,
 ): void {
   if (state.winner) return;
 
   const deltaTime = elapsed * state.config.speed;
   replenishPlanets(state, deltaTime);
-  assignFormationTargets(state, cohesion);
+  assignFormationTargets(state);
 
   for (const ship of state.ships) {
     ship.cooldown -= deltaTime;
@@ -186,7 +186,7 @@ function replenishPlanets(state: GameState, deltaTime: number): void {
   }
 }
 
-function assignFormationTargets(state: GameState, cohesion: number): void {
+function assignFormationTargets(state: GameState): void {
   const playerBase = state.bodies.find((body) => body.base === Side.Player);
   if (!playerBase) return;
 
@@ -198,7 +198,7 @@ function assignFormationTargets(state: GameState, cohesion: number): void {
     const battleships = fleet.filter(
       (ship) => ship.role === ShipRole.Battleship,
     );
-    const spacing = clamp(80 - cohesion * 50, 25, 70);
+    const spacing = clamp(80 - state.cohesion * 50, 25, 70);
     const targets = formationSlots(
       center,
       formation,

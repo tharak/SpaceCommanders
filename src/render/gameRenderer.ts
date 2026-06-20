@@ -9,7 +9,6 @@ type RenderContext = {
   context: CanvasRenderingContext2D;
   status: HTMLElement;
   viewport: Viewport;
-  cohesion: number;
 };
 
 export function resizeCanvas(
@@ -31,7 +30,7 @@ export function renderGame(
   const { context, viewport } = renderContext;
   drawBackground(context, viewport);
   drawBodies(context, state);
-  drawFormationPreview(context, state, renderContext.cohesion);
+  drawFormationPreview(context, state);
   drawFlashes(context, state);
   drawShips(context, state);
   updateStatus(renderContext.status, state);
@@ -122,7 +121,6 @@ function drawBodies(context: CanvasRenderingContext2D, state: GameState): void {
 function drawFormationPreview(
   context: CanvasRenderingContext2D,
   state: GameState,
-  cohesion: number,
 ): void {
   const center = state.previewCenter ?? state.command ?? state.pointer;
   if (!center) return;
@@ -130,7 +128,7 @@ function drawFormationPreview(
     center,
     state.formation,
     state.config.ships,
-    clamp(80 - cohesion * 50, 25, 70),
+    clamp(80 - state.cohesion * 50, 25, 70),
     state.previewCenter ? state.previewRotation : state.formationRotation,
   );
   context.strokeStyle = "#62e8ff66";

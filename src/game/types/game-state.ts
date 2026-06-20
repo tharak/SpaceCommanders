@@ -15,6 +15,7 @@ export type GameState = {
   previewCenter: Vec | null;
   previewRotation: number;
   formationRotation: number;
+  cohesion: number;
   pointer: Vec | null;
   bodies: Body[];
   ships: Ship[];

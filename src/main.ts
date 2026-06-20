@@ -4,7 +4,6 @@ import { FireMode } from "./game/types";
 import type { Vec, Viewport } from "./game/types";
 import { renderGame, resizeCanvas } from "./render/gameRenderer";
 import {
-  getCohesion,
   getControls,
   readConfig,
   setupControls,
@@ -50,10 +49,14 @@ setupControls(
             : "WEAPONS FREE — ENGAGING HOSTILES IN RANGE";
       showReadout(controls, message);
     },
+    onCohesionChange: (cohesion) => {
+      state.cohesion = cohesion;
+    },
     onReset: reset,
   },
   state.formation,
   state.fireMode,
+  state.cohesion,
 );
 
 function updateViewport(): void {
@@ -103,7 +106,7 @@ canvas.addEventListener("pointerup", (event) => {
   canvas.releasePointerCapture(event.pointerId);
   showReadout(
     controls,
-    `FLEET MOVING IN ${state.formation.toUpperCase()} FORMATION — COHESION ${controls.tightness.value}%`,
+    `FLEET MOVING IN ${state.formation.toUpperCase()} FORMATION — COHESION ${Math.round(state.cohesion * 100)}%`,
   );
 });
 
@@ -124,9 +127,8 @@ window.addEventListener("resize", () => {
 function animationLoop(now: number): void {
   const deltaTime = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
-  const cohesion = getCohesion(controls);
-  updateGame(state, viewport, cohesion, deltaTime);
-  renderGame(state, { canvas, context, status, viewport, cohesion });
+  updateGame(state, viewport, deltaTime);
+  renderGame(state, { canvas, context, status, viewport });
   requestAnimationFrame(animationLoop);
 }
 
