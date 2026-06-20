@@ -249,7 +249,8 @@ function drawFormationPreview(
   context: CanvasRenderingContext2D,
   state: GameState,
 ): void {
-  const center = state.previewCenter ?? state.command ?? state.pointer;
+  const center =
+    state.previewCenter ?? state.destination ?? state.command ?? state.pointer;
   if (!center) return;
   const slots = formationSlots(
     center,

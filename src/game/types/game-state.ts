@@ -13,6 +13,7 @@ export type GameState = {
   selectedFormation: Formation;
   fireMode: FireMode;
   command: Vec | null;
+  destination: Vec | null;
   previewCenter: Vec | null;
   previewRotation: number;
   formationRotation: number;
