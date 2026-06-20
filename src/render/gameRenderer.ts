@@ -184,17 +184,38 @@ function drawBodies(context: CanvasRenderingContext2D, state: GameState): void {
       context.beginPath();
       context.arc(0, 0, body.radius * 1.7, 0, 7);
       context.fill();
-      context.fillStyle = `hsl(${body.hue},65%,42%)`;
-      context.beginPath();
-      context.arc(0, 0, body.radius, 0, 7);
-      context.fill();
-
       if (body.base) {
+        const health = body.maxHp ? Math.max(0, body.hp ?? 0) / body.maxHp : 1;
+        context.save();
+        context.beginPath();
+        context.arc(0, 0, body.radius, 0, Math.PI * 2);
+        context.clip();
+        context.fillStyle = "#020a06";
+        context.fillRect(
+          -body.radius,
+          -body.radius,
+          body.radius * 2,
+          body.radius * 2,
+        );
+        context.fillStyle = `hsl(,65%,42%)`;
+        context.fillRect(
+          -body.radius,
+          body.radius - body.radius * 2 * health,
+          body.radius * 2,
+          body.radius * 2 * health,
+        );
+        context.restore();
+
         context.strokeStyle = COLORS[body.base];
         context.lineWidth = 2;
         context.beginPath();
-        context.arc(0, 0, body.radius + 6, 0, 7);
+        context.arc(0, 0, body.radius, 0, Math.PI * 2);
         context.stroke();
+      } else {
+        context.fillStyle = `hsl(,65%,42%)`;
+        context.beginPath();
+        context.arc(0, 0, body.radius, 0, Math.PI * 2);
+        context.fill();
       }
     }
     context.restore();

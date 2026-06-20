@@ -87,6 +87,8 @@ export function resetGame(
       pos: playerBase,
       radius: 37,
       base: Side.Player,
+      hp: 25,
+      maxHp: 25,
       stock: 0,
       hue: 195,
       weight: 2.5,
@@ -97,6 +99,8 @@ export function resetGame(
       pos: enemyBase,
       radius: 37,
       base: Side.Enemy,
+      hp: 25,
+      maxHp: 25,
       stock: 0,
       hue: 350,
       weight: 2.5,
@@ -565,7 +569,7 @@ function attackBases(state: GameState, deltaTime: number): void {
     );
     if (attackers.length === 0 || Math.random() >= deltaTime * 3) continue;
 
-    base.radius -= attackers.length * 1;
+    base.hp = Math.max(0, (base.hp ?? 0) - attackers.length);
     attackers.forEach((ship) => {
       const angle = Math.random() * Math.PI * 2;
       const impactDistance = base.radius * randomBetween(0.2, 0.85);
@@ -582,7 +586,7 @@ function attackBases(state: GameState, deltaTime: number): void {
     });
   }
 
-  if (playerBase.radius < 12 || enemyBase.radius < 12) {
-    state.winner = playerBase.radius < 12 ? Side.Enemy : Side.Player;
+  if (playerBase.hp === 0 || enemyBase.hp === 0) {
+    state.winner = playerBase.hp === 0 ? Side.Enemy : Side.Player;
   }
 }
