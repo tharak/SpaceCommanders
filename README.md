@@ -1,7 +1,7 @@
 # SpaceCommanders
 
-Create a complete, standalone TypeScript browser game called Space Commanders (sci-fi themed Battleships variant). It must be a single-page app deployable to GitHub Pages. Use modern TypeScript, HTML5 Canvas for rendering, and vanilla JS (no heavy frameworks unless necessary — prefer lightweight or none). The repo structure should match a typical Vite + TypeScript project. the game should work on web and mobile. 
-use https://github.com/tharak/SpaceCommanders as repository and deploy to github pages. 
+Create a complete, standalone TypeScript browser game called Space Commanders (sci-fi themed Battleships variant). It must be a single-page app deployable to GitHub Pages. Use modern TypeScript, HTML5 Canvas for rendering, and vanilla JS (no heavy frameworks unless necessary — prefer lightweight or none). The repo structure should match a typical Vite + TypeScript project. the game should work on web and mobile.
+use https://github.com/tharak/SpaceCommanders as repository and deploy to github pages.
 
 the core game mechanics is to tell the fleet which position it should form, where to move and if it should shoot at will, shoot at a specific area or not shoot. Also the player has to manage the fleet supplies and moral.
 
@@ -16,14 +16,14 @@ lets have a debug view where we can set all variables of the game for fine tune.
 
 the game should create a map with a number of celestial bodies, at fist lets make so that they are only obstacles but later they might have some function like black hole pulls the ships near, asteroids fields move around, planets generate resources, etc.
 
-each player starts with a random planet as base. the objective is to destroy the enemy's base. each player starts with 10 battleships and 1 supply ship and 1 captain that likes a random formation. 
-planet generates supply. 
+each player starts with a random planet as base. the objective is to destroy the enemy's base. each player starts with 10 battleships and 1 supply ship and 1 captain that likes a random formation.
+planet generates supply.
 
 fleet is composed of 10 battleships and 1 captain
 
-captain has a favorite formation and provides a bonus to his ships if its in that formation. 
+captain has a favorite formation and provides a bonus to his ships if its in that formation.
 
-battleship starts with 10 supplies. each time it shoots it loses 1. 
+battleship starts with 10 supplies. each time it shoots it loses 1.
 planets can give supplies to ships near it.
 supply ships can carry 10 supply and provide it to nearby ships.
 supply ships start with 0 supplies.
