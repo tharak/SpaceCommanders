@@ -19,7 +19,6 @@ export enum Side {
 
 export enum ShipRole {
   Battleship = "battleship",
-  Supply = "supply",
   Captain = "captain",
 }
 

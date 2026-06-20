@@ -1,7 +1,7 @@
 import { COLORS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp } from "../game/math";
-import { BodyKind, ShipRole, Side } from "../game/types";
+import { BodyKind, Side } from "../game/types";
 import type { GameState, Viewport } from "../game/types";
 
 type RenderContext = {
@@ -171,15 +171,11 @@ function drawShips(context: CanvasRenderingContext2D, state: GameState): void {
     context.rotate(Math.atan2(ship.vel.y, ship.vel.x) + Math.PI / 2);
     context.fillStyle = COLORS[ship.side];
     context.beginPath();
-    if (ship.role === ShipRole.Supply) {
-      context.rect(-6, -8, 12, 16);
-    } else {
-      context.moveTo(0, -10);
-      context.lineTo(7, 8);
-      context.lineTo(0, 5);
-      context.lineTo(-7, 8);
-      context.closePath();
-    }
+    context.moveTo(0, -10);
+    context.lineTo(7, 8);
+    context.lineTo(0, 5);
+    context.lineTo(-7, 8);
+    context.closePath();
     context.fill();
     context.restore();
 

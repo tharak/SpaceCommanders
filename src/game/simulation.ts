@@ -106,9 +106,6 @@ export function resetGame(
       );
     }
     state.ships.push(
-      spawnShip(side, ShipRole.Supply, offsetPosition(base, 35), id++),
-    );
-    state.ships.push(
       spawnShip(side, ShipRole.Captain, offsetPosition(base, 30), id++),
     );
   }
@@ -128,7 +125,6 @@ export function updateGame(
 
   for (const ship of state.ships) {
     ship.cooldown -= deltaTime;
-    resupplyShip(state, ship, deltaTime);
     collectPlanetSupplies(state, ship, deltaTime);
     moveShip(state, ship, viewport, deltaTime);
     fireWeapons(state, ship);
@@ -212,23 +208,6 @@ function assignFormationTargets(state: GameState, cohesion: number): void {
       .forEach((ship, index) => {
         ship.target = { x: center.x + (index ? 20 : -20), y: center.y + 60 };
       });
-  }
-}
-
-function resupplyShip(state: GameState, ship: Ship, deltaTime: number): void {
-  if (ship.role !== ShipRole.Supply) return;
-
-  for (const ally of state.ships) {
-    if (
-      ally.side !== ship.side ||
-      ally.role !== ShipRole.Battleship ||
-      distance(ally.pos, ship.pos) >= 70 ||
-      ally.supplies >= 10
-    )
-      continue;
-    const amount = Math.min(deltaTime * 3, ship.supplies, 10 - ally.supplies);
-    ship.supplies -= amount;
-    ally.supplies += amount;
   }
 }
 
