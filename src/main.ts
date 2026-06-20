@@ -106,7 +106,7 @@ canvas.addEventListener("pointermove", (event) => {
   if (Math.hypot(offsetX, offsetY) >= 8) {
     state.previewRotation = Math.atan2(offsetY, offsetX);
   }
-  state.cohesion = Math.min(
+  state.previewCohesion = Math.min(
     1,
     Math.max(0.25, dragStartCohesion - offsetX / 200),
   );
@@ -124,6 +124,7 @@ canvas.addEventListener("pointerdown", (event) => {
   state.pointer = point;
   state.previewCenter = { ...point };
   state.previewRotation = 0;
+  state.previewCohesion = state.cohesion;
   dragStartCohesion = state.cohesion;
   showReadout(
     controls,
@@ -138,6 +139,7 @@ canvas.addEventListener("pointerup", (event) => {
   state.command = { ...state.previewCenter };
   state.formation = state.selectedFormation;
   state.formationRotation = state.previewRotation;
+  state.cohesion = state.previewCohesion;
   state.previewCenter = null;
   canvas.releasePointerCapture(event.pointerId);
   showReadout(
@@ -149,7 +151,7 @@ canvas.addEventListener("pointerup", (event) => {
 canvas.addEventListener("pointercancel", (event) => {
   state.previewCenter = null;
   state.previewRotation = state.formationRotation;
-  state.cohesion = dragStartCohesion;
+  state.previewCohesion = state.cohesion;
   state.pointer = null;
   if (canvas.hasPointerCapture(event.pointerId)) {
     canvas.releasePointerCapture(event.pointerId);

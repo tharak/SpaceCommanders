@@ -43,6 +43,7 @@ export function createGameState(): GameState {
     previewRotation: 0,
     formationRotation: 0,
     cohesion: 0.7,
+    previewCohesion: 0.7,
     pointer: null,
     bodies: [],
     ships: [],
@@ -65,6 +66,7 @@ export function resetGame(
   state.previewCenter = null;
   state.previewRotation = 0;
   state.formationRotation = 0;
+  state.previewCohesion = state.cohesion;
   state.projectiles = [];
   state.ships = [];
   state.bodies = [];

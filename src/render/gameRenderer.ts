@@ -255,7 +255,11 @@ function drawFormationPreview(
     center,
     state.selectedFormation,
     state.config.ships,
-    clamp(80 - state.cohesion * 50, 25, 70),
+    clamp(
+      80 - (state.previewCenter ? state.previewCohesion : state.cohesion) * 50,
+      25,
+      70,
+    ),
     state.previewCenter ? state.previewRotation : state.formationRotation,
   );
   context.strokeStyle = "#62e8ff66";
