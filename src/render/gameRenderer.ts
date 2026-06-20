@@ -68,8 +68,8 @@ function drawGeodesicGrid(
 ): void {
   const gridSpacing = 72;
   const sampleSpacing = 12;
-  context.strokeStyle = "#4bbde033";
-  context.lineWidth = 1;
+  context.strokeStyle = "#5bd8ff66";
+  context.lineWidth = 1.2;
 
   for (
     let x = -gridSpacing;
@@ -138,7 +138,7 @@ function warpPoint(point: Vec, bodies: Body[]): Vec {
     const distance = Math.sqrt(distanceSquared) || 1;
     const pull = Math.min(
       body.radius * 1.25,
-      (body.weight * body.radius * 120) / (distanceSquared + softening),
+      (body.weight * body.radius * 900) / (distanceSquared + softening),
     );
 
     warped.x += (offsetX / distance) * pull;
