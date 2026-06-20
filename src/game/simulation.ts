@@ -4,6 +4,7 @@ import {
   FORMATION_ARRIVAL_DISTANCE,
   FORMATIONS,
   SUPPLY_TRANSFER_DISTANCE,
+  SUPPLY_SHIP_CAPACITY,
 } from "./constants";
 import { formationSlots } from "./formations";
 import { clamp, distance, normalize, randomBetween } from "./math";
@@ -258,7 +259,7 @@ function spawnResupplyShips(state: GameState): void {
     if (
       planet.kind !== BodyKind.Planet ||
       !planet.base ||
-      (planet.stock ?? 0) < 1
+      (planet.stock ?? 0) < SUPPLY_SHIP_CAPACITY
     ) {
       continue;
     }
@@ -271,7 +272,7 @@ function spawnResupplyShips(state: GameState): void {
     const target = findLeastSuppliedBattleship(state, planet.base);
     if (activeMission || !target || target.supplies >= 10) continue;
 
-    planet.stock = (planet.stock ?? 0) - 1;
+    planet.stock = (planet.stock ?? 0) - SUPPLY_SHIP_CAPACITY;
     state.ships.push(
       spawnSupplyShip(planet.base, planet, target, nextShipId++),
     );
@@ -289,7 +290,7 @@ function spawnSupplyShip(
     hp: 40,
     maxHp: 40,
     speed: 78,
-    supplies: 1,
+    supplies: SUPPLY_SHIP_CAPACITY,
     range: 0,
     homeBodyId: homePlanet.id,
     resupplyTargetId: target.id,
