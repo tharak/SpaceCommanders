@@ -25,8 +25,8 @@ import {
 export function createGameState(): GameState {
   return {
     config: { ...DEFAULT_CONFIG },
-    formation: Formation.Arrow,
-    selectedFormation: Formation.Arrow,
+    formation: Formation.Circle,
+    selectedFormation: Formation.Circle,
     fireMode: FireMode.AtWill,
     command: null,
     previewCenter: null,
@@ -49,6 +49,8 @@ export function resetGame(
 ): void {
   state.config = config;
   state.winner = null;
+  state.formation = Formation.Circle;
+  state.selectedFormation = Formation.Circle;
   state.command = null;
   state.previewCenter = null;
   state.previewRotation = 0;
@@ -125,9 +127,15 @@ export function resetGame(
   let id = 0;
   for (const side of [Side.Player, Side.Enemy] as const) {
     const base = side === Side.Player ? playerBase : enemyBase;
+    const slots = formationSlots(
+      base,
+      Formation.Circle,
+      config.ships,
+      clamp(80 - state.cohesion * 50, 25, 70),
+    );
     for (let index = 0; index < config.ships; index++) {
       state.ships.push(
-        spawnShip(side, ShipRole.Battleship, offsetPosition(base, 75), id++),
+        spawnShip(side, ShipRole.Battleship, slots[index], id++),
       );
     }
     state.ships.push(
@@ -341,14 +349,14 @@ function findLeastSuppliedBattleship(
 }
 
 function assignFormationTargets(state: GameState): void {
-  const playerBase = state.bodies.find((body) => body.base === Side.Player);
-  if (!playerBase) return;
-
   for (const side of [Side.Player, Side.Enemy] as const) {
+    const homeBase = state.bodies.find((body) => body.base === side);
+    if (!homeBase) continue;
+
     const fleet = state.ships.filter((ship) => ship.side === side);
     const center =
-      side === Side.Player ? (state.command ?? playerBase.pos) : playerBase.pos;
-    const formation = side === Side.Player ? state.formation : Formation.Arrow;
+      side === Side.Player ? (state.command ?? homeBase.pos) : homeBase.pos;
+    const formation = side === Side.Player ? state.formation : Formation.Circle;
     const battleships = fleet.filter(
       (ship) => ship.role === ShipRole.Battleship,
     );
