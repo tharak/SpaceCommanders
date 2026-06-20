@@ -1,6 +1,5 @@
 import {
   DEFAULT_CONFIG,
-  ENEMY_DEPLOYMENT_DELAY,
   FORMATION_ARRIVAL_DISTANCE,
   FORMATIONS,
   SUPPLY_TRANSFER_DISTANCE,
@@ -41,7 +40,6 @@ export function createGameState(): GameState {
     previewRotation: 0,
     formationRotation: 0,
     cohesion: 0.7,
-    elapsed: 0,
     pointer: null,
     bodies: [],
     ships: [],
@@ -58,7 +56,6 @@ export function resetGame(
 ): void {
   state.config = config;
   state.winner = null;
-  state.elapsed = 0;
   state.formation = Formation.Circle;
   state.selectedFormation = Formation.Circle;
   state.command = null;
@@ -166,7 +163,6 @@ export function updateGame(
   if (state.winner) return;
 
   const deltaTime = elapsed * state.config.speed;
-  state.elapsed += deltaTime;
   replenishPlanets(state, deltaTime);
   spawnResupplyShips(state);
   assignFormationTargets(state);
@@ -365,9 +361,7 @@ function assignFormationTargets(state: GameState): void {
 
     const fleet = state.ships.filter((ship) => ship.side === side);
     const enemyAdvancing =
-      side === Side.Enemy &&
-      state.elapsed >= ENEMY_DEPLOYMENT_DELAY &&
-      playerBase;
+      side === Side.Enemy && state.command !== null && playerBase;
     const center =
       side === Side.Player
         ? (state.command ?? homeBase.pos)
