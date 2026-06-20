@@ -7,6 +7,7 @@ import {
   getControls,
   readConfig,
   setupControls,
+  showCohesion,
   showReadout,
 } from "./ui/controls";
 
@@ -17,6 +18,7 @@ const controls = getControls();
 const state = createGameState();
 let viewport: Viewport;
 let lastFrame = performance.now();
+let dragStartCohesion = state.cohesion;
 
 function reset(): void {
   resetGame(state, readConfig(), viewport);
@@ -78,6 +80,11 @@ canvas.addEventListener("pointermove", (event) => {
   if (Math.hypot(offsetX, offsetY) >= 8) {
     state.previewRotation = Math.atan2(offsetY, offsetX);
   }
+  state.cohesion = Math.min(
+    1,
+    Math.max(0.25, dragStartCohesion + offsetX / 200),
+  );
+  showCohesion(controls, state.cohesion);
 });
 
 canvas.addEventListener("pointerleave", () => {
@@ -90,6 +97,7 @@ canvas.addEventListener("pointerdown", (event) => {
   state.pointer = point;
   state.previewCenter = { ...point };
   state.previewRotation = 0;
+  dragStartCohesion = state.cohesion;
   showReadout(
     controls,
     `DRAG TO ROTATE ${state.formation.toUpperCase()} FORMATION — RELEASE TO ISSUE ORDER`,
@@ -113,6 +121,8 @@ canvas.addEventListener("pointerup", (event) => {
 canvas.addEventListener("pointercancel", (event) => {
   state.previewCenter = null;
   state.previewRotation = state.formationRotation;
+  state.cohesion = dragStartCohesion;
+  showCohesion(controls, state.cohesion);
   state.pointer = null;
   if (canvas.hasPointerCapture(event.pointerId)) {
     canvas.releasePointerCapture(event.pointerId);

@@ -59,6 +59,12 @@ export function showReadout(controls: Controls, message: string): void {
   controls.readout.textContent = message;
 }
 
+export function showCohesion(controls: Controls, cohesion: number): void {
+  const percent = Math.round(cohesion * 100);
+  controls.tightnessValue.textContent = percent + "%";
+  controls.cohesionControl.setAttribute("aria-valuenow", String(percent));
+}
+
 function setupCohesionControl(
   controls: Controls,
   onChange: (cohesion: number) => void,
@@ -70,15 +76,15 @@ function setupCohesionControl(
 
   const update = (value: number) => {
     cohesion = Math.min(1, Math.max(0.25, value));
-    const percent = Math.round(cohesion * 100);
-    controls.tightnessValue.textContent = percent + "%";
-    controls.cohesionControl.setAttribute("aria-valuenow", String(percent));
+    showCohesion(controls, cohesion);
     onChange(cohesion);
   };
 
   controls.cohesionControl.addEventListener("pointerdown", (event) => {
     startX = event.clientX;
-    startCohesion = cohesion;
+    startCohesion =
+      Number(controls.cohesionControl.getAttribute("aria-valuenow")) / 100;
+    cohesion = startCohesion;
     controls.cohesionControl.setPointerCapture(event.pointerId);
   });
   controls.cohesionControl.addEventListener("pointermove", (event) => {
@@ -91,6 +97,8 @@ function setupCohesionControl(
     }
   });
   controls.cohesionControl.addEventListener("keydown", (event) => {
+    cohesion =
+      Number(controls.cohesionControl.getAttribute("aria-valuenow")) / 100;
     if (event.key === "ArrowLeft") update(cohesion - 0.05);
     else if (event.key === "ArrowRight") update(cohesion + 0.05);
     else if (event.key === "Home") update(0.25);
