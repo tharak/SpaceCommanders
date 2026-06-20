@@ -8,8 +8,9 @@ export type Body = {
   pos: Vec;
   radius: number;
   base?: Side;
-  hp?: number;
-  maxHp?: number;
+  home?: Side;
+  capturingSide?: Side;
+  captureProgress?: number;
   stock?: number;
   hue: number;
   weight: number;

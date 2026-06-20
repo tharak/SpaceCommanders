@@ -3,6 +3,8 @@ import {
   ENEMY_FORMATION_SPACING,
   FORMATION_ARRIVAL_DISTANCE,
   FORMATIONS,
+  PLANET_CAPTURE_RANGE,
+  PLANET_CAPTURE_RATE,
   SUPPLY_TRANSFER_DISTANCE,
   SUPPLY_SHIP_CAPACITY,
 } from "./constants";
@@ -85,8 +87,7 @@ export function resetGame(
       pos: playerBase,
       radius: 37,
       base: Side.Player,
-      maxHp: 50,
-      hp: 50,
+      home: Side.Player,
       stock: 0,
       hue: 195,
       weight: 2.5,
@@ -97,8 +98,7 @@ export function resetGame(
       pos: enemyBase,
       radius: 37,
       base: Side.Enemy,
-      maxHp: 50,
-      hp: 50,
+      home: Side.Enemy,
       stock: 0,
       hue: 350,
       weight: 2.5,
@@ -167,6 +167,8 @@ export function updateGame(
 
   const deltaTime = elapsed * state.config.speed;
   replenishPlanets(state, deltaTime);
+  updatePlanetCaptures(state, deltaTime);
+  if (state.winner) return;
   spawnResupplyShips(state);
   assignFormationTargets(state);
 
@@ -184,7 +186,6 @@ export function updateGame(
 
   state.ships = state.ships.filter((ship) => ship.hp > 0);
   updateProjectiles(state, deltaTime);
-  attackBases(state);
 }
 
 const PROJECTILE_SPEED = 360;
@@ -251,6 +252,62 @@ function replenishPlanets(state: GameState, deltaTime: number): void {
   for (const body of state.bodies) {
     if (body.kind === BodyKind.Planet)
       body.stock = (body.stock ?? 0) + deltaTime * 1.1;
+  }
+}
+
+function updatePlanetCaptures(state: GameState, deltaTime: number): void {
+  for (const planet of state.bodies) {
+    if (planet.kind !== BodyKind.Planet) continue;
+
+    const playerShips = state.ships.filter(
+      (ship) =>
+        ship.side === Side.Player &&
+        ship.role === ShipRole.Battleship &&
+        distance(ship.pos, planet.pos) < planet.radius + PLANET_CAPTURE_RANGE,
+    ).length;
+    const enemyShips = state.ships.filter(
+      (ship) =>
+        ship.side === Side.Enemy &&
+        ship.role === ShipRole.Battleship &&
+        distance(ship.pos, planet.pos) < planet.radius + PLANET_CAPTURE_RANGE,
+    ).length;
+    if (playerShips === enemyShips) continue;
+
+    const capturingSide = playerShips > enemyShips ? Side.Player : Side.Enemy;
+    if (planet.base === capturingSide) {
+      planet.capturingSide = undefined;
+      planet.captureProgress = 0;
+      continue;
+    }
+
+    const captureAmount =
+      deltaTime * PLANET_CAPTURE_RATE * Math.abs(playerShips - enemyShips);
+    if (
+      planet.capturingSide &&
+      planet.capturingSide !== capturingSide &&
+      (planet.captureProgress ?? 0) > 0
+    ) {
+      planet.captureProgress = Math.max(
+        0,
+        (planet.captureProgress ?? 0) - captureAmount,
+      );
+      if (planet.captureProgress > 0) continue;
+    }
+
+    planet.capturingSide = capturingSide;
+    planet.captureProgress = Math.min(
+      1,
+      (planet.captureProgress ?? 0) + captureAmount,
+    );
+    if (planet.captureProgress < 1) continue;
+
+    planet.base = capturingSide;
+    planet.capturingSide = undefined;
+    planet.captureProgress = 0;
+    planet.stock = Math.max(planet.stock ?? 0, SUPPLY_SHIP_CAPACITY);
+    if (planet.home && planet.home !== capturingSide) {
+      state.winner = capturingSide;
+    }
   }
 }
 
@@ -555,43 +612,4 @@ function fireWeapons(state: GameState, ship: Ship): void {
   ship.supplies--;
   ship.cooldown = 0.75;
   spawnProjectile(state, ship.pos, target.pos, ship.side);
-}
-
-function attackBases(state: GameState): void {
-  const playerBase = state.bodies.find((body) => body.base === Side.Player);
-  const enemyBase = state.bodies.find((body) => body.base === Side.Enemy);
-  if (!playerBase || !enemyBase) return;
-
-  for (const base of [playerBase, enemyBase]) {
-    const attackers = state.ships.filter(
-      (ship) =>
-        ship.side !== base.base &&
-        ship.role === ShipRole.Battleship &&
-        ship.supplies >= 1 &&
-        ship.cooldown <= 0 &&
-        distance(ship.pos, base.pos) < ship.range &&
-        hasLineOfSight(state, ship, base.pos, undefined, base) &&
-        (ship.side === Side.Enemy || state.fireMode !== FireMode.Hold),
-    );
-    for (const ship of attackers) {
-      base.hp = Math.max(0, (base.hp ?? 0) - attackDamage(state, ship));
-      const angle = Math.random() * Math.PI * 2;
-      const impactDistance = base.radius * randomBetween(0.2, 0.85);
-      spawnProjectile(
-        state,
-        ship.pos,
-        {
-          x: base.pos.x + Math.cos(angle) * impactDistance,
-          y: base.pos.y + Math.sin(angle) * impactDistance,
-        },
-        ship.side,
-      );
-      ship.supplies--;
-      ship.cooldown = 0.75;
-    }
-  }
-
-  if (playerBase.hp === 0 || enemyBase.hp === 0) {
-    state.winner = playerBase.hp === 0 ? Side.Enemy : Side.Player;
-  }
 }

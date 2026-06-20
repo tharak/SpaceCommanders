@@ -16,8 +16,8 @@ lets have a debug view where we can set all variables of the game for fine tune.
 
 the game should create a map with a number of celestial bodies, at fist lets make so that they are only obstacles but later they might have some function like black hole pulls the ships near, asteroids fields move around, planets generate resources, etc.
 
-each player starts with a random planet as base. the objective is to destroy the enemy's base. each player starts with 10 battleships and 1 captain that likes a random formation.
-planet generates supply.
+each player starts with a random planet as base. the objective is to capture the enemy home planet. each player starts with 10 battleships and 1 captain that likes a random formation.
+a planet begins capture when nearby battleships outnumber the opposing force. captured planets become owned supply sources.
 
 fleet is composed of 10 battleships and 1 captain
 
