@@ -197,7 +197,7 @@ function drawBodies(context: CanvasRenderingContext2D, state: GameState): void {
           body.radius * 2,
           body.radius * 2,
         );
-        context.fillStyle = `hsl(,65%,42%)`;
+        context.fillStyle = "hsl(" + body.hue + ",65%,42%)";
         context.fillRect(
           -body.radius,
           body.radius - body.radius * 2 * health,
@@ -212,7 +212,7 @@ function drawBodies(context: CanvasRenderingContext2D, state: GameState): void {
         context.arc(0, 0, body.radius, 0, Math.PI * 2);
         context.stroke();
       } else {
-        context.fillStyle = `hsl(,65%,42%)`;
+        context.fillStyle = "hsl(" + body.hue + ",65%,42%)";
         context.beginPath();
         context.arc(0, 0, body.radius, 0, Math.PI * 2);
         context.fill();
