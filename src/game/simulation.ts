@@ -217,7 +217,7 @@ function spawnShip(
 ): Ship {
   const battleship = role === ShipRole.Battleship;
   const captain = role === ShipRole.Captain;
-  const hp = 100;
+  const hp = 50;
 
   return {
     id,
@@ -227,7 +227,7 @@ function spawnShip(
     vel: { x: randomBetween(-12, 12), y: randomBetween(-12, 12) },
     hp,
     maxHp: hp,
-    attack: 14,
+    attack: 10,
     defense: 3,
     speed: 56,
     sight: 260,
@@ -393,12 +393,9 @@ function assignFormationTargets(state: GameState): void {
   }
 }
 
-function collectPlanetSupplies(
-  state: GameState,
-  ship: Ship,
-): void {
+function collectPlanetSupplies(state: GameState, ship: Ship): void {
   if (ship.supplyMission == null) {
-    return
+    return;
   }
   for (const planet of state.bodies) {
     if (
@@ -408,10 +405,7 @@ function collectPlanetSupplies(
       continue;
     if (planet.base !== ship.side) continue;
 
-    const amount = Math.min(
-      planet.stock ?? 0,
-      10 - ship.supplies,
-    );
+    const amount = Math.min(planet.stock ?? 0, 10 - ship.supplies);
     ship.supplies += amount;
     planet.stock = (planet.stock ?? 0) - amount;
   }
