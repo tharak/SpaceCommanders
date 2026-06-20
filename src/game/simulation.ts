@@ -115,7 +115,7 @@ export function resetGame(
       },
       radius: randomBetween(32, 58),
       hue: 0,
-      weight: randomBetween(0.35, 0.9),
+      weight: 0,
     });
   }
 

@@ -22,7 +22,7 @@ export const SUPPLY_TRANSFER_DISTANCE = 32;
 
 export const DEFAULT_CONFIG: Config = {
   ships: 10,
-  planets: 5,
-  asteroids: 3,
+  planets: 3,
+  asteroids: 1,
   speed: 1,
 };
