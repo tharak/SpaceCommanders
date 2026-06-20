@@ -2,7 +2,7 @@ import { COLORS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp } from "../game/math";
 import { BodyKind, ShipRole, Side } from "../game/types";
-import type { Body, GameState, Vec, Viewport } from "../game/types";
+import type { Body, GameState, Ship, Vec, Viewport } from "../game/types";
 
 type RenderContext = {
   canvas: HTMLCanvasElement;
@@ -270,15 +270,31 @@ function drawShips(context: CanvasRenderingContext2D, state: GameState): void {
       22 * (ship.hp / ship.maxHp),
       3,
     );
-    if (ship.side === Side.Player) {
-      context.fillStyle = "#c9efff";
-      context.font = "10px Rajdhani";
-      context.fillText(
-        `${Math.floor(ship.supplies)}`,
-        ship.pos.x + 9,
-        ship.pos.y + 8,
-      );
-    }
+    drawSupplyMarkers(context, ship);
+  }
+}
+
+function drawSupplyMarkers(
+  context: CanvasRenderingContext2D,
+  ship: Ship,
+): void {
+  const supplyCount = Math.floor(ship.supplies);
+  if (supplyCount <= 0) return;
+
+  const markerRadius = 18;
+  context.strokeStyle = ship.side === Side.Player ? "#9af4ff" : "#ffadc1";
+  context.lineWidth = 1.25;
+  for (let index = 0; index < supplyCount; index++) {
+    const angle = (index / supplyCount) * Math.PI * 2 - Math.PI / 2;
+    context.beginPath();
+    context.arc(
+      ship.pos.x + Math.cos(angle) * markerRadius,
+      ship.pos.y + Math.sin(angle) * markerRadius,
+      2,
+      0,
+      Math.PI * 2,
+    );
+    context.stroke();
   }
 }
 
