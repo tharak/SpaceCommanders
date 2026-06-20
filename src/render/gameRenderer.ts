@@ -68,7 +68,7 @@ function drawGeodesicGrid(
 ): void {
   const gridSpacing = 20;
   const sampleSpacing = 8;
-  context.strokeStyle = "#5bd8ff66";
+  context.strokeStyle = "#67f7a166";
   context.lineWidth = 1.2;
 
   for (
