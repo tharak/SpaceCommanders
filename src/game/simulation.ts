@@ -142,9 +142,9 @@ export function resetGame(
         spawnShip(side, ShipRole.Battleship, slots[index], id++),
       );
     }
-    state.ships.push(
-      spawnShip(side, ShipRole.Captain, offsetPosition(base, 30), id++),
-    );
+    //state.ships.push(
+    //  spawnShip(side, ShipRole.Captain, offsetPosition(base, 30), id++),
+    //);
   }
 }
 
@@ -167,7 +167,7 @@ export function updateGame(
       updateSupplyMission(state, ship);
       if (ship.hp <= 0) continue;
     } else {
-      collectPlanetSupplies(state, ship, deltaTime);
+      collectPlanetSupplies(state, ship);
     }
     moveShip(state, ship, viewport, deltaTime);
     fireWeapons(state, ship);
@@ -217,7 +217,7 @@ function spawnShip(
 ): Ship {
   const battleship = role === ShipRole.Battleship;
   const captain = role === ShipRole.Captain;
-  const hp = battleship ? 100 : captain ? 150 : 80;
+  const hp = 100;
 
   return {
     id,
@@ -227,21 +227,14 @@ function spawnShip(
     vel: { x: randomBetween(-12, 12), y: randomBetween(-12, 12) },
     hp,
     maxHp: hp,
-    attack: battleship ? 14 : captain ? 8 : 0,
-    defense: battleship ? 3 : 5,
-    speed: battleship ? 56 : 45,
+    attack: 14,
+    defense: 3,
+    speed: 56,
     sight: 260,
     moral: 70,
-    supplies: battleship ? 10 : 0,
-    range: battleship ? 135 : 80,
-    cooldown: randomBetween(0, 0.8),
-  };
-}
-
-function offsetPosition(base: Vec, range: number): Vec {
-  return {
-    x: base.x + randomBetween(-range, range),
-    y: base.y + randomBetween(-range, range),
+    supplies: 10,
+    range: 135,
+    cooldown: 1,
   };
 }
 
@@ -403,8 +396,10 @@ function assignFormationTargets(state: GameState): void {
 function collectPlanetSupplies(
   state: GameState,
   ship: Ship,
-  deltaTime: number,
 ): void {
+  if (ship.supplyMission == null) {
+    return
+  }
   for (const planet of state.bodies) {
     if (
       planet.kind !== BodyKind.Planet ||
@@ -414,7 +409,6 @@ function collectPlanetSupplies(
     if (planet.base !== ship.side) continue;
 
     const amount = Math.min(
-      deltaTime * 2,
       planet.stock ?? 0,
       10 - ship.supplies,
     );

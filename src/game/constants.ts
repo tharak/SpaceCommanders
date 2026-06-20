@@ -23,7 +23,7 @@ export const SUPPLY_SHIP_CAPACITY = 1;
 export const ENEMY_DEPLOYMENT_DELAY = 2;
 
 export const DEFAULT_CONFIG: Config = {
-  ships: 10,
+  ships: 5,
   planets: 3,
   asteroids: 1,
   speed: 1,
