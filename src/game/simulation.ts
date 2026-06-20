@@ -2,6 +2,7 @@ import {
   DEFAULT_CONFIG,
   FORMATION_ARRIVAL_DISTANCE,
   FORMATIONS,
+  SUPPLY_TRANSFER_DISTANCE,
 } from "./constants";
 import { formationSlots } from "./formations";
 import { clamp, distance, normalize, randomBetween } from "./math";
@@ -286,7 +287,7 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
 
   ship.resupplyTargetId = target.id;
   ship.target = { ...target.pos };
-  if (distance(ship.pos, target.pos) > 16) return;
+  if (distance(ship.pos, target.pos) > SUPPLY_TRANSFER_DISTANCE) return;
 
   const transferred = Math.min(ship.supplies, 10 - target.supplies);
   target.supplies += transferred;
