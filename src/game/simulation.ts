@@ -184,7 +184,7 @@ export function updateGame(
 
   state.ships = state.ships.filter((ship) => ship.hp > 0);
   updateProjectiles(state, deltaTime);
-  attackBases(state, deltaTime);
+  attackBases(state);
 }
 
 const PROJECTILE_SPEED = 360;
@@ -513,6 +513,14 @@ function hasLineOfSight(
   );
 }
 
+function attackDamage(state: GameState, ship: Ship, defense = 0): number {
+  const bonus =
+    ship.side === Side.Player && state.formation === state.captainFavorite
+      ? 1.25
+      : 1;
+  return Math.max(1, ship.attack * bonus - defense);
+}
+
 function fireWeapons(state: GameState, ship: Ship): void {
   const targets = state.ships.filter(
     (candidate) =>
@@ -542,18 +550,14 @@ function fireWeapons(state: GameState, ship: Ship): void {
     );
   }
 
-  const bonus =
-    ship.side === Side.Player && state.formation === state.captainFavorite
-      ? 1.25
-      : 1;
-  target.hp -= Math.max(1, ship.attack * bonus - target.defense);
+  target.hp -= attackDamage(state, ship, target.defense);
   target.moral = clamp(target.moral - 5, 0, 100);
   ship.supplies--;
   ship.cooldown = 0.75;
   spawnProjectile(state, ship.pos, target.pos, ship.side);
 }
 
-function attackBases(state: GameState, deltaTime: number): void {
+function attackBases(state: GameState): void {
   const playerBase = state.bodies.find((body) => body.base === Side.Player);
   const enemyBase = state.bodies.find((body) => body.base === Side.Enemy);
   if (!playerBase || !enemyBase) return;
@@ -563,14 +567,14 @@ function attackBases(state: GameState, deltaTime: number): void {
       (ship) =>
         ship.side !== base.base &&
         ship.role === ShipRole.Battleship &&
-        ship.supplies > 0 &&
+        ship.supplies >= 1 &&
+        ship.cooldown <= 0 &&
         distance(ship.pos, base.pos) < ship.range &&
-        hasLineOfSight(state, ship, base.pos, undefined, base),
+        hasLineOfSight(state, ship, base.pos, undefined, base) &&
+        (ship.side === Side.Enemy || state.fireMode !== FireMode.Hold),
     );
-    if (attackers.length === 0 || Math.random() >= deltaTime * 3) continue;
-
-    base.hp = Math.max(0, (base.hp ?? 0) - attackers.length);
-    attackers.forEach((ship) => {
+    for (const ship of attackers) {
+      base.hp = Math.max(0, (base.hp ?? 0) - attackDamage(state, ship));
       const angle = Math.random() * Math.PI * 2;
       const impactDistance = base.radius * randomBetween(0.2, 0.85);
       spawnProjectile(
@@ -582,8 +586,9 @@ function attackBases(state: GameState, deltaTime: number): void {
         },
         ship.side,
       );
-      ship.supplies -= 0.02;
-    });
+      ship.supplies--;
+      ship.cooldown = 0.75;
+    }
   }
 
   if (playerBase.hp === 0 || enemyBase.hp === 0) {
