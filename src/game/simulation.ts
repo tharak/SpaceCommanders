@@ -20,6 +20,9 @@ export function createGameState(): GameState {
     formation: Formation.Arrow,
     fireMode: FireMode.AtWill,
     command: null,
+    previewCenter: null,
+    previewRotation: 0,
+    formationRotation: 0,
     pointer: null,
     bodies: [],
     ships: [],
@@ -37,6 +40,9 @@ export function resetGame(
   state.config = config;
   state.winner = null;
   state.command = null;
+  state.previewCenter = null;
+  state.previewRotation = 0;
+  state.formationRotation = 0;
   state.flashes = [];
   state.ships = [];
   state.bodies = [];
@@ -198,6 +204,7 @@ function assignFormationTargets(state: GameState, cohesion: number): void {
       formation,
       battleships.length,
       spacing,
+      side === Side.Player ? state.formationRotation : 0,
     );
 
     battleships.forEach((ship, index) => {

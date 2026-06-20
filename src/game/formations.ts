@@ -6,8 +6,11 @@ export function formationSlots(
   formation: Formation,
   count: number,
   spacing: number,
+  rotation = 0,
 ): Vec[] {
   const slots: Vec[] = [];
+  const cosine = Math.cos(rotation);
+  const sine = Math.sin(rotation);
 
   for (let index = 0; index < count; index++) {
     let x = 0;
@@ -42,7 +45,10 @@ export function formationSlots(
       }
     }
 
-    slots.push({ x: center.x + x, y: center.y + y });
+    slots.push({
+      x: center.x + x * cosine - y * sine,
+      y: center.y + x * sine + y * cosine,
+    });
   }
 
   return slots;

@@ -124,14 +124,14 @@ function drawFormationPreview(
   state: GameState,
   cohesion: number,
 ): void {
-  if (!state.pointer) return;
-
-  const center = state.command ?? state.pointer;
+  const center = state.previewCenter ?? state.command ?? state.pointer;
+  if (!center) return;
   const slots = formationSlots(
     center,
     state.formation,
     state.config.ships,
     clamp(80 - cohesion * 50, 25, 70),
+    state.previewCenter ? state.previewRotation : state.formationRotation,
   );
   context.strokeStyle = "#62e8ff66";
   context.setLineDash([5, 5]);

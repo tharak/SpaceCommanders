@@ -13,7 +13,6 @@ import {
 
 const canvas = requiredCanvas("#game");
 const context = requiredContext(canvas);
-
 const status = requiredElement("#status");
 const controls = getControls();
 const state = createGameState();
@@ -34,6 +33,8 @@ setupControls(
     onFormationChange: (formation) => {
       state.formation = formation;
       state.command = null;
+      state.previewCenter = null;
+      state.formationRotation = 0;
       showReadout(
         controls,
         `${formation.toUpperCase()} SELECTED — TAP MAP TO SET FLEET POSITION`,
@@ -65,19 +66,56 @@ function mapPoint(event: PointerEvent): Vec {
 }
 
 canvas.addEventListener("pointermove", (event) => {
-  state.pointer = mapPoint(event);
+  const point = mapPoint(event);
+  state.pointer = point;
+  if (!state.previewCenter) return;
+
+  const offsetX = point.x - state.previewCenter.x;
+  const offsetY = point.y - state.previewCenter.y;
+  if (Math.hypot(offsetX, offsetY) >= 8) {
+    state.previewRotation = Math.atan2(offsetY, offsetX);
+  }
 });
+
 canvas.addEventListener("pointerleave", () => {
-  state.pointer = null;
+  if (!state.previewCenter) state.pointer = null;
 });
+
 canvas.addEventListener("pointerdown", (event) => {
+  const point = mapPoint(event);
+  canvas.setPointerCapture(event.pointerId);
+  state.pointer = point;
+  state.previewCenter = { ...point };
+  state.previewRotation = 0;
+  showReadout(
+    controls,
+    `DRAG TO ROTATE ${state.formation.toUpperCase()} FORMATION — RELEASE TO ISSUE ORDER`,
+  );
+});
+
+canvas.addEventListener("pointerup", (event) => {
+  if (!state.previewCenter) return;
+
   state.pointer = mapPoint(event);
-  state.command = { ...state.pointer };
+  state.command = { ...state.previewCenter };
+  state.formationRotation = state.previewRotation;
+  state.previewCenter = null;
+  canvas.releasePointerCapture(event.pointerId);
   showReadout(
     controls,
     `FLEET MOVING IN ${state.formation.toUpperCase()} FORMATION — COHESION ${controls.tightness.value}%`,
   );
 });
+
+canvas.addEventListener("pointercancel", (event) => {
+  state.previewCenter = null;
+  state.previewRotation = state.formationRotation;
+  state.pointer = null;
+  if (canvas.hasPointerCapture(event.pointerId)) {
+    canvas.releasePointerCapture(event.pointerId);
+  }
+});
+
 window.addEventListener("resize", () => {
   updateViewport();
   reset();
@@ -100,15 +138,17 @@ function requiredContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
 
 function requiredCanvas(selector: string): HTMLCanvasElement {
   const element = document.querySelector(selector);
-  if (!(element instanceof HTMLCanvasElement))
+  if (!(element instanceof HTMLCanvasElement)) {
     throw new Error(`Missing required canvas: ${selector}`);
+  }
   return element;
 }
 
 function requiredElement(selector: string): HTMLElement {
   const element = document.querySelector(selector);
-  if (!(element instanceof HTMLElement))
+  if (!(element instanceof HTMLElement)) {
     throw new Error(`Missing required element: ${selector}`);
+  }
   return element;
 }
 

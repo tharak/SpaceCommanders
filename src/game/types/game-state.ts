@@ -12,6 +12,9 @@ export type GameState = {
   formation: Formation;
   fireMode: FireMode;
   command: Vec | null;
+  previewCenter: Vec | null;
+  previewRotation: number;
+  formationRotation: number;
   pointer: Vec | null;
   bodies: Body[];
   ships: Ship[];
