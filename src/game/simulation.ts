@@ -87,7 +87,6 @@ export function resetGame(
       pos: playerBase,
       radius: 37,
       base: Side.Player,
-      home: Side.Player,
       stock: 0,
       hue: 195,
       weight: 2.5,
@@ -98,7 +97,6 @@ export function resetGame(
       pos: enemyBase,
       radius: 37,
       base: Side.Enemy,
-      home: Side.Enemy,
       stock: 0,
       hue: 350,
       weight: 2.5,
@@ -305,10 +303,16 @@ function updatePlanetCaptures(state: GameState, deltaTime: number): void {
     planet.capturingSide = undefined;
     planet.captureProgress = 0;
     planet.stock = Math.max(planet.stock ?? 0, SUPPLY_SHIP_CAPACITY);
-    if (planet.home && planet.home !== capturingSide) {
-      state.winner = capturingSide;
-    }
   }
+
+  const playerOwnsPlanet = state.bodies.some(
+    (body) => body.kind === BodyKind.Planet && body.base === Side.Player,
+  );
+  const enemyOwnsPlanet = state.bodies.some(
+    (body) => body.kind === BodyKind.Planet && body.base === Side.Enemy,
+  );
+  if (!playerOwnsPlanet) state.winner = Side.Enemy;
+  if (!enemyOwnsPlanet) state.winner = Side.Player;
 }
 
 function spawnResupplyShips(state: GameState): void {

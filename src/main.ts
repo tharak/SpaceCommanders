@@ -53,8 +53,8 @@ function showGameOver(winner: Side): void {
   showSetup(
     playerWon ? "VICTORY" : "COMMAND FLEET LOST",
     playerWon
-      ? "Enemy home planet captured. Tune the simulation and begin another match."
-      : "Your home planet was captured. Tune the simulation and try again.",
+      ? "Enemy forces control no planets. Tune the simulation and begin another match."
+      : "Your forces control no planets. Tune the simulation and try again.",
     "START NEW MATCH",
   );
 }
