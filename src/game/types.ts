@@ -1,13 +1,38 @@
-export type Formation = "line" | "column" | "arrow" | "circle" | "pincer";
-export type FireMode = "focus" | "atwill" | "hold";
-export type Side = "player" | "enemy";
-export type ShipRole = "battleship" | "supply" | "captain";
+export enum Formation {
+  Line = "line",
+  Column = "column",
+  Arrow = "arrow",
+  Circle = "circle",
+  Pincer = "pincer",
+}
+
+export enum FireMode {
+  Focus = "focus",
+  AtWill = "atwill",
+  Hold = "hold",
+}
+
+export enum Side {
+  Player = "player",
+  Enemy = "enemy",
+}
+
+export enum ShipRole {
+  Battleship = "battleship",
+  Supply = "supply",
+  Captain = "captain",
+}
+
+export enum BodyKind {
+  Planet = "planet",
+  Asteroids = "asteroids",
+}
 
 export type Vec = { x: number; y: number };
 export type Viewport = { width: number; height: number };
 
 export type Body = {
-  kind: "planet" | "asteroids";
+  kind: BodyKind;
   pos: Vec;
   radius: number;
   base?: Side;

@@ -1,6 +1,7 @@
 import { COLORS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp } from "../game/math";
+import { BodyKind, ShipRole, Side } from "../game/types";
 import type { GameState, Viewport } from "../game/types";
 
 type RenderContext = {
@@ -70,7 +71,7 @@ function drawBodies(context: CanvasRenderingContext2D, state: GameState): void {
     context.save();
     context.translate(body.pos.x, body.pos.y);
 
-    if (body.kind === "asteroids") {
+    if (body.kind === BodyKind.Asteroids) {
       for (let index = 0; index < 15; index++) {
         const angle = index * 0.9;
         const radius = body.radius * (0.3 + (index % 3) * 0.22);
@@ -152,7 +153,7 @@ function drawFlashes(
   state: GameState,
 ): void {
   for (const flash of state.flashes) {
-    context.strokeStyle = flash.side === "player" ? "#8df6ff" : "#ff86a3";
+    context.strokeStyle = flash.side === Side.Player ? "#8df6ff" : "#ff86a3";
     context.globalAlpha = flash.life / 0.12;
     context.lineWidth = 2;
     context.beginPath();
@@ -170,7 +171,7 @@ function drawShips(context: CanvasRenderingContext2D, state: GameState): void {
     context.rotate(Math.atan2(ship.vel.y, ship.vel.x) + Math.PI / 2);
     context.fillStyle = COLORS[ship.side];
     context.beginPath();
-    if (ship.role === "supply") {
+    if (ship.role === ShipRole.Supply) {
       context.rect(-6, -8, 12, 16);
     } else {
       context.moveTo(0, -10);
@@ -184,14 +185,14 @@ function drawShips(context: CanvasRenderingContext2D, state: GameState): void {
 
     context.fillStyle = "#000a";
     context.fillRect(ship.pos.x - 11, ship.pos.y - 17, 22, 3);
-    context.fillStyle = ship.side === "player" ? "#69eaff" : "#ff6e91";
+    context.fillStyle = ship.side === Side.Player ? "#69eaff" : "#ff6e91";
     context.fillRect(
       ship.pos.x - 11,
       ship.pos.y - 17,
       22 * (ship.hp / ship.maxHp),
       3,
     );
-    if (ship.side === "player") {
+    if (ship.side === Side.Player) {
       context.fillStyle = "#c9efff";
       context.font = "10px Rajdhani";
       context.fillText(
@@ -205,9 +206,11 @@ function drawShips(context: CanvasRenderingContext2D, state: GameState): void {
 
 function updateStatus(status: HTMLElement, state: GameState): void {
   const playerShips = state.ships.filter(
-    (ship) => ship.side === "player",
+    (ship) => ship.side === Side.Player,
   ).length;
-  const enemyShips = state.ships.filter((ship) => ship.side === "enemy").length;
+  const enemyShips = state.ships.filter(
+    (ship) => ship.side === Side.Enemy,
+  ).length;
   status.innerHTML = `<span style="color:#5de5ff">◈ ${playerShips} FLEET</span><br><span style="color:#ff7898">◇ ${enemyShips} HOSTILES</span>`;
 }
 
@@ -220,11 +223,13 @@ function drawWinner(
 
   context.fillStyle = "#03101ad9";
   context.fillRect(0, 0, viewport.width, viewport.height);
-  context.fillStyle = state.winner === "player" ? "#6eeeff" : "#ff7797";
+  context.fillStyle = state.winner === Side.Player ? "#6eeeff" : "#ff7797";
   context.textAlign = "center";
   context.font = "700 42px Barlow Condensed";
   context.fillText(
-    state.winner === "player" ? "ENEMY BASE DESTROYED" : "COMMAND FLEET LOST",
+    state.winner === Side.Player
+      ? "ENEMY BASE DESTROYED"
+      : "COMMAND FLEET LOST",
     viewport.width / 2,
     viewport.height / 2,
   );

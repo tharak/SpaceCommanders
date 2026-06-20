@@ -1,5 +1,6 @@
 import "./style.css";
 import { createGameState, resetGame, updateGame } from "./game/simulation";
+import { FireMode } from "./game/types";
 import type { Vec, Viewport } from "./game/types";
 import { renderGame, resizeCanvas } from "./render/gameRenderer";
 import {
@@ -41,9 +42,9 @@ setupControls(
     onFireModeChange: (mode) => {
       state.fireMode = mode;
       const message =
-        mode === "hold"
+        mode === FireMode.Hold
           ? "WEAPONS HOLD"
-          : mode === "focus"
+          : mode === FireMode.Focus
             ? "FOCUS FIRE — TAP AN ENEMY TO DESIGNATE"
             : "WEAPONS FREE — ENGAGING HOSTILES IN RANGE";
       showReadout(controls, message);

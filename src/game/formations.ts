@@ -1,4 +1,5 @@
-import type { Formation, Vec } from "./types";
+import { Formation } from "./types";
+import type { Vec } from "./types";
 
 export function formationSlots(
   center: Vec,
@@ -13,26 +14,26 @@ export function formationSlots(
     let y = 0;
 
     switch (formation) {
-      case "line":
+      case Formation.Line:
         x = (index - (count - 1) / 2) * spacing;
         break;
-      case "column":
+      case Formation.Column:
         y = (index - (count - 1) / 2) * spacing;
         break;
-      case "arrow": {
+      case Formation.Arrow: {
         const row = Math.floor((Math.sqrt(8 * index + 1) - 1) / 2);
         const rowStart = (row * (row + 1)) / 2;
         x = (index - rowStart - row / 2) * spacing;
         y = (row - 2) * spacing * 0.7;
         break;
       }
-      case "circle": {
+      case Formation.Circle: {
         const angle = (index / count) * Math.PI * 2;
         x = Math.cos(angle) * spacing * 1.8;
         y = Math.sin(angle) * spacing * 1.8;
         break;
       }
-      case "pincer": {
+      case Formation.Pincer: {
         const half = index < count / 2 ? -1 : 1;
         const row = index % Math.ceil(count / 2);
         x = half * (spacing * 1.2 + row * spacing * 0.55);

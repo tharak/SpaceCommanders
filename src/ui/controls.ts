@@ -1,5 +1,6 @@
 import { FIRE_MODES, FORMATIONS } from "../game/constants";
-import type { Config, FireMode, Formation } from "../game/types";
+import { FireMode, Formation } from "../game/types";
+import type { Config } from "../game/types";
 
 type Controls = {
   formationControls: HTMLElement;
@@ -126,26 +127,26 @@ function formationIcon(formation: Formation): string {
   const dot = (x: number, y: number) =>
     `<circle cx="${x}" cy="${y}" r="2" fill="currentColor"/>`;
   const points: Record<Formation, [number, number][]> = {
-    line: [
+    [Formation.Line]: [
       [7, 14],
       [13, 14],
       [19, 14],
       [25, 14],
     ],
-    column: [
+    [Formation.Column]: [
       [16, 6],
       [16, 12],
       [16, 18],
       [16, 24],
     ],
-    arrow: [
+    [Formation.Arrow]: [
       [16, 7],
       [11, 14],
       [21, 14],
       [7, 21],
       [25, 21],
     ],
-    circle: [
+    [Formation.Circle]: [
       [16, 6],
       [25, 11],
       [25, 19],
@@ -153,7 +154,7 @@ function formationIcon(formation: Formation): string {
       [7, 19],
       [7, 11],
     ],
-    pincer: [
+    [Formation.Pincer]: [
       [7, 7],
       [12, 12],
       [7, 21],
@@ -168,11 +169,13 @@ function formationIcon(formation: Formation): string {
 }
 
 function fireModeIcon(mode: FireMode): string {
-  if (mode === "hold") {
+  if (mode === FireMode.Hold) {
     return `<svg viewBox="0 0 32 30"><path d="M7 19h17l-3-4H11zM12 14l2-5h4l2 5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="22" cy="9" r="7" fill="#081724" stroke="#ff7292" stroke-width="2"/><path d="M17 4l10 10" stroke="#ff7292" stroke-width="2"/></svg>`;
   }
   const spread =
-    mode === "focus" ? "M14 7h4M14 12h4M14 17h4" : "M11 7h4M15 12h4M19 17h4";
+    mode === FireMode.Focus
+      ? "M14 7h4M14 12h4M14 17h4"
+      : "M11 7h4M15 12h4M19 17h4";
   return `<svg viewBox="0 0 32 30"><path d="M6 22h17l-3-5H10zM12 17l2-5h4l2 5" fill="none" stroke="currentColor" stroke-width="2"/><path d="${spread}" stroke="#80efff" stroke-width="2"/></svg>`;
 }
 

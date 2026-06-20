@@ -1,12 +1,15 @@
 import { DEFAULT_CONFIG, FORMATIONS } from "./constants";
 import { formationSlots } from "./formations";
 import { clamp, distance, normalize, randomBetween } from "./math";
-import type {
+import {
   Config,
   GameState,
   Ship,
   ShipRole,
   Side,
+  BodyKind,
+  Formation,
+  FireMode,
   Vec,
   Viewport,
 } from "./types";
@@ -14,14 +17,14 @@ import type {
 export function createGameState(): GameState {
   return {
     config: { ...DEFAULT_CONFIG },
-    formation: "arrow",
-    fireMode: "atwill",
+    formation: Formation.Arrow,
+    fireMode: FireMode.AtWill,
     command: null,
     pointer: null,
     bodies: [],
     ships: [],
     flashes: [],
-    captainFavorite: "line",
+    captainFavorite: Formation.Line,
     winner: null,
   };
 }
@@ -50,18 +53,18 @@ export function resetGame(
 
   state.bodies.push(
     {
-      kind: "planet",
+      kind: BodyKind.Planet,
       pos: playerBase,
       radius: 37,
-      base: "player",
+      base: Side.Player,
       stock: 0,
       hue: 195,
     },
     {
-      kind: "planet",
+      kind: BodyKind.Planet,
       pos: enemyBase,
       radius: 37,
-      base: "enemy",
+      base: Side.Enemy,
       stock: 0,
       hue: 350,
     },
@@ -69,7 +72,7 @@ export function resetGame(
 
   for (let index = 2; index < config.planets; index++) {
     state.bodies.push({
-      kind: "planet",
+      kind: BodyKind.Planet,
       pos: {
         x: randomBetween(120, viewport.width - 120),
         y: randomBetween(100, viewport.height - 100),
@@ -82,7 +85,7 @@ export function resetGame(
 
   for (let index = 0; index < config.asteroids; index++) {
     state.bodies.push({
-      kind: "asteroids",
+      kind: BodyKind.Asteroids,
       pos: {
         x: randomBetween(100, viewport.width - 100),
         y: randomBetween(80, viewport.height - 80),
@@ -95,16 +98,18 @@ export function resetGame(
   state.captainFavorite =
     FORMATIONS[Math.floor(Math.random() * FORMATIONS.length)];
   let id = 0;
-  for (const side of ["player", "enemy"] as const) {
-    const base = side === "player" ? playerBase : enemyBase;
+  for (const side of [Side.Player, Side.Enemy] as const) {
+    const base = side === Side.Player ? playerBase : enemyBase;
     for (let index = 0; index < config.ships; index++) {
       state.ships.push(
-        spawnShip(side, "battleship", offsetPosition(base, 75), id++),
+        spawnShip(side, ShipRole.Battleship, offsetPosition(base, 75), id++),
       );
     }
-    state.ships.push(spawnShip(side, "supply", offsetPosition(base, 35), id++));
     state.ships.push(
-      spawnShip(side, "captain", offsetPosition(base, 30), id++),
+      spawnShip(side, ShipRole.Supply, offsetPosition(base, 35), id++),
+    );
+    state.ships.push(
+      spawnShip(side, ShipRole.Captain, offsetPosition(base, 30), id++),
     );
   }
 }
@@ -142,8 +147,8 @@ function spawnShip(
   position: Vec,
   id: number,
 ): Ship {
-  const battleship = role === "battleship";
-  const captain = role === "captain";
+  const battleship = role === ShipRole.Battleship;
+  const captain = role === ShipRole.Captain;
   const hp = battleship ? 100 : captain ? 150 : 80;
 
   return {
@@ -174,21 +179,23 @@ function offsetPosition(base: Vec, range: number): Vec {
 
 function replenishPlanets(state: GameState, deltaTime: number): void {
   for (const body of state.bodies) {
-    if (body.kind === "planet")
+    if (body.kind === BodyKind.Planet)
       body.stock = (body.stock ?? 0) + deltaTime * 1.1;
   }
 }
 
 function assignFormationTargets(state: GameState, cohesion: number): void {
-  const playerBase = state.bodies.find((body) => body.base === "player");
+  const playerBase = state.bodies.find((body) => body.base === Side.Player);
   if (!playerBase) return;
 
-  for (const side of ["player", "enemy"] as const) {
+  for (const side of [Side.Player, Side.Enemy] as const) {
     const fleet = state.ships.filter((ship) => ship.side === side);
     const center =
-      side === "player" ? (state.command ?? playerBase.pos) : playerBase.pos;
-    const formation = side === "player" ? state.formation : "arrow";
-    const battleships = fleet.filter((ship) => ship.role === "battleship");
+      side === Side.Player ? (state.command ?? playerBase.pos) : playerBase.pos;
+    const formation = side === Side.Player ? state.formation : Formation.Arrow;
+    const battleships = fleet.filter(
+      (ship) => ship.role === ShipRole.Battleship,
+    );
     const spacing = clamp(80 - cohesion * 50, 25, 70);
     const targets = formationSlots(
       center,
@@ -201,7 +208,7 @@ function assignFormationTargets(state: GameState, cohesion: number): void {
       ship.target = targets[index];
     });
     fleet
-      .filter((ship) => ship.role !== "battleship")
+      .filter((ship) => ship.role !== ShipRole.Battleship)
       .forEach((ship, index) => {
         ship.target = { x: center.x + (index ? 20 : -20), y: center.y + 60 };
       });
@@ -209,12 +216,12 @@ function assignFormationTargets(state: GameState, cohesion: number): void {
 }
 
 function resupplyShip(state: GameState, ship: Ship, deltaTime: number): void {
-  if (ship.role !== "supply") return;
+  if (ship.role !== ShipRole.Supply) return;
 
   for (const ally of state.ships) {
     if (
       ally.side !== ship.side ||
-      ally.role !== "battleship" ||
+      ally.role !== ShipRole.Battleship ||
       distance(ally.pos, ship.pos) >= 70 ||
       ally.supplies >= 10
     )
@@ -232,7 +239,7 @@ function collectPlanetSupplies(
 ): void {
   for (const planet of state.bodies) {
     if (
-      planet.kind !== "planet" ||
+      planet.kind !== BodyKind.Planet ||
       distance(ship.pos, planet.pos) >= planet.radius + 45
     )
       continue;
@@ -315,15 +322,19 @@ function fireWeapons(state: GameState, ship: Ship): void {
       distance(candidate.pos, ship.pos) < ship.range,
   );
   const canFire =
-    ship.role === "battleship" &&
+    ship.role === ShipRole.Battleship &&
     ship.supplies >= 1 &&
     ship.cooldown <= 0 &&
     targets.length > 0 &&
-    (ship.side === "enemy" || state.fireMode !== "hold");
+    (ship.side === Side.Enemy || state.fireMode !== FireMode.Hold);
   if (!canFire) return;
 
   let target = targets[0];
-  if (ship.side === "player" && state.fireMode === "focus" && state.pointer) {
+  if (
+    ship.side === Side.Player &&
+    state.fireMode === FireMode.Focus &&
+    state.pointer
+  ) {
     target = targets.reduce((closest, candidate) =>
       distance(candidate.pos, state.pointer!) <
       distance(closest.pos, state.pointer!)
@@ -333,7 +344,7 @@ function fireWeapons(state: GameState, ship: Ship): void {
   }
 
   const bonus =
-    ship.side === "player" && state.formation === state.captainFavorite
+    ship.side === Side.Player && state.formation === state.captainFavorite
       ? 1.25
       : 1;
   target.hp -= Math.max(1, ship.attack * bonus - target.defense);
@@ -349,15 +360,15 @@ function fireWeapons(state: GameState, ship: Ship): void {
 }
 
 function attackBases(state: GameState, deltaTime: number): void {
-  const playerBase = state.bodies.find((body) => body.base === "player");
-  const enemyBase = state.bodies.find((body) => body.base === "enemy");
+  const playerBase = state.bodies.find((body) => body.base === Side.Player);
+  const enemyBase = state.bodies.find((body) => body.base === Side.Enemy);
   if (!playerBase || !enemyBase) return;
 
   for (const base of [playerBase, enemyBase]) {
     const attackers = state.ships.filter(
       (ship) =>
         ship.side !== base.base &&
-        ship.role === "battleship" &&
+        ship.role === ShipRole.Battleship &&
         ship.supplies > 0 &&
         distance(ship.pos, base.pos) < ship.range,
     );
@@ -367,6 +378,6 @@ function attackBases(state: GameState, deltaTime: number): void {
   }
 
   if (playerBase.radius < 12 || enemyBase.radius < 12) {
-    state.winner = playerBase.radius < 12 ? "enemy" : "player";
+    state.winner = playerBase.radius < 12 ? Side.Enemy : Side.Player;
   }
 }
