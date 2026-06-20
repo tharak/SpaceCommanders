@@ -42,7 +42,7 @@ function drawBackground(
   viewport: Viewport,
   bodies: Body[],
 ): void {
-  context.fillStyle = "#030711";
+  context.fillStyle = "#020a06";
   context.fillRect(0, 0, viewport.width, viewport.height);
 
   const gradient = context.createRadialGradient(
@@ -53,8 +53,8 @@ function drawBackground(
     viewport.height * 0.48,
     Math.max(viewport.width, viewport.height) * 0.7,
   );
-  gradient.addColorStop(0, "#0a2435");
-  gradient.addColorStop(1, "#030711");
+  gradient.addColorStop(0, "#0b2a1b");
+  gradient.addColorStop(1, "#020a06");
   context.fillStyle = gradient;
   context.fillRect(0, 0, viewport.width, viewport.height);
 
