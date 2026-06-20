@@ -70,6 +70,7 @@ export function resetGame(
       base: Side.Player,
       stock: 0,
       hue: 195,
+      weight: 2.5,
     },
     {
       kind: BodyKind.Planet,
@@ -78,6 +79,7 @@ export function resetGame(
       base: Side.Enemy,
       stock: 0,
       hue: 350,
+      weight: 2.5,
     },
   );
 
@@ -91,6 +93,7 @@ export function resetGame(
       radius: randomBetween(20, 34),
       stock: 0,
       hue: randomBetween(25, 290),
+      weight: randomBetween(0.8, 2),
     });
   }
 
@@ -103,6 +106,7 @@ export function resetGame(
       },
       radius: randomBetween(32, 58),
       hue: 0,
+      weight: randomBetween(0.35, 0.9),
     });
   }
 

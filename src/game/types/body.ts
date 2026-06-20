@@ -9,4 +9,5 @@ export type Body = {
   base?: Side;
   stock?: number;
   hue: number;
+  weight: number;
 };

@@ -2,7 +2,7 @@ import { COLORS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp } from "../game/math";
 import { BodyKind, Side } from "../game/types";
-import type { GameState, Viewport } from "../game/types";
+import type { Body, GameState, Vec, Viewport } from "../game/types";
 
 type RenderContext = {
   canvas: HTMLCanvasElement;
@@ -28,7 +28,7 @@ export function renderGame(
   renderContext: RenderContext,
 ): void {
   const { context, viewport } = renderContext;
-  drawBackground(context, viewport);
+  drawBackground(context, viewport, state.bodies);
   drawBodies(context, state);
   drawFormationPreview(context, state);
   drawFlashes(context, state);
@@ -40,16 +40,10 @@ export function renderGame(
 function drawBackground(
   context: CanvasRenderingContext2D,
   viewport: Viewport,
+  bodies: Body[],
 ): void {
-  context.fillStyle = "#050a13";
+  context.fillStyle = "#030711";
   context.fillRect(0, 0, viewport.width, viewport.height);
-
-  for (let index = 0; index < 160; index++) {
-    const x = (index * 211.3) % viewport.width;
-    const y = (index * 97.1) % viewport.height;
-    context.fillStyle = `rgba(180,220,255,${0.12 + (index % 5) * 0.06})`;
-    context.fillRect(x, y, 1, 1);
-  }
 
   const gradient = context.createRadialGradient(
     viewport.width * 0.53,
@@ -59,10 +53,99 @@ function drawBackground(
     viewport.height * 0.48,
     Math.max(viewport.width, viewport.height) * 0.7,
   );
-  gradient.addColorStop(0, "#0b2637");
-  gradient.addColorStop(1, "#050a13");
+  gradient.addColorStop(0, "#0a2435");
+  gradient.addColorStop(1, "#030711");
   context.fillStyle = gradient;
   context.fillRect(0, 0, viewport.width, viewport.height);
+
+  drawGeodesicGrid(context, viewport, bodies);
+}
+
+function drawGeodesicGrid(
+  context: CanvasRenderingContext2D,
+  viewport: Viewport,
+  bodies: Body[],
+): void {
+  const gridSpacing = 72;
+  const sampleSpacing = 12;
+  context.strokeStyle = "#4bbde033";
+  context.lineWidth = 1;
+
+  for (
+    let x = -gridSpacing;
+    x <= viewport.width + gridSpacing;
+    x += gridSpacing
+  ) {
+    drawWarpedLine(
+      context,
+      { x, y: -gridSpacing },
+      { x, y: viewport.height + gridSpacing },
+      sampleSpacing,
+      bodies,
+    );
+  }
+
+  for (
+    let y = -gridSpacing;
+    y <= viewport.height + gridSpacing;
+    y += gridSpacing
+  ) {
+    drawWarpedLine(
+      context,
+      { x: -gridSpacing, y },
+      { x: viewport.width + gridSpacing, y },
+      sampleSpacing,
+      bodies,
+    );
+  }
+}
+
+function drawWarpedLine(
+  context: CanvasRenderingContext2D,
+  start: Vec,
+  end: Vec,
+  sampleSpacing: number,
+  bodies: Body[],
+): void {
+  const length = Math.hypot(end.x - start.x, end.y - start.y);
+  const steps = Math.ceil(length / sampleSpacing);
+  context.beginPath();
+
+  for (let index = 0; index <= steps; index++) {
+    const progress = index / steps;
+    const point = warpPoint(
+      {
+        x: start.x + (end.x - start.x) * progress,
+        y: start.y + (end.y - start.y) * progress,
+      },
+      bodies,
+    );
+    if (index === 0) context.moveTo(point.x, point.y);
+    else context.lineTo(point.x, point.y);
+  }
+
+  context.stroke();
+}
+
+function warpPoint(point: Vec, bodies: Body[]): Vec {
+  const warped = { ...point };
+
+  for (const body of bodies) {
+    const offsetX = body.pos.x - point.x;
+    const offsetY = body.pos.y - point.y;
+    const distanceSquared = offsetX * offsetX + offsetY * offsetY;
+    const softening = body.radius * body.radius;
+    const distance = Math.sqrt(distanceSquared) || 1;
+    const pull = Math.min(
+      body.radius * 1.25,
+      (body.weight * body.radius * 120) / (distanceSquared + softening),
+    );
+
+    warped.x += (offsetX / distance) * pull;
+    warped.y += (offsetY / distance) * pull;
+  }
+
+  return warped;
 }
 
 function drawBodies(context: CanvasRenderingContext2D, state: GameState): void {
