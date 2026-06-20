@@ -173,7 +173,7 @@ window.addEventListener("resize", () => {
 function animationLoop(now: number): void {
   const deltaTime = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
-  if (matchActive) {
+  if (matchActive && state.command) {
     updateGame(state, viewport, deltaTime);
     if (state.winner) showGameOver(state.winner);
   }
