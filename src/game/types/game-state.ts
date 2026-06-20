@@ -1,0 +1,21 @@
+import type { Body } from "./body";
+import type { Config } from "./config";
+import type { FireMode } from "./fire-mode";
+import type { Flash } from "./flash";
+import type { Formation } from "./formation";
+import type { Ship } from "./ship";
+import type { Side } from "./side";
+import type { Vec } from "./vector";
+
+export type GameState = {
+  config: Config;
+  formation: Formation;
+  fireMode: FireMode;
+  command: Vec | null;
+  pointer: Vec | null;
+  bodies: Body[];
+  ships: Ship[];
+  flashes: Flash[];
+  captainFavorite: Formation;
+  winner: Side | null;
+};
