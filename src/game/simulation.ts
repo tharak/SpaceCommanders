@@ -565,7 +565,7 @@ function attackBases(state: GameState, deltaTime: number): void {
     );
     if (attackers.length === 0 || Math.random() >= deltaTime * 3) continue;
 
-    base.radius -= attackers.length * 0.016;
+    base.radius -= attackers.length * 1;
     attackers.forEach((ship) => {
       const angle = Math.random() * Math.PI * 2;
       const impactDistance = base.radius * randomBetween(0.2, 0.85);
