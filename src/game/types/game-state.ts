@@ -1,7 +1,7 @@
 import type { Body } from "./body";
 import type { Config } from "./config";
 import type { FireMode } from "./fire-mode";
-import type { Flash } from "./flash";
+import type { Projectile } from "./projectile";
 import type { Formation } from "./formation";
 import type { Ship } from "./ship";
 import type { Side } from "./side";
@@ -20,7 +20,7 @@ export type GameState = {
   pointer: Vec | null;
   bodies: Body[];
   ships: Ship[];
-  flashes: Flash[];
+  projectiles: Projectile[];
   captainFavorite: Formation;
   winner: Side | null;
 };

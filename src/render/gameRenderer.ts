@@ -31,7 +31,7 @@ export function renderGame(
   drawBackground(context, viewport, state.bodies);
   drawBodies(context, state);
   drawFormationPreview(context, state);
-  drawFlashes(context, state);
+  drawProjectiles(context, state);
   drawShips(context, state);
   updateStatus(renderContext.status, state);
   drawWinner(context, state, viewport);
@@ -228,18 +228,16 @@ function drawFormationPreview(
   }
 }
 
-function drawFlashes(
+function drawProjectiles(
   context: CanvasRenderingContext2D,
   state: GameState,
 ): void {
-  for (const flash of state.flashes) {
-    context.strokeStyle = flash.side === Side.Player ? "#8df6ff" : "#ff86a3";
-    context.globalAlpha = flash.life / 0.12;
-    context.lineWidth = 2;
+  for (const projectile of state.projectiles) {
+    context.fillStyle = COLORS[projectile.side];
+    context.globalAlpha = projectile.life / projectile.maxLife;
     context.beginPath();
-    context.moveTo(flash.from.x, flash.from.y);
-    context.lineTo(flash.to.x, flash.to.y);
-    context.stroke();
+    context.arc(projectile.pos.x, projectile.pos.y, 3, 0, Math.PI * 2);
+    context.fill();
     context.globalAlpha = 1;
   }
 }

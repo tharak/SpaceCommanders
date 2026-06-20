@@ -6,7 +6,7 @@ export { Side } from "./side";
 export { SupplyMission } from "./supply-mission";
 export type { Body } from "./body";
 export type { Config } from "./config";
-export type { Flash } from "./flash";
+export type { Projectile } from "./projectile";
 export type { GameState } from "./game-state";
 export type { Ship } from "./ship";
 export type { Vec } from "./vector";

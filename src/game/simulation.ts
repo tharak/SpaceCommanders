@@ -16,6 +16,7 @@ import {
   BodyKind,
   Formation,
   FireMode,
+  Projectile,
   SupplyMission,
   Vec,
   Viewport,
@@ -35,7 +36,7 @@ export function createGameState(): GameState {
     pointer: null,
     bodies: [],
     ships: [],
-    flashes: [],
+    projectiles: [],
     captainFavorite: Formation.Line,
     winner: null,
   };
@@ -52,7 +53,7 @@ export function resetGame(
   state.previewCenter = null;
   state.previewRotation = 0;
   state.formationRotation = 0;
-  state.flashes = [];
+  state.projectiles = [];
   state.ships = [];
   state.bodies = [];
 
@@ -160,10 +161,39 @@ export function updateGame(
   }
 
   state.ships = state.ships.filter((ship) => ship.hp > 0);
-  state.flashes = state.flashes.filter(
-    (flash) => (flash.life -= deltaTime) > 0,
-  );
+  updateProjectiles(state, deltaTime);
   attackBases(state, deltaTime);
+}
+
+const PROJECTILE_SPEED = 360;
+
+function spawnProjectile(
+  state: GameState,
+  from: Vec,
+  to: Vec,
+  side: Side,
+): void {
+  const direction = normalize({ x: to.x - from.x, y: to.y - from.y });
+  const maxLife = clamp(distance(from, to) / PROJECTILE_SPEED, 0.08, 0.6);
+  state.projectiles.push({
+    pos: { ...from },
+    vel: {
+      x: direction.x * PROJECTILE_SPEED,
+      y: direction.y * PROJECTILE_SPEED,
+    },
+    life: maxLife,
+    maxLife,
+    side,
+  });
+}
+
+function updateProjectiles(state: GameState, deltaTime: number): void {
+  state.projectiles = state.projectiles.filter((projectile) => {
+    projectile.pos.x += projectile.vel.x * deltaTime;
+    projectile.pos.y += projectile.vel.y * deltaTime;
+    projectile.life -= deltaTime;
+    return projectile.life > 0;
+  });
 }
 
 function spawnShip(
@@ -470,12 +500,7 @@ function fireWeapons(state: GameState, ship: Ship): void {
   target.moral = clamp(target.moral - 5, 0, 100);
   ship.supplies--;
   ship.cooldown = 0.75;
-  state.flashes.push({
-    from: { ...ship.pos },
-    to: { ...target.pos },
-    life: 0.12,
-    side: ship.side,
-  });
+  spawnProjectile(state, ship.pos, target.pos, ship.side);
 }
 
 function attackBases(state: GameState, deltaTime: number): void {
@@ -497,15 +522,15 @@ function attackBases(state: GameState, deltaTime: number): void {
     attackers.forEach((ship) => {
       const angle = Math.random() * Math.PI * 2;
       const impactDistance = base.radius * randomBetween(0.2, 0.85);
-      state.flashes.push({
-        from: { ...ship.pos },
-        to: {
+      spawnProjectile(
+        state,
+        ship.pos,
+        {
           x: base.pos.x + Math.cos(angle) * impactDistance,
           y: base.pos.y + Math.sin(angle) * impactDistance,
         },
-        life: 0.2,
-        side: ship.side,
-      });
+        ship.side,
+      );
       ship.supplies -= 0.02;
     });
   }
