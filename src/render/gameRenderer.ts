@@ -244,10 +244,13 @@ function drawProjectiles(
 
 function drawShips(context: CanvasRenderingContext2D, state: GameState): void {
   for (const ship of state.ships) {
+    const fillHeight = ship.role === ShipRole.Supply ? 10 : 18;
+    const bottom = ship.role === ShipRole.Supply ? 5 : 8;
+    const health = Math.max(0, Math.min(1, ship.hp / ship.maxHp));
+
     context.save();
     context.translate(ship.pos.x, ship.pos.y);
     context.rotate(Math.atan2(ship.vel.y, ship.vel.x) + Math.PI / 2);
-    context.fillStyle = COLORS[ship.side];
     context.beginPath();
     if (ship.role === ShipRole.Supply) {
       context.rect(-5, -5, 10, 10);
@@ -258,16 +261,23 @@ function drawShips(context: CanvasRenderingContext2D, state: GameState): void {
       context.lineTo(-7, 8);
       context.closePath();
     }
-    context.fill();
-    context.restore();
 
+    context.save();
+    context.clip();
     context.fillStyle = COLORS[ship.side];
     context.fillRect(
-      ship.pos.x - 11,
-      ship.pos.y - 17,
-      22 * (ship.hp / ship.maxHp),
-      3,
+      -10,
+      bottom - fillHeight * health,
+      20,
+      fillHeight * health,
     );
+    context.restore();
+
+    context.strokeStyle = COLORS[ship.side];
+    context.lineWidth = 1.5;
+    context.stroke();
+    context.restore();
+
     drawSupplyMarkers(context, ship);
   }
 }
