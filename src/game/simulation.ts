@@ -251,8 +251,8 @@ function spawnShip(
 function replenishPlanets(state: GameState, deltaTime: number): void {
   for (const body of state.bodies) {
     if (body.kind !== BodyKind.Planet) continue;
-    const capacity = Math.floor(body.radius);
-    body.stock = Math.min(capacity, (body.stock ?? 0) + deltaTime * 1.1);
+    const capacity = Math.floor(body.radius / 2);
+    body.stock = Math.min(capacity, (body.stock ?? 0) + deltaTime * 0.55);
   }
 }
 
