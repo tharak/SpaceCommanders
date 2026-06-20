@@ -34,7 +34,6 @@ export function renderGame(
   drawProjectiles(context, state);
   drawShips(context, state);
   updateStatus(renderContext.status, state);
-  drawWinner(context, state, viewport);
 }
 
 function drawBackground(
@@ -335,32 +334,4 @@ function updateStatus(status: HTMLElement, state: GameState): void {
     (ship) => ship.side === Side.Enemy,
   ).length;
   status.innerHTML = `<span style="color:#5de5ff">◈ ${playerShips} FLEET</span><br><span style="color:#ff7898">◇ ${enemyShips} HOSTILES</span>`;
-}
-
-function drawWinner(
-  context: CanvasRenderingContext2D,
-  state: GameState,
-  viewport: Viewport,
-): void {
-  if (!state.winner) return;
-
-  context.fillStyle = "#03101ad9";
-  context.fillRect(0, 0, viewport.width, viewport.height);
-  context.fillStyle = state.winner === Side.Player ? "#6eeeff" : "#ff7797";
-  context.textAlign = "center";
-  context.font = "700 42px Barlow Condensed";
-  context.fillText(
-    state.winner === Side.Player
-      ? "ENEMY BASE DESTROYED"
-      : "COMMAND FLEET LOST",
-    viewport.width / 2,
-    viewport.height / 2,
-  );
-  context.font = "600 16px Rajdhani";
-  context.fillText(
-    "Use the debug reset control to run another simulation",
-    viewport.width / 2,
-    viewport.height / 2 + 32,
-  );
-  context.textAlign = "left";
 }

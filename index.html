@@ -22,7 +22,7 @@
           <button
             id="debug-toggle"
             class="icon-button debug"
-            aria-label="Open debug settings"
+            aria-label="Open simulation tuning"
           >
             ⌘
           </button>
@@ -40,11 +40,11 @@
         <div id="order-readout">
           SELECT A FORMATION, THEN TAP THE MAP TO ISSUE AN ORDER
         </div>
-        <aside id="debug-panel" aria-label="Debug controls">
-          <div class="panel-title">
-            SIMULATION TUNING
-            <button id="reset-game" aria-label="Reset simulation">↻</button>
-          </div>
+        <aside id="debug-panel" aria-label="Simulation tuning">
+          <div id="setup-title" class="panel-title">SIMULATION TUNING</div>
+          <p id="setup-message">
+            Configure the simulation, then begin the match.
+          </p>
           <label
             >BATTLESHIPS
             <input
@@ -79,10 +79,10 @@
               step="0.25"
               value="1" /><output></output
           ></label>
-          <p>
-            Changes apply on reset. Celestial bodies currently act as collision
-            obstacles.
-          </p>
+          <p>Changes apply when a new match starts.</p>
+          <button id="reset-game" class="start-button" type="button">
+            START MATCH
+          </button>
         </aside>
       </div>
     </main>

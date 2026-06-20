@@ -1,29 +1,61 @@
 import "./style.css";
 import { createGameState, resetGame, updateGame } from "./game/simulation";
-import { FireMode } from "./game/types";
+import { FireMode, Side } from "./game/types";
 import type { Vec, Viewport } from "./game/types";
 import { renderGame, resizeCanvas } from "./render/gameRenderer";
 import {
   getControls,
   readConfig,
   setupControls,
+  setSelectedFormation,
   showReadout,
 } from "./ui/controls";
 
 const canvas = requiredCanvas("#game");
 const context = requiredContext(canvas);
 const status = requiredElement("#status");
+const setupTitle = requiredElement("#setup-title");
+const setupMessage = requiredElement("#setup-message");
+const startButton = requiredElement("#reset-game");
 const controls = getControls();
 const state = createGameState();
 let viewport: Viewport;
 let lastFrame = performance.now();
 let dragStartCohesion = state.cohesion;
+let matchActive = false;
 
 function reset(): void {
   resetGame(state, readConfig(), viewport);
+  setSelectedFormation(controls, state.selectedFormation);
   showReadout(
     controls,
     `CAPTAIN FAVORS ${state.captainFavorite.toUpperCase()} — SELECT A FORMATION, THEN TAP THE MAP`,
+  );
+}
+
+function startMatch(): void {
+  reset();
+  matchActive = true;
+  document.body.classList.remove("setup-open", "debug-open");
+}
+
+function showSetup(title: string, message: string, buttonLabel: string): void {
+  matchActive = false;
+  setupTitle.textContent = title;
+  setupMessage.textContent = message;
+  startButton.textContent = buttonLabel;
+  document.body.classList.remove("debug-open");
+  document.body.classList.add("setup-open");
+}
+
+function showGameOver(winner: Side): void {
+  const playerWon = winner === Side.Player;
+  showSetup(
+    playerWon ? "VICTORY" : "COMMAND FLEET LOST",
+    playerWon
+      ? "Enemy base destroyed. Tune the simulation and begin another match."
+      : "Your home planet was destroyed. Tune the simulation and try again.",
+    "START NEW MATCH",
   );
 }
 
@@ -47,7 +79,7 @@ setupControls(
             : "WEAPONS FREE — ENGAGING HOSTILES IN RANGE";
       showReadout(controls, message);
     },
-    onReset: reset,
+    onReset: startMatch,
   },
   state.selectedFormation,
   state.fireMode,
@@ -63,6 +95,8 @@ function mapPoint(event: PointerEvent): Vec {
 }
 
 canvas.addEventListener("pointermove", (event) => {
+  if (!matchActive) return;
+
   const point = mapPoint(event);
   state.pointer = point;
   if (!state.previewCenter) return;
@@ -83,6 +117,8 @@ canvas.addEventListener("pointerleave", () => {
 });
 
 canvas.addEventListener("pointerdown", (event) => {
+  if (!matchActive) return;
+
   const point = mapPoint(event);
   canvas.setPointerCapture(event.pointerId);
   state.pointer = point;
@@ -96,7 +132,7 @@ canvas.addEventListener("pointerdown", (event) => {
 });
 
 canvas.addEventListener("pointerup", (event) => {
-  if (!state.previewCenter) return;
+  if (!matchActive || !state.previewCenter) return;
 
   state.pointer = mapPoint(event);
   state.command = { ...state.previewCenter };
@@ -123,12 +159,22 @@ canvas.addEventListener("pointercancel", (event) => {
 window.addEventListener("resize", () => {
   updateViewport();
   reset();
+  if (!matchActive) {
+    showSetup(
+      "SIMULATION TUNING",
+      "Configure the simulation, then begin the match.",
+      "START MATCH",
+    );
+  }
 });
 
 function animationLoop(now: number): void {
   const deltaTime = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
-  updateGame(state, viewport, deltaTime);
+  if (matchActive) {
+    updateGame(state, viewport, deltaTime);
+    if (state.winner) showGameOver(state.winner);
+  }
   renderGame(state, { canvas, context, status, viewport });
   requestAnimationFrame(animationLoop);
 }
@@ -157,4 +203,9 @@ function requiredElement(selector: string): HTMLElement {
 
 updateViewport();
 reset();
+showSetup(
+  "SIMULATION TUNING",
+  "Configure the simulation, then begin the match.",
+  "START MATCH",
+);
 requestAnimationFrame(animationLoop);

@@ -52,6 +52,13 @@ export function showReadout(controls: Controls, message: string): void {
   controls.readout.textContent = message;
 }
 
+export function setSelectedFormation(
+  controls: Controls,
+  formation: Formation,
+): void {
+  selectActive(controls.formationControls, formation);
+}
+
 function createFormationButtons(
   controls: Controls,
   onChange: (formation: Formation) => void,
