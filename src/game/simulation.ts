@@ -489,9 +489,23 @@ function attackBases(state: GameState, deltaTime: number): void {
         ship.supplies > 0 &&
         distance(ship.pos, base.pos) < ship.range,
     );
-    if (attackers.length === 0 || Math.random() >= deltaTime * 0.3) continue;
-    base.radius -= attackers.length * 0.16;
-    attackers.forEach((ship) => (ship.supplies -= 0.2));
+    if (attackers.length === 0 || Math.random() >= deltaTime * 3) continue;
+
+    base.radius -= attackers.length * 0.016;
+    attackers.forEach((ship) => {
+      const angle = Math.random() * Math.PI * 2;
+      const impactDistance = base.radius * randomBetween(0.2, 0.85);
+      state.flashes.push({
+        from: { ...ship.pos },
+        to: {
+          x: base.pos.x + Math.cos(angle) * impactDistance,
+          y: base.pos.y + Math.sin(angle) * impactDistance,
+        },
+        life: 0.2,
+        side: ship.side,
+      });
+      ship.supplies -= 0.02;
+    });
   }
 
   if (playerBase.radius < 12 || enemyBase.radius < 12) {
