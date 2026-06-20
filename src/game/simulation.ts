@@ -1,5 +1,6 @@
 import {
   DEFAULT_CONFIG,
+  ENEMY_DEPLOYMENT_DELAY,
   FORMATION_ARRIVAL_DISTANCE,
   FORMATIONS,
   SUPPLY_TRANSFER_DISTANCE,
@@ -33,6 +34,7 @@ export function createGameState(): GameState {
     previewRotation: 0,
     formationRotation: 0,
     cohesion: 0.7,
+    elapsed: 0,
     pointer: null,
     bodies: [],
     ships: [],
@@ -49,6 +51,7 @@ export function resetGame(
 ): void {
   state.config = config;
   state.winner = null;
+  state.elapsed = 0;
   state.formation = Formation.Circle;
   state.selectedFormation = Formation.Circle;
   state.command = null;
@@ -152,6 +155,7 @@ export function updateGame(
   if (state.winner) return;
 
   const deltaTime = elapsed * state.config.speed;
+  state.elapsed += deltaTime;
   replenishPlanets(state, deltaTime);
   spawnResupplyShips(state);
   assignFormationTargets(state);
@@ -349,14 +353,29 @@ function findLeastSuppliedBattleship(
 }
 
 function assignFormationTargets(state: GameState): void {
+  const playerBase = state.bodies.find((body) => body.base === Side.Player);
+
   for (const side of [Side.Player, Side.Enemy] as const) {
     const homeBase = state.bodies.find((body) => body.base === side);
     if (!homeBase) continue;
 
     const fleet = state.ships.filter((ship) => ship.side === side);
+    const enemyAdvancing =
+      side === Side.Enemy &&
+      state.elapsed >= ENEMY_DEPLOYMENT_DELAY &&
+      playerBase;
     const center =
-      side === Side.Player ? (state.command ?? homeBase.pos) : homeBase.pos;
-    const formation = side === Side.Player ? state.formation : Formation.Circle;
+      side === Side.Player
+        ? (state.command ?? homeBase.pos)
+        : enemyAdvancing
+          ? playerBase.pos
+          : homeBase.pos;
+    const formation =
+      side === Side.Player
+        ? state.formation
+        : enemyAdvancing
+          ? Formation.Arrow
+          : Formation.Circle;
     const battleships = fleet.filter(
       (ship) => ship.role === ShipRole.Battleship,
     );
