@@ -410,7 +410,7 @@ function collectPlanetSupplies(
       distance(ship.pos, planet.pos) >= planet.radius + 45
     )
       continue;
-    if (planet.base && planet.base !== ship.side) continue;
+    if (planet.base !== ship.side) continue;
 
     const amount = Math.min(
       deltaTime * 2,
