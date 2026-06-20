@@ -187,6 +187,7 @@ function drawBodies(context: CanvasRenderingContext2D, state: GameState): void {
       context.beginPath();
       context.arc(0, 0, body.radius, 0, Math.PI * 2);
       context.fill();
+      drawPlanetSupplies(context, body);
 
       if (body.base) {
         context.strokeStyle = COLORS[body.base];
@@ -210,6 +211,37 @@ function drawBodies(context: CanvasRenderingContext2D, state: GameState): void {
       }
     }
     context.restore();
+  }
+}
+
+function drawPlanetSupplies(
+  context: CanvasRenderingContext2D,
+  body: Body,
+): void {
+  const supplyCount = Math.floor(body.stock ?? 0);
+  if (supplyCount <= 0) return;
+
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  const markerRadius = Math.max(
+    0.75,
+    Math.min(2, body.radius / (Math.sqrt(supplyCount) * 3)),
+  );
+  const usableRadius = body.radius - markerRadius * 3;
+  context.strokeStyle = body.base ? COLORS[body.base] : "#e4ff91";
+  context.lineWidth = Math.max(0.75, markerRadius * 0.65);
+
+  for (let index = 0; index < supplyCount; index++) {
+    const angle = index * goldenAngle;
+    const radius = usableRadius * Math.sqrt((index + 0.5) / supplyCount);
+    context.beginPath();
+    context.arc(
+      Math.cos(angle) * radius,
+      Math.sin(angle) * radius,
+      markerRadius,
+      0,
+      Math.PI * 2,
+    );
+    context.stroke();
   }
 }
 
