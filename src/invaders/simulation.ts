@@ -134,7 +134,7 @@ export function updateInvaders(
   );
   state.ships.forEach((ship, index) => {
     moveFleetShip(
-      state.ships,
+      [...state.ships, ...state.enemies],
       ship,
       slots[index],
       viewport,
