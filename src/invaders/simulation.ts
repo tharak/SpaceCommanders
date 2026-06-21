@@ -13,7 +13,7 @@ const FLEET_SPACING = 48;
 const PROJECTILE_SPEED = 330;
 const ENEMY_FLEET_Y = 105;
 const BASE_BOTTOM_OFFSET = 130;
-const PLAYER_FLEET_BOTTOM_OFFSET = 220;
+const PLAYER_FLEET_BOTTOM_OFFSET = 290;
 const BASE_MAX_HP = 1000;
 
 export function createInvadersState(): InvadersState {
