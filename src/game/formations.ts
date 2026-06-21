@@ -70,7 +70,7 @@ export function formationSlotHeadings(
         break;
       case Formation.Pincer: {
         const leftWing = index < count / 2;
-        heading = { x: leftWing ? 0.55 : -0.55, y: -0.85 };
+        heading = { x: leftWing ? -0.55 : 0.55, y: -0.85 };
         break;
       }
       case Formation.Circle: {
