@@ -339,6 +339,9 @@ input[type="range"] {
     700 10px/1 Barlow Condensed,
     sans-serif;
   letter-spacing: 0.5px;
+  display: grid;
+  place-items: center;
+  line-height: 0.9;
   cursor: pointer;
 }
 .upgrade-row button:hover {
