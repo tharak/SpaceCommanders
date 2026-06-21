@@ -13,6 +13,7 @@ const PROJECTILE_SPEED = 330;
 const ENEMY_FLEET_Y = 105;
 const BASE_BOTTOM_OFFSET = 130;
 const PLAYER_FLEET_BOTTOM_OFFSET = 220;
+const BASE_MAX_HP = 1000;
 
 export function createInvadersState(): InvadersState {
   return {
@@ -34,7 +35,8 @@ export function createInvadersState(): InvadersState {
       hue: 195,
       weight: 2.5,
     },
-    baseHp: 100,
+    baseHp: BASE_MAX_HP,
+    baseMaxHp: BASE_MAX_HP,
     wave: 1,
     waveOffset: 0,
     waveDirection: 1,
@@ -64,7 +66,8 @@ export function resetInvaders(
     hue: 195,
     weight: 2.5,
   };
-  state.baseHp = 100;
+  state.baseHp = BASE_MAX_HP;
+  state.baseMaxHp = BASE_MAX_HP;
   state.projectiles = [];
   state.wave = 0;
   state.waveOffset = 0;
@@ -130,8 +133,8 @@ export function updateInvaders(
 
 function resolveGuardBaseContacts(state: InvadersState): void {
   for (const guard of state.enemies) {
-    if (distance(guard.pos, state.base.pos) > state.base.radius + 8) continue;
-    state.baseHp = clamp(state.baseHp - guard.hp, 0, 100);
+    if (guard.pos.y < state.base.pos.y - state.base.radius / 2 - 8) continue;
+    state.baseHp = clamp(state.baseHp - guard.hp, 0, state.baseMaxHp);
     guard.hp = 0;
   }
   state.enemies = state.enemies.filter((ship) => ship.hp > 0);
@@ -231,7 +234,7 @@ function fireWeapons(state: InvadersState): void {
       );
     if (!target && !canAttackBase) continue;
     if (target) target.hp -= ship.attack;
-    else state.baseHp = clamp(state.baseHp - ship.attack, 0, 100);
+    else state.baseHp = clamp(state.baseHp - ship.attack, 0, state.baseMaxHp);
     ship.cooldown = 1.15;
     spawnProjectile(state, ship, target?.pos ?? state.base.pos);
   }

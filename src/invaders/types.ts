@@ -19,6 +19,7 @@ export type InvadersState = {
   projectiles: Projectile[];
   base: Body;
   baseHp: number;
+  baseMaxHp: number;
   wave: number;
   waveOffset: number;
   waveDirection: number;

@@ -12,7 +12,7 @@ export function renderInvaders(
   context.fillStyle = "#020a06";
   context.fillRect(0, 0, viewport.width, viewport.height);
   drawStars(context, viewport);
-  drawBase(context, state);
+  drawBase(context, state, viewport);
   drawFiringRangeCones(context, [...state.ships, ...state.enemies]);
   drawShips(context, state.ships);
   drawShips(context, state.enemies);
@@ -53,36 +53,24 @@ function drawStars(
 function drawBase(
   context: CanvasRenderingContext2D,
   state: InvadersState,
+  viewport: { width: number; height: number },
 ): void {
   const { base } = state;
   context.save();
   context.translate(base.pos.x, base.pos.y);
+  const width = viewport.width;
+  const height = base.radius;
   context.fillStyle = "#0b2a3a";
   context.strokeStyle = COLORS[Side.Player];
   context.lineWidth = 2;
-  context.beginPath();
-  for (let index = 0; index < 6; index++) {
-    const angle = -Math.PI / 2 + (index * Math.PI) / 3;
-    const x = Math.cos(angle) * base.radius;
-    const y = Math.sin(angle) * base.radius;
-    if (index === 0) context.moveTo(x, y);
-    else context.lineTo(x, y);
-  }
-  context.closePath();
-  context.fill();
-  context.stroke();
+  context.fillRect(-width / 2, -height / 2, width, height);
+  context.strokeRect(-width / 2, -height / 2, width, height);
   context.fillStyle = "#5de5ff66";
-  context.fillRect(-base.radius * 0.45, -4, base.radius * 0.9, 8);
-  context.strokeStyle = COLORS[Side.Player];
-  context.lineWidth = 3;
-  context.beginPath();
-  context.arc(
-    0,
-    0,
-    base.radius + 7,
-    -Math.PI / 2,
-    -Math.PI / 2 + (Math.PI * 2 * state.baseHp) / 100,
-  );
-  context.stroke();
+  context.fillRect(-width / 2, -4, width, 8);
+  const health = state.baseHp / state.baseMaxHp;
+  context.fillStyle = "#031017";
+  context.fillRect(-width / 2, -height / 2 - 9, width, 5);
+  context.fillStyle = COLORS[Side.Player];
+  context.fillRect(-width / 2, -height / 2 - 9, width * health, 5);
   context.restore();
 }

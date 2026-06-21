@@ -11,6 +11,7 @@ export function spawnShip(
   id: number,
 ): Ship {
   const hp = 50;
+  const speed = role === ShipRole.Guard ? 28 : 56;
   return {
     id,
     side,
@@ -22,7 +23,7 @@ export function spawnShip(
     maxHp: hp,
     attack: 10,
     defense: 3,
-    speed: 56,
+    speed,
     sight: 260,
     moral: 70,
     supplies: role === ShipRole.Guard ? 0 : 10,
