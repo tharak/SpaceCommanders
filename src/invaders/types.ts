@@ -1,5 +1,6 @@
 import type {
   Body,
+  FireMode,
   Formation,
   Projectile,
   Ship,
@@ -15,6 +16,7 @@ export type InvadersState = {
   enemyDestination: Vec;
   playerSteeringTarget: Vec | null;
   captainFavorite: Formation;
+  fireMode: FireMode;
   ships: Ship[];
   enemies: Ship[];
   projectiles: Projectile[];

@@ -8,7 +8,7 @@ import {
   SUPPLY_TRANSFER_DISTANCE,
   SUPPLY_SHIP_CAPACITY,
 } from "./constants";
-import { hasLineOfSight, isTargetForward } from "./combat";
+import { applyAtWillSteering, hasLineOfSight, isTargetForward } from "./combat";
 import { assignNearestFormationSlots } from "./formation-assignment";
 import { formationSlotHeadings, formationSlots } from "./formations";
 import { spawnFleet, spawnShip } from "./ship-factory";
@@ -477,31 +477,13 @@ function assignFormationTargets(state: GameState): void {
 }
 
 function applyFireModeSteering(state: GameState): void {
-  for (const ship of state.ships) {
-    if (ship.side === Side.Player && ship.role === ShipRole.Battleship) {
-      ship.steeringHeading = undefined;
-    }
-  }
-  if (state.fireMode !== FireMode.AtWill) return;
-  for (const ship of state.ships) {
-    if (ship.side !== Side.Player || ship.role !== ShipRole.Battleship)
-      continue;
-    const target = state.ships
-      .filter(
-        (candidate) =>
-          candidate.side !== ship.side &&
-          distance(candidate.pos, ship.pos) < ship.range,
-      )
-      .reduce<
-        Ship | undefined
-      >((closest, candidate) => (!closest || distance(candidate.pos, ship.pos) < distance(closest.pos, ship.pos) ? candidate : closest), undefined);
-    if (target) {
-      ship.steeringHeading = {
-        x: target.pos.x - ship.pos.x,
-        y: target.pos.y - ship.pos.y,
-      };
-    }
-  }
+  applyAtWillSteering(
+    state.ships.filter(
+      (ship) => ship.side === Side.Player && ship.role === ShipRole.Battleship,
+    ),
+    state.ships.filter((ship) => ship.side === Side.Enemy),
+    state.fireMode === FireMode.AtWill,
+  );
 }
 
 function collectPlanetSupplies(state: GameState, ship: Ship): void {

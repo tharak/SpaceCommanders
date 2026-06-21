@@ -5,6 +5,7 @@ import {
   applyInvadersFormation,
   selectInvadersFormation,
   setInvadersAlignment,
+  setInvadersFireMode,
   updateInvaders,
 } from "./invaders/simulation";
 import { renderInvaders } from "./invaders/renderer";
@@ -111,7 +112,11 @@ setupControls(
       );
     },
     onFireModeChange: (mode) => {
-      commandState.fireMode = mode;
+      if (activeGame === "invaders") {
+        setInvadersFireMode(invadersState, mode);
+      } else {
+        commandState.fireMode = mode;
+      }
       const message =
         mode === FireMode.Hold
           ? "WEAPONS HOLD"

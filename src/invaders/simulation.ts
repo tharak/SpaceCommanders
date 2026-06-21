@@ -1,11 +1,15 @@
-import { hasLineOfSight, isTargetForward } from "../game/combat";
+import {
+  applyAtWillSteering,
+  hasLineOfSight,
+  isTargetForward,
+} from "../game/combat";
 import { FORMATIONS } from "../game/constants";
 import { assignNearestFormationSlots } from "../game/formation-assignment";
 import { formationSlotHeadings, formationSlots } from "../game/formations";
 import { clamp, distance, normalize } from "../game/math";
 import { spawnFleet } from "../game/ship-factory";
 import { moveShipWithBoids } from "../game/ship-movement";
-import { BodyKind, Formation, ShipRole, Side } from "../game/types";
+import { BodyKind, FireMode, Formation, ShipRole, Side } from "../game/types";
 import type { Formation as FormationType, Ship, Viewport } from "../game/types";
 import type { InvadersState } from "./types";
 
@@ -25,6 +29,7 @@ export function createInvadersState(): InvadersState {
     enemyDestination: { x: 0, y: 0 },
     playerSteeringTarget: null,
     captainFavorite: Formation.Line,
+    fireMode: FireMode.AtWill,
     ships: [],
     enemies: [],
     projectiles: [],
@@ -57,6 +62,7 @@ export function resetInvaders(
   state.formation = Formation.Line;
   state.selectedFormation = Formation.Line;
   state.captainFavorite = captain;
+  state.fireMode = FireMode.AtWill;
   state.playerSteeringTarget = null;
   state.base = {
     id: 0,
@@ -98,6 +104,13 @@ export function selectInvadersFormation(
 
 export function applyInvadersFormation(state: InvadersState): void {
   state.formation = state.selectedFormation;
+}
+
+export function setInvadersFireMode(
+  state: InvadersState,
+  fireMode: FireMode,
+): void {
+  state.fireMode = fireMode;
 }
 
 export function setInvadersAlignment(
@@ -142,6 +155,11 @@ export function updateInvaders(
     FLEET_SPACING,
   );
   const playerHeadings = formationSlotHeadings(state.formation, FLEET_SIZE);
+  applyAtWillSteering(
+    state.ships,
+    state.enemies,
+    state.fireMode === FireMode.AtWill,
+  );
   for (const [ship, assignment] of assignNearestFormationSlots(
     state.ships,
     slots,
@@ -223,6 +241,7 @@ function fireWeapons(state: InvadersState): void {
   for (const ship of state.ships) {
     if (
       ship.role !== ShipRole.Battleship ||
+      state.fireMode === FireMode.Hold ||
       ship.cooldown > 0 ||
       state.enemies.length === 0
     )

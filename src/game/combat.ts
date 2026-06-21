@@ -1,4 +1,5 @@
-import { distanceToSegment } from "./math";
+import { distance, distanceToSegment } from "./math";
+import { ShipRole } from "./types";
 
 export const FIRING_CONE_ANGLE = (40 * Math.PI) / 180;
 export const FIRING_CONE_HALF_ANGLE = FIRING_CONE_ANGLE / 2;
@@ -39,4 +40,26 @@ export function isTargetForward(ship: Ship, target: Vec): boolean {
     (ship.heading.x / headingLength) * (targetDirection.x / targetLength) +
     (ship.heading.y / headingLength) * (targetDirection.y / targetLength);
   return dot >= Math.cos(FIRING_CONE_HALF_ANGLE);
+}
+
+export function applyAtWillSteering(
+  ships: Ship[],
+  enemies: Ship[],
+  enabled: boolean,
+): void {
+  for (const ship of ships) {
+    ship.steeringHeading = undefined;
+    if (!enabled || ship.role !== ShipRole.Battleship) continue;
+    const target = enemies
+      .filter((enemy) => distance(enemy.pos, ship.pos) < ship.range)
+      .reduce<
+        Ship | undefined
+      >((closest, enemy) => (!closest || distance(enemy.pos, ship.pos) < distance(closest.pos, ship.pos) ? enemy : closest), undefined);
+    if (target) {
+      ship.steeringHeading = {
+        x: target.pos.x - ship.pos.x,
+        y: target.pos.y - ship.pos.y,
+      };
+    }
+  }
 }
