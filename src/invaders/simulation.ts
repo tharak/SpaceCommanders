@@ -11,6 +11,7 @@ import { spawnFleet, spawnShip } from "../game/ship-factory";
 import { moveShipWithBoids } from "../game/ship-movement";
 import { BodyKind, FireMode, Formation, ShipRole, Side } from "../game/types";
 import type { Formation as FormationType, Ship, Viewport } from "../game/types";
+import { UpgradeType } from "./upgrade-type";
 import type { InvadersState } from "./types";
 
 const FLEET_SIZE = 10;
@@ -51,6 +52,7 @@ export function createInvadersState(): InvadersState {
     baseMaxHp: BASE_MAX_HP,
     wave: 1,
     score: 0,
+    upgrades: createUpgradeLevels(),
     waveOffset: 0,
     waveDirection: 1,
     nextShipId: 1,
@@ -86,6 +88,7 @@ export function resetInvaders(
   state.projectiles = [];
   state.wave = 0;
   state.score = 0;
+  state.upgrades = createUpgradeLevels();
   state.waveOffset = 0;
   state.nextShipId = 1;
   state.winner = null;
@@ -109,6 +112,35 @@ export function selectInvadersFormation(
 
 export function applyInvadersFormation(state: InvadersState): void {
   state.formation = state.selectedFormation;
+}
+
+export function purchaseInvadersUpgrade(
+  state: InvadersState,
+  upgrade: UpgradeType,
+): number | null {
+  const cost = 100 * (state.upgrades[upgrade] + 1);
+  if (state.score < cost) return null;
+
+  state.score -= cost;
+  state.upgrades[upgrade]++;
+  for (const ship of state.ships) {
+    switch (upgrade) {
+      case UpgradeType.Damage:
+        ship.attack += 2;
+        break;
+      case UpgradeType.Speed:
+        ship.speed += 8;
+        break;
+      case UpgradeType.Hull:
+        ship.maxHp += 10;
+        ship.hp += 10;
+        break;
+      case UpgradeType.Range:
+        ship.range += 15;
+        break;
+    }
+  }
+  return cost;
 }
 
 export function setInvadersFireMode(
@@ -456,4 +488,13 @@ function updateSupplyShip(
     viewport,
     elapsed,
   );
+}
+
+function createUpgradeLevels(): Record<UpgradeType, number> {
+  return {
+    [UpgradeType.Damage]: 0,
+    [UpgradeType.Speed]: 0,
+    [UpgradeType.Hull]: 0,
+    [UpgradeType.Range]: 0,
+  };
 }

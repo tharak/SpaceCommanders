@@ -1,6 +1,7 @@
 import "./style.css";
 import {
   createInvadersState,
+  purchaseInvadersUpgrade,
   resetInvaders,
   applyInvadersFormation,
   selectInvadersFormation,
@@ -9,6 +10,7 @@ import {
   updateInvaders,
 } from "./invaders/simulation";
 import { renderInvaders } from "./invaders/renderer";
+import { UpgradeType } from "./invaders/upgrade-type";
 import {
   createGameState,
   issueFormationOrder,
@@ -124,6 +126,25 @@ setupControls(
             ? "FOCUS FIRE — TAP AN ENEMY TO DESIGNATE"
             : "WEAPONS FREE — ENGAGING HOSTILES IN RANGE";
       showReadout(controls, message);
+    },
+    onUpgrade: (upgrade: UpgradeType) => {
+      if (activeGame !== "invaders") {
+        showReadout(controls, "UPGRADES ARE AVAILABLE IN PLANETARY DEFENSE");
+        return;
+      }
+      const cost = purchaseInvadersUpgrade(invadersState, upgrade);
+      if (cost == null) {
+        const nextCost = 100 * (invadersState.upgrades[upgrade] + 1);
+        showReadout(
+          controls,
+          "NEED " + nextCost + " SCORE FOR " + upgrade.toUpperCase(),
+        );
+        return;
+      }
+      showReadout(
+        controls,
+        upgrade.toUpperCase() + " UPGRADED — " + cost + " SCORE SPENT",
+      );
     },
     onReset: startMatch,
   },

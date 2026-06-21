@@ -1,3 +1,4 @@
+import { UpgradeType } from "./upgrade-type";
 import type {
   Body,
   FireMode,
@@ -26,6 +27,7 @@ export type InvadersState = {
   baseMaxHp: number;
   wave: number;
   score: number;
+  upgrades: Record<UpgradeType, number>;
   waveOffset: number;
   waveDirection: number;
   nextShipId: number;

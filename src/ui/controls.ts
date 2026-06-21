@@ -1,16 +1,19 @@
 import { FIRE_MODES, FORMATIONS } from "../game/constants";
+import { UpgradeType } from "../invaders/upgrade-type";
 import { FireMode, Formation } from "../game/types";
 import type { Config } from "../game/types";
 
 type Controls = {
   formationControls: HTMLElement;
   fireControls: HTMLElement;
+  upgradeControls: HTMLElement;
   readout: HTMLElement;
 };
 
 type ControlCallbacks = {
   onFormationChange: (formation: Formation) => void;
   onFireModeChange: (mode: FireMode) => void;
+  onUpgrade: (upgrade: UpgradeType) => void;
   onReset: () => void;
 };
 
@@ -18,6 +21,7 @@ export function getControls(): Controls {
   return {
     formationControls: requiredElement("#formation-controls"),
     fireControls: requiredElement("#fire-controls"),
+    upgradeControls: requiredElement("#upgrade-controls"),
     readout: requiredElement("#order-readout"),
   };
 }
@@ -30,6 +34,7 @@ export function setupControls(
 ): void {
   createFormationButtons(controls, callbacks.onFormationChange);
   createFireModeButtons(controls, callbacks.onFireModeChange);
+  createUpgradeButtons(controls, callbacks.onUpgrade);
   selectActive(controls.formationControls, initialFormation);
   selectActive(controls.fireControls, initialFireMode);
   requiredElement("#debug-toggle").addEventListener("click", () =>
@@ -99,6 +104,26 @@ function createFormationButtons(
       onChange(formation);
     });
     controls.formationControls.append(button);
+  }
+}
+
+function createUpgradeButtons(
+  controls: Controls,
+  onUpgrade: (upgrade: UpgradeType) => void,
+): void {
+  const labels: Record<UpgradeType, string> = {
+    [UpgradeType.Damage]: "DMG",
+    [UpgradeType.Speed]: "SPD",
+    [UpgradeType.Hull]: "HP",
+    [UpgradeType.Range]: "RNG",
+  };
+  for (const upgrade of Object.values(UpgradeType)) {
+    const button = document.createElement("button");
+    button.ariaLabel = `Upgrade `;
+    button.dataset.value = upgrade;
+    button.textContent = labels[upgrade];
+    button.addEventListener("click", () => onUpgrade(upgrade));
+    controls.upgradeControls.append(button);
   }
 }
 

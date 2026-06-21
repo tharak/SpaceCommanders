@@ -335,3 +335,25 @@ input[type="range"] {
     animation: none;
   }
 }
+.upgrade-row {
+  display: flex;
+  gap: 4px;
+}
+.upgrade-row button {
+  min-width: 34px;
+  height: 35px;
+  padding: 0 5px;
+  border: 1px solid #48728a;
+  color: #b8ddeb;
+  background: #081724d9;
+  font:
+    700 10px/1 Barlow Condensed,
+    sans-serif;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+.upgrade-row button:hover {
+  border-color: #f0cf77;
+  color: #fff0bc;
+  background: #3a3117e8;
+}
