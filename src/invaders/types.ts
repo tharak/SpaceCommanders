@@ -27,6 +27,7 @@ export type InvadersState = {
   baseMaxHp: number;
   baseSupplyRate: number;
   baseSupplyCapacity: number;
+  regenerationRate: number;
   wave: number;
   score: number;
   upgrades: Record<UpgradeType, number>;

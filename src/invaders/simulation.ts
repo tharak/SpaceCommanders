@@ -52,6 +52,7 @@ export function createInvadersState(): InvadersState {
     baseMaxHp: BASE_MAX_HP,
     baseSupplyRate: BASE_SUPPLY_RATE,
     baseSupplyCapacity: BASE_SUPPLY_CAPACITY,
+    regenerationRate: 0,
     wave: 1,
     score: 0,
     upgrades: createUpgradeLevels(),
@@ -89,6 +90,7 @@ export function resetInvaders(
   state.baseMaxHp = BASE_MAX_HP;
   state.baseSupplyRate = BASE_SUPPLY_RATE;
   state.baseSupplyCapacity = BASE_SUPPLY_CAPACITY;
+  state.regenerationRate = 0;
   state.projectiles = [];
   state.wave = 0;
   state.score = 0;
@@ -145,6 +147,7 @@ export function purchaseInvadersUpgrade(
       case UpgradeType.SupplyShips:
       case UpgradeType.BaseSupplyGeneration:
       case UpgradeType.BaseSupplyCapacity:
+      case UpgradeType.Regeneration:
         break;
     }
   }
@@ -158,6 +161,9 @@ export function purchaseInvadersUpgrade(
   }
   if (upgrade === UpgradeType.BaseSupplyCapacity) {
     state.baseSupplyCapacity += 5;
+  }
+  if (upgrade === UpgradeType.Regeneration) {
+    state.regenerationRate += 1;
   }
   return cost;
 }
@@ -236,6 +242,7 @@ export function updateInvaders(
   state.enemies.forEach((ship) => {
     ship.cooldown -= elapsed;
   });
+  regenerateDefenders(state, elapsed);
   replenishBaseSupplies(state, elapsed);
   updateSupplyShips(state, viewport, elapsed);
   resolveBaseContacts(state);
@@ -463,6 +470,13 @@ function createSupplyShip(
   return ship;
 }
 
+function regenerateDefenders(state: InvadersState, elapsed: number): void {
+  if (state.regenerationRate <= 0) return;
+  for (const ship of state.ships) {
+    ship.hp = Math.min(ship.maxHp, ship.hp + elapsed * state.regenerationRate);
+  }
+}
+
 function replenishBaseSupplies(state: InvadersState, elapsed: number): void {
   state.base.stock = Math.min(
     state.baseSupplyCapacity,
@@ -528,5 +542,6 @@ function createUpgradeLevels(): Record<UpgradeType, number> {
     [UpgradeType.SupplyShips]: 0,
     [UpgradeType.BaseSupplyGeneration]: 0,
     [UpgradeType.BaseSupplyCapacity]: 0,
+    [UpgradeType.Regeneration]: 0,
   };
 }

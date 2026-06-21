@@ -26,6 +26,7 @@ export const TEXT = {
       supplyShips: "SUP",
       baseSupplyGeneration: "GEN",
       baseSupplyCapacity: "CAP",
+      regeneration: "REG",
     },
   },
   launcher: {
