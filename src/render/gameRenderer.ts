@@ -283,11 +283,9 @@ function drawProjectiles(
 ): void {
   for (const projectile of state.projectiles) {
     context.fillStyle = COLORS[projectile.side];
-    context.globalAlpha = projectile.life / projectile.maxLife;
     context.beginPath();
     context.arc(projectile.pos.x, projectile.pos.y, 3, 0, Math.PI * 2);
     context.fill();
-    context.globalAlpha = 1;
   }
 }
 

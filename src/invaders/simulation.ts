@@ -109,7 +109,7 @@ export function updateInvaders(
     ship.cooldown -= elapsed;
   firePlayerWeapons(state);
   fireEnemyWeapons(state);
-  updateProjectiles(state, elapsed);
+  updateProjectiles(state, elapsed, viewport);
   state.ships = state.ships.filter((ship) => ship.hp > 0);
   state.enemies = state.enemies.filter((ship) => ship.hp > 0);
   if (state.planetHp <= 0 || state.ships.length === 0)
@@ -213,17 +213,23 @@ function spawnProjectile(
       x: direction.x * PROJECTILE_SPEED,
       y: direction.y * PROJECTILE_SPEED,
     },
-    life: 0.65,
-    maxLife: 0.65,
     side: ship.side,
   });
 }
 
-function updateProjectiles(state: InvadersState, elapsed: number): void {
+function updateProjectiles(
+  state: InvadersState,
+  elapsed: number,
+  viewport: Viewport,
+): void {
   state.projectiles = state.projectiles.filter((projectile) => {
     projectile.pos.x += projectile.vel.x * elapsed;
     projectile.pos.y += projectile.vel.y * elapsed;
-    projectile.life -= elapsed;
-    return projectile.life > 0;
+    return (
+      projectile.pos.x >= 0 &&
+      projectile.pos.x <= viewport.width &&
+      projectile.pos.y >= 0 &&
+      projectile.pos.y <= viewport.height
+    );
   });
 }

@@ -196,7 +196,7 @@ export function updateGame(
   }
 
   state.ships = state.ships.filter((ship) => ship.hp > 0);
-  updateProjectiles(state, deltaTime);
+  updateProjectiles(state, deltaTime, viewport);
 }
 
 const PROJECTILE_SPEED = 360;
@@ -208,25 +208,30 @@ function spawnProjectile(
   side: Side,
 ): void {
   const direction = normalize({ x: to.x - from.x, y: to.y - from.y });
-  const maxLife = clamp(distance(from, to) / PROJECTILE_SPEED, 0.08, 0.6);
   state.projectiles.push({
     pos: { ...from },
     vel: {
       x: direction.x * PROJECTILE_SPEED,
       y: direction.y * PROJECTILE_SPEED,
     },
-    life: maxLife,
-    maxLife,
     side,
   });
 }
 
-function updateProjectiles(state: GameState, deltaTime: number): void {
+function updateProjectiles(
+  state: GameState,
+  deltaTime: number,
+  viewport: Viewport,
+): void {
   state.projectiles = state.projectiles.filter((projectile) => {
     projectile.pos.x += projectile.vel.x * deltaTime;
     projectile.pos.y += projectile.vel.y * deltaTime;
-    projectile.life -= deltaTime;
-    return projectile.life > 0;
+    return (
+      projectile.pos.x >= 0 &&
+      projectile.pos.x <= viewport.width &&
+      projectile.pos.y >= 0 &&
+      projectile.pos.y <= viewport.height
+    );
   });
 }
 
