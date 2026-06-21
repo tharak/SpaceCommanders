@@ -1,9 +1,11 @@
 import { formationSlots } from "../game/formations";
+import { clamp, distance, normalize } from "../game/math";
 import { BodyKind, Formation, ShipRole, Side } from "../game/types";
 import type { Formation as FormationType, Ship, Viewport } from "../game/types";
 import type { InvadersState } from "./types";
 
 const FLEET_SIZE = 7;
+const PROJECTILE_SPEED = 330;
 const ENEMY_FLEET_Y = 105;
 const PLANET_BOTTOM_OFFSET = 130;
 const ENEMY_FLEET_SPEED = 20;
@@ -111,7 +113,15 @@ export function updateInvaders(
   state.ships.forEach((ship, index) => {
     ship.pos = { ...slots[index] };
     ship.vel = { x: 0, y: 0 };
+    ship.cooldown -= elapsed;
   });
+  state.enemies.forEach((ship) => {
+    ship.cooldown -= elapsed;
+  });
+  fireWeapons(state);
+  updateProjectiles(state, elapsed, viewport);
+  state.ships = state.ships.filter((ship) => ship.hp > 0);
+  state.enemies = state.enemies.filter((ship) => ship.hp > 0);
 }
 
 function playerFleetCenter(viewport: Viewport): { x: number; y: number } {
@@ -144,4 +154,81 @@ function createFleet(
     range: 0,
     cooldown: 0,
   }));
+}
+
+function fireWeapons(state: InvadersState): void {
+  for (const ship of state.ships) {
+    if (ship.cooldown > 0 || state.enemies.length === 0) continue;
+    const target = state.enemies.reduce((closest, enemy) =>
+      distance(enemy.pos, ship.pos) < distance(closest.pos, ship.pos)
+        ? enemy
+        : closest,
+    );
+    target.hp -=
+      ship.attack * (state.formation === state.captainFavorite ? 1.25 : 1);
+    ship.cooldown = 0.7;
+    spawnProjectile(state, ship, target.pos);
+  }
+
+  for (const ship of state.enemies) {
+    if (ship.cooldown > 0) continue;
+    const target = state.ships.reduce<Ship | undefined>(
+      (closest, defender) =>
+        !closest ||
+        distance(defender.pos, ship.pos) < distance(closest.pos, ship.pos)
+          ? defender
+          : closest,
+      undefined,
+    );
+    if (target) target.hp -= ship.attack;
+    else state.planetHp = clamp(state.planetHp - ship.attack, 0, 100);
+    ship.cooldown = 1.15;
+    spawnProjectile(state, ship, target?.pos ?? state.planet.pos);
+  }
+}
+
+function spawnProjectile(
+  state: InvadersState,
+  ship: Ship,
+  target: { x: number; y: number },
+): void {
+  const direction = normalize({
+    x: target.x - ship.pos.x,
+    y: target.y - ship.pos.y,
+  });
+  state.projectiles.push({
+    pos: { ...ship.pos },
+    vel: {
+      x: direction.x * PROJECTILE_SPEED,
+      y: direction.y * PROJECTILE_SPEED,
+    },
+    side: ship.side,
+    sourceShipId: ship.id,
+  });
+}
+
+function updateProjectiles(
+  state: InvadersState,
+  elapsed: number,
+  viewport: Viewport,
+): void {
+  state.projectiles = state.projectiles.filter((projectile) => {
+    projectile.pos.x += projectile.vel.x * elapsed;
+    projectile.pos.y += projectile.vel.y * elapsed;
+    const hitShip = [...state.ships, ...state.enemies].some(
+      (ship) =>
+        ship.id !== projectile.sourceShipId &&
+        distance(ship.pos, projectile.pos) < 10,
+    );
+    const hitPlanet =
+      distance(state.planet.pos, projectile.pos) < state.planet.radius;
+    return (
+      !hitShip &&
+      !hitPlanet &&
+      projectile.pos.x >= 0 &&
+      projectile.pos.x <= viewport.width &&
+      projectile.pos.y >= 0 &&
+      projectile.pos.y <= viewport.height
+    );
+  });
 }
