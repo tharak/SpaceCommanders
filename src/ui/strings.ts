@@ -17,6 +17,7 @@ export const TEXT = {
     formation: "FORMATION",
     shootMode: "SHOOT MODE",
     captainFormation: "CAPTAIN FORMATION",
+    upgradePrice: (label: string, cost: number) => ` `,
     upgradeLabels: {
       damage: "DMG",
       speed: "SPD",

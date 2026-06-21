@@ -90,7 +90,10 @@ export function setUpgradePrices(
       const upgrade = button.dataset.value as UpgradeType;
       const label = button.dataset.label;
       if (!label || !(upgrade in levels)) return;
-      button.textContent = label + " " + 100 * (levels[upgrade] + 1);
+      button.textContent = TEXT.controls.upgradePrice(
+        label,
+        100 * (levels[upgrade] + 1),
+      );
     });
 }
 
@@ -133,7 +136,7 @@ function createUpgradeButtons(
     button.ariaLabel = TEXT.controls.upgrades;
     button.dataset.value = upgrade;
     button.dataset.label = labels[upgrade];
-    button.textContent = labels[upgrade] + " 100";
+    button.textContent = TEXT.controls.upgradePrice(labels[upgrade], 100);
     button.addEventListener("click", () => onUpgrade(upgrade));
     controls.upgradeControls.append(button);
   }
