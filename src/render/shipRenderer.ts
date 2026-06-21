@@ -13,7 +13,7 @@ export function drawShips(
 
     context.save();
     context.translate(ship.pos.x, ship.pos.y);
-    context.rotate(Math.atan2(ship.vel.y, ship.vel.x) + Math.PI / 2);
+    context.rotate(Math.atan2(ship.heading.y, ship.heading.x) + Math.PI / 2);
     context.beginPath();
     if (ship.role === ShipRole.Supply) {
       context.rect(-5, -5, 10, 10);

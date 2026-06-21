@@ -24,3 +24,16 @@ export function hasLineOfSight(
       distanceToSegment(body.pos, ship.pos, target) < body.radius,
   );
 }
+
+export function isTargetForward(ship: Ship, target: Vec): boolean {
+  const targetDirection = {
+    x: target.x - ship.pos.x,
+    y: target.y - ship.pos.y,
+  };
+  const targetLength = Math.hypot(targetDirection.x, targetDirection.y) || 1;
+  const headingLength = Math.hypot(ship.heading.x, ship.heading.y) || 1;
+  const dot =
+    (ship.heading.x / headingLength) * (targetDirection.x / targetLength) +
+    (ship.heading.y / headingLength) * (targetDirection.y / targetLength);
+  return dot >= 0.5;
+}

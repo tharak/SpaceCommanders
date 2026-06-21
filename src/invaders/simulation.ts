@@ -1,4 +1,4 @@
-import { hasLineOfSight } from "../game/combat";
+import { hasLineOfSight, isTargetForward } from "../game/combat";
 import { FORMATIONS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp, distance, normalize } from "../game/math";
@@ -169,6 +169,7 @@ function fireWeapons(state: InvadersState): void {
       continue;
     const targets = state.enemies.filter(
       (enemy) =>
+        isTargetForward(ship, enemy.pos) &&
         distance(enemy.pos, ship.pos) < ship.range &&
         hasLineOfSight(
           ship,
@@ -194,6 +195,7 @@ function fireWeapons(state: InvadersState): void {
     if (ship.role !== ShipRole.Battleship || ship.cooldown > 0) continue;
     const targets = state.ships.filter(
       (defender) =>
+        isTargetForward(ship, defender.pos) &&
         distance(defender.pos, ship.pos) < ship.range &&
         hasLineOfSight(
           ship,

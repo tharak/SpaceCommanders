@@ -17,6 +17,8 @@ export function moveShipWithBoids(
   }
 
   const force = steeringForce(ship);
+  let alignment = { x: 0, y: 0 };
+  let alignmentCount = 0;
   for (const other of ships) {
     if (other === ship) continue;
     const separation = distance(ship.pos, other.pos);
@@ -27,6 +29,14 @@ export function moveShipWithBoids(
     });
     force.x += direction.x * (42 - separation) * 3;
     force.y += direction.y * (42 - separation) * 3;
+    alignment.x += other.heading.x;
+    alignment.y += other.heading.y;
+    alignmentCount++;
+  }
+  if (alignmentCount > 0) {
+    const direction = normalize(alignment);
+    force.x += direction.x * ship.speed * 0.25;
+    force.y += direction.y * ship.speed * 0.25;
   }
   for (const body of bodies) {
     const separation = distance(ship.pos, body.pos);
@@ -42,6 +52,9 @@ export function moveShipWithBoids(
 
   ship.vel.x += (force.x - ship.vel.x) * Math.min(1, deltaTime * 2.2);
   ship.vel.y += (force.y - ship.vel.y) * Math.min(1, deltaTime * 2.2);
+  if (Math.hypot(ship.vel.x, ship.vel.y) > 1) {
+    ship.heading = normalize(ship.vel);
+  }
   ship.pos.x = clamp(
     ship.pos.x + ship.vel.x * deltaTime,
     10,

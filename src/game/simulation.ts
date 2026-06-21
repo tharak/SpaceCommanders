@@ -8,7 +8,7 @@ import {
   SUPPLY_TRANSFER_DISTANCE,
   SUPPLY_SHIP_CAPACITY,
 } from "./constants";
-import { hasLineOfSight } from "./combat";
+import { hasLineOfSight, isTargetForward } from "./combat";
 import { formationSlots } from "./formations";
 import { spawnFleet, spawnShip } from "./ship-factory";
 import { moveShipWithBoids } from "./ship-movement";
@@ -510,6 +510,7 @@ function fireWeapons(state: GameState, ship: Ship): void {
   const targets = state.ships.filter(
     (candidate) =>
       candidate.side !== ship.side &&
+      isTargetForward(ship, candidate.pos) &&
       distance(candidate.pos, ship.pos) < ship.range &&
       hasLineOfSight(ship, candidate.pos, state.ships, state.bodies, candidate),
   );

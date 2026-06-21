@@ -1,8 +1,8 @@
 import { formationSlots } from "./formations";
 import { randomBetween } from "./math";
-import { ShipRole } from "./types";
+import { ShipRole, Side } from "./types";
 import type { Formation } from "./types";
-import type { Ship, Side, Vec } from "./types";
+import type { Ship, Vec } from "./types";
 
 export function spawnShip(
   side: Side,
@@ -17,6 +17,7 @@ export function spawnShip(
     role,
     pos: { ...position },
     vel: { x: randomBetween(-12, 12), y: randomBetween(-12, 12) },
+    heading: side === Side.Player ? { x: 0, y: -1 } : { x: 0, y: 1 },
     hp,
     maxHp: hp,
     attack: 10,

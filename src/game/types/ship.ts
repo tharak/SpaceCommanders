@@ -9,6 +9,7 @@ export type Ship = {
   role: ShipRole;
   pos: Vec;
   vel: Vec;
+  heading: Vec;
   hp: number;
   maxHp: number;
   attack: number;
