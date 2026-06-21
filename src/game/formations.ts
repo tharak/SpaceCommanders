@@ -39,8 +39,8 @@ export function formationSlots(
       case Formation.Pincer: {
         const half = index < count / 2 ? -1 : 1;
         const row = index % Math.ceil(count / 2);
-        x = half * (spacing * 1.2 + row * spacing * 0.55);
-        y = (row - count / 4) * spacing;
+        x = -half * (spacing * 1.2 + row * spacing * 0.55);
+        y = -(row - count / 4) * spacing;
         break;
       }
     }
