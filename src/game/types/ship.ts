@@ -22,6 +22,7 @@ export type Ship = {
   cooldown: number;
   target?: Vec;
   targetHeading?: Vec;
+  steeringHeading?: Vec;
   homeBodyId?: number;
   resupplyTargetId?: number;
   supplyMission?: SupplyMission;

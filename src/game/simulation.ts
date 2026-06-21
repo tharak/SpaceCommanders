@@ -477,6 +477,11 @@ function assignFormationTargets(state: GameState): void {
 }
 
 function applyFireModeSteering(state: GameState): void {
+  for (const ship of state.ships) {
+    if (ship.side === Side.Player && ship.role === ShipRole.Battleship) {
+      ship.steeringHeading = undefined;
+    }
+  }
   if (state.fireMode !== FireMode.AtWill) return;
   for (const ship of state.ships) {
     if (ship.side !== Side.Player || ship.role !== ShipRole.Battleship)
@@ -491,7 +496,7 @@ function applyFireModeSteering(state: GameState): void {
         Ship | undefined
       >((closest, candidate) => (!closest || distance(candidate.pos, ship.pos) < distance(closest.pos, ship.pos) ? candidate : closest), undefined);
     if (target) {
-      ship.targetHeading = {
+      ship.steeringHeading = {
         x: target.pos.x - ship.pos.x,
         y: target.pos.y - ship.pos.y,
       };
