@@ -4,6 +4,7 @@ import type {
   Projectile,
   Ship,
   Side,
+  Vec,
   Viewport,
 } from "../game/types";
 
@@ -11,6 +12,7 @@ export type InvadersState = {
   formation: Formation;
   selectedFormation: Formation;
   enemyFormation: Formation;
+  enemyDestination: Vec;
   captainFavorite: Formation;
   ships: Ship[];
   enemies: Ship[];

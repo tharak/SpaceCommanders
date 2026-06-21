@@ -12,7 +12,6 @@ const FLEET_SIZE = 10;
 const PROJECTILE_SPEED = 330;
 const ENEMY_FLEET_Y = 105;
 const PLANET_BOTTOM_OFFSET = 130;
-const ENEMY_FLEET_SPEED = 20;
 const PLAYER_FLEET_BOTTOM_OFFSET = 220;
 
 export function createInvadersState(): InvadersState {
@@ -20,6 +19,7 @@ export function createInvadersState(): InvadersState {
     formation: Formation.Line,
     selectedFormation: Formation.Line,
     enemyFormation: Formation.Line,
+    enemyDestination: { x: 0, y: 0 },
     captainFavorite: Formation.Line,
     ships: [],
     enemies: [],
@@ -93,9 +93,8 @@ export function updateInvaders(
   viewport: Viewport,
   elapsed: number,
 ): void {
-  state.waveOffset += ENEMY_FLEET_SPEED * elapsed;
   const enemySlots = formationSlots(
-    { x: viewport.width / 2, y: ENEMY_FLEET_Y + state.waveOffset },
+    state.enemyDestination,
     state.enemyFormation,
     state.enemies.length,
     34,
@@ -278,6 +277,10 @@ function moveFleetShip(
 function spawnEnemyWave(state: InvadersState, viewport: Viewport): void {
   state.wave++;
   state.waveOffset = 0;
+  state.enemyDestination = {
+    x: viewport.width / 2,
+    y: viewport.height + 80,
+  };
   state.enemyFormation =
     FORMATIONS[Math.floor(Math.random() * FORMATIONS.length)];
   state.enemies = createFleet(
