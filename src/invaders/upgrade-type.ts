@@ -4,4 +4,5 @@ export enum UpgradeType {
   Hull = "hull",
   Range = "range",
   SupplyShips = "supply_ships",
+  BaseSupplyGeneration = "base_supply_generation",
 }

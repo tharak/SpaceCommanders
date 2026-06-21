@@ -24,6 +24,7 @@ export const TEXT = {
       hull: "HP",
       range: "RNG",
       supplyShips: "SUP",
+      baseSupplyGeneration: "GEN",
     },
   },
   launcher: {
