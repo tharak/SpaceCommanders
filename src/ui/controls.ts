@@ -90,10 +90,7 @@ export function setUpgradePrices(
       const upgrade = button.dataset.value as UpgradeType;
       const label = button.dataset.label;
       if (!label || !(upgrade in levels)) return;
-      button.textContent = TEXT.controls.upgradePrice(
-        label,
-        100 * (levels[upgrade] + 1),
-      );
+      setUpgradeButtonText(button, label, 100 * (levels[upgrade] + 1));
     });
 }
 
@@ -136,10 +133,22 @@ function createUpgradeButtons(
     button.ariaLabel = TEXT.controls.upgrades;
     button.dataset.value = upgrade;
     button.dataset.label = labels[upgrade];
-    button.textContent = TEXT.controls.upgradePrice(labels[upgrade], 100);
+    setUpgradeButtonText(button, labels[upgrade], 100);
     button.addEventListener("click", () => onUpgrade(upgrade));
     controls.upgradeControls.append(button);
   }
+}
+
+function setUpgradeButtonText(
+  button: HTMLButtonElement,
+  label: string,
+  cost: number,
+): void {
+  const name = document.createElement("span");
+  name.textContent = label;
+  const price = document.createElement("small");
+  price.textContent = TEXT.controls.upgradePrice("", cost).trim();
+  button.replaceChildren(name, price);
 }
 
 function createFireModeButtons(
