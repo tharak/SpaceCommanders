@@ -10,7 +10,7 @@ import {
 } from "./constants";
 import { hasLineOfSight, isTargetForward } from "./combat";
 import { assignNearestFormationSlots } from "./formation-assignment";
-import { formationSlots } from "./formations";
+import { formationSlotHeadings, formationSlots } from "./formations";
 import { spawnFleet, spawnShip } from "./ship-factory";
 import { moveShipWithBoids } from "./ship-movement";
 import { clamp, distance, normalize, randomBetween } from "./math";
@@ -446,19 +446,26 @@ function assignFormationTargets(state: GameState): void {
       side === Side.Player
         ? clamp(80 - state.cohesion * 50, 25, 70)
         : ENEMY_FORMATION_SPACING;
+    const rotation = side === Side.Player ? state.formationRotation : 0;
     const targets = formationSlots(
       center,
       formation,
       battleships.length,
       spacing,
-      side === Side.Player ? state.formationRotation : 0,
+      rotation,
+    );
+    const headings = formationSlotHeadings(
+      formation,
+      battleships.length,
+      rotation,
     );
 
-    for (const [ship, target] of assignNearestFormationSlots(
+    for (const [ship, assignment] of assignNearestFormationSlots(
       battleships,
       targets,
     )) {
-      ship.target = target;
+      ship.target = assignment.position;
+      ship.targetHeading = headings[assignment.slotIndex];
     }
     fleet
       .filter((ship) => ship.role === ShipRole.Captain)

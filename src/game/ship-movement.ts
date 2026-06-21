@@ -11,10 +11,11 @@ export function moveShipWithBoids(
   formationHeading?: Vec,
 ): void {
   if (!ship.target) return;
+  const desiredHeading = ship.targetHeading ?? formationHeading;
   if (distance(ship.pos, ship.target) <= arrivalDistance) {
     ship.pos = { ...ship.target };
     ship.vel = { x: 0, y: 0 };
-    if (formationHeading) steerHeading(ship, formationHeading, deltaTime);
+    if (desiredHeading) steerHeading(ship, desiredHeading, deltaTime);
     return;
   }
 
@@ -40,8 +41,8 @@ export function moveShipWithBoids(
     force.x += direction.x * ship.speed * 0.25;
     force.y += direction.y * ship.speed * 0.25;
   }
-  if (formationHeading) {
-    const direction = normalize(formationHeading);
+  if (desiredHeading) {
+    const direction = normalize(desiredHeading);
     force.x += direction.x * ship.speed * 0.4;
     force.y += direction.y * ship.speed * 0.4;
   }

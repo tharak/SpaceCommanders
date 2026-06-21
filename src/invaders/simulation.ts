@@ -1,7 +1,7 @@
 import { hasLineOfSight, isTargetForward } from "../game/combat";
 import { FORMATIONS } from "../game/constants";
 import { assignNearestFormationSlots } from "../game/formation-assignment";
-import { formationSlots } from "../game/formations";
+import { formationSlotHeadings, formationSlots } from "../game/formations";
 import { clamp, distance, normalize } from "../game/math";
 import { spawnFleet } from "../game/ship-factory";
 import { moveShipWithBoids } from "../game/ship-movement";
@@ -119,12 +119,24 @@ export function updateInvaders(
     state.enemies.length,
     FLEET_SPACING,
   );
-  state.enemies.forEach((ship, index) => {
-    moveFleetShip(state.enemies, ship, enemySlots[index], viewport, elapsed, {
-      x: 0,
-      y: 1,
-    });
-  });
+  const enemyHeadings = formationSlotHeadings(
+    state.enemyFormation,
+    state.enemies.length,
+  );
+  for (const [ship, assignment] of assignNearestFormationSlots(
+    state.enemies,
+    enemySlots,
+  )) {
+    ship.targetHeading = enemyHeadings[assignment.slotIndex];
+    moveFleetShip(
+      [...state.enemies, ...state.ships],
+      ship,
+      assignment.position,
+      viewport,
+      elapsed,
+      ship.targetHeading,
+    );
+  }
 
   const slots = formationSlots(
     playerFleetCenter(viewport),
@@ -132,17 +144,24 @@ export function updateInvaders(
     state.ships.length,
     FLEET_SPACING,
   );
-  for (const [ship, target] of assignNearestFormationSlots(
+  const playerHeadings = formationSlotHeadings(
+    state.formation,
+    state.ships.length,
+  );
+  for (const [ship, assignment] of assignNearestFormationSlots(
     state.ships,
     slots,
   )) {
+    ship.targetHeading = state.playerSteeringTarget
+      ? playerSteeringHeading(state, ship)
+      : playerHeadings[assignment.slotIndex];
     moveFleetShip(
       [...state.ships, ...state.enemies],
       ship,
-      target,
+      assignment.position,
       viewport,
       elapsed,
-      playerSteeringHeading(state, ship),
+      ship.targetHeading,
     );
     ship.cooldown -= elapsed;
   }

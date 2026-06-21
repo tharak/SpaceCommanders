@@ -53,3 +53,46 @@ export function formationSlots(
 
   return slots;
 }
+
+export function formationSlotHeadings(
+  formation: Formation,
+  count: number,
+  rotation = 0,
+): Vec[] {
+  return Array.from({ length: count }, (_, index) => {
+    let heading: Vec;
+    switch (formation) {
+      case Formation.Column:
+        heading =
+          index === 0
+            ? { x: 0, y: -1 }
+            : { x: index % 2 === 0 ? 0.7 : -0.7, y: -0.7 };
+        break;
+      case Formation.Pincer: {
+        const leftWing = index < count / 2;
+        heading = { x: leftWing ? 0.55 : -0.55, y: -0.85 };
+        break;
+      }
+      case Formation.Circle: {
+        const angle = (index / count) * Math.PI * 2;
+        heading = { x: Math.cos(angle), y: Math.sin(angle) };
+        break;
+      }
+      case Formation.Line:
+      case Formation.Arrow:
+      default:
+        heading = { x: 0, y: -1 };
+        break;
+    }
+    return rotateHeading(heading, rotation);
+  });
+}
+
+function rotateHeading(heading: Vec, rotation: number): Vec {
+  const cosine = Math.cos(rotation);
+  const sine = Math.sin(rotation);
+  return {
+    x: heading.x * cosine - heading.y * sine,
+    y: heading.x * sine + heading.y * cosine,
+  };
+}
