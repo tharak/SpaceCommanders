@@ -116,13 +116,10 @@ export function updateInvaders(
   const enemySlots = formationSlots(
     state.enemyDestination,
     state.enemyFormation,
-    state.enemies.length,
+    FLEET_SIZE,
     FLEET_SPACING,
   );
-  const enemyHeadings = formationSlotHeadings(
-    state.enemyFormation,
-    state.enemies.length,
-  );
+  const enemyHeadings = formationSlotHeadings(state.enemyFormation, FLEET_SIZE);
   for (const [ship, assignment] of assignNearestFormationSlots(
     state.enemies,
     enemySlots,
@@ -141,13 +138,10 @@ export function updateInvaders(
   const slots = formationSlots(
     playerFleetCenter(viewport),
     state.formation,
-    state.ships.length,
+    FLEET_SIZE,
     FLEET_SPACING,
   );
-  const playerHeadings = formationSlotHeadings(
-    state.formation,
-    state.ships.length,
-  );
+  const playerHeadings = formationSlotHeadings(state.formation, FLEET_SIZE);
   for (const [ship, assignment] of assignNearestFormationSlots(
     state.ships,
     slots,

@@ -450,13 +450,13 @@ function assignFormationTargets(state: GameState): void {
     const targets = formationSlots(
       center,
       formation,
-      battleships.length,
+      state.config.ships,
       spacing,
       rotation,
     );
     const headings = formationSlotHeadings(
       formation,
-      battleships.length,
+      state.config.ships,
       rotation,
     );
 
