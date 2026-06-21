@@ -35,7 +35,7 @@ export function createInvadersState(): InvadersState {
       base: Side.Player,
       stock: 0,
       hue: 195,
-      weight: 2.5,
+      weight: 0,
     },
     baseHp: BASE_MAX_HP,
     baseMaxHp: BASE_MAX_HP,
