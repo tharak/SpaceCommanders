@@ -14,7 +14,8 @@ import type { Formation as FormationType, Ship, Viewport } from "../game/types";
 import { UpgradeType } from "./upgrade-type";
 import type { InvadersState } from "./types";
 
-const FLEET_SIZE = 10;
+const PLAYER_FLEET_SIZE = 10;
+const ENEMY_WAVE_SIZE = 5;
 const FLEET_SPACING = 48;
 const PROJECTILE_SPEED = 330;
 const ENEMY_FLEET_Y = 105;
@@ -104,6 +105,7 @@ export function resetInvaders(
     state.formation,
     ShipRole.Battleship,
     state,
+    PLAYER_FLEET_SIZE,
   );
   state.supplyShips = [createSupplyShip(state.base.pos, state.nextShipId++)];
   spawnEnemyWave(state, viewport);
@@ -191,10 +193,13 @@ export function updateInvaders(
   const enemySlots = formationSlots(
     state.enemyDestination,
     state.enemyFormation,
-    FLEET_SIZE,
+    ENEMY_WAVE_SIZE,
     FLEET_SPACING,
   );
-  const enemyHeadings = formationSlotHeadings(state.enemyFormation, FLEET_SIZE);
+  const enemyHeadings = formationSlotHeadings(
+    state.enemyFormation,
+    ENEMY_WAVE_SIZE,
+  );
   for (const [ship, assignment] of assignNearestFormationSlots(
     state.enemies,
     enemySlots,
@@ -213,10 +218,13 @@ export function updateInvaders(
   const slots = formationSlots(
     playerFleetCenter(viewport),
     state.formation,
-    FLEET_SIZE,
+    PLAYER_FLEET_SIZE,
     FLEET_SPACING,
   );
-  const playerHeadings = formationSlotHeadings(state.formation, FLEET_SIZE);
+  const playerHeadings = formationSlotHeadings(
+    state.formation,
+    PLAYER_FLEET_SIZE,
+  );
   applyAtWillSteering(
     state.ships,
     state.enemies,
@@ -288,13 +296,14 @@ function createFleet(
   formation: Formation,
   role: ShipRole,
   state: InvadersState,
+  count: number,
 ): Ship[] {
   const fleet = spawnFleet(
     side,
     role,
     center,
     formation,
-    FLEET_SIZE,
+    count,
     FLEET_SPACING,
     state.nextShipId,
   );
@@ -453,6 +462,7 @@ function spawnEnemyWave(state: InvadersState, viewport: Viewport): void {
     state.enemyFormation,
     ShipRole.Battleship,
     state,
+    ENEMY_WAVE_SIZE,
   );
 }
 
