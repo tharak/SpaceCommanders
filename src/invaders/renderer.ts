@@ -1,5 +1,6 @@
 import { COLORS } from "../game/constants";
 import { Side } from "../game/types";
+import type { Vec } from "../game/types";
 import type { InvadersRenderContext, InvadersState } from "./types";
 
 export function renderInvaders(
@@ -14,12 +15,25 @@ export function renderInvaders(
   drawShips(context, state.ships);
   drawShips(context, state.enemies);
   for (const projectile of state.projectiles) {
-    context.fillStyle = COLORS[projectile.side];
-    context.beginPath();
-    context.arc(projectile.pos.x, projectile.pos.y, 3, 0, Math.PI * 2);
-    context.fill();
+    drawLaser(context, projectile.pos, projectile.vel, COLORS[projectile.side]);
   }
   status.innerHTML = `<span style="color:#5de5ff">◈ WAVE ${state.wave}</span><br><span style="color:#91c9de">PLANET ${Math.ceil(state.planetHp)}%</span>`;
+}
+
+function drawLaser(
+  context: CanvasRenderingContext2D,
+  position: Vec,
+  velocity: Vec,
+  color: string,
+): void {
+  context.save();
+  context.translate(position.x, position.y);
+  context.rotate(Math.atan2(velocity.y, velocity.x));
+  context.fillStyle = color;
+  context.shadowColor = color;
+  context.shadowBlur = 8;
+  context.fillRect(-7, -1.5, 14, 3);
+  context.restore();
 }
 
 function drawStars(
