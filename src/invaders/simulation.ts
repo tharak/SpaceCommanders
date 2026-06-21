@@ -36,7 +36,6 @@ export function createInvadersState(): InvadersState {
     fireMode: FireMode.AtWill,
     ships: [],
     supplyShips: [],
-    mechanics: [],
     enemies: [],
     projectiles: [],
     base: {
@@ -105,7 +104,6 @@ export function resetInvaders(
     state,
   );
   state.supplyShips = [createSupplyShip(state.base.pos, state.nextShipId++)];
-  state.mechanics = [createMechanic(state.base.pos, state.nextShipId++)];
   spawnEnemyWave(state, viewport);
 }
 
@@ -147,7 +145,6 @@ export function purchaseInvadersUpgrade(
       case UpgradeType.SupplyShips:
       case UpgradeType.BaseSupplyGeneration:
       case UpgradeType.BaseSupplyCapacity:
-      case UpgradeType.Mechanics:
         break;
     }
   }
@@ -161,9 +158,6 @@ export function purchaseInvadersUpgrade(
   }
   if (upgrade === UpgradeType.BaseSupplyCapacity) {
     state.baseSupplyCapacity += 5;
-  }
-  if (upgrade === UpgradeType.Mechanics) {
-    state.mechanics.push(createMechanic(state.base.pos, state.nextShipId++));
   }
   return cost;
 }
@@ -244,7 +238,6 @@ export function updateInvaders(
   });
   replenishBaseSupplies(state, elapsed);
   updateSupplyShips(state, viewport, elapsed);
-  updateMechanics(state, viewport, elapsed);
   resolveBaseContacts(state);
   if (state.winner) return;
   fireWeapons(state);
@@ -456,17 +449,6 @@ function spawnEnemyWave(state: InvadersState, viewport: Viewport): void {
   );
 }
 
-function createMechanic(position: { x: number; y: number }, id: number): Ship {
-  const ship = spawnShip(Side.Player, ShipRole.Mechanic, position, id);
-  ship.hp = 35;
-  ship.maxHp = 35;
-  ship.speed = 70;
-  ship.supplies = 0;
-  ship.range = 0;
-  ship.target = { ...position };
-  return ship;
-}
-
 function createSupplyShip(
   position: { x: number; y: number },
   id: number,
@@ -486,36 +468,6 @@ function replenishBaseSupplies(state: InvadersState, elapsed: number): void {
     state.baseSupplyCapacity,
     (state.base.stock ?? 0) + elapsed * state.baseSupplyRate,
   );
-}
-
-function updateMechanics(
-  state: InvadersState,
-  viewport: Viewport,
-  elapsed: number,
-): void {
-  for (const mechanic of state.mechanics) {
-    const target = state.ships
-      .filter((defender) => defender.hp < defender.maxHp)
-      .reduce<
-        Ship | undefined
-      >((mostDamaged, defender) => (!mostDamaged || defender.hp / defender.maxHp < mostDamaged.hp / mostDamaged.maxHp ? defender : mostDamaged), undefined);
-    mechanic.target = { ...(target?.pos ?? state.base.pos) };
-    if (target && distance(mechanic.pos, target.pos) <= 32) {
-      target.hp = Math.min(target.maxHp, target.hp + elapsed * 8);
-    }
-    moveShipWithBoids(
-      mechanic,
-      [
-        ...state.ships,
-        ...state.enemies,
-        ...state.supplyShips,
-        ...state.mechanics,
-      ],
-      [],
-      viewport,
-      elapsed,
-    );
-  }
 }
 
 function updateSupplyShips(
@@ -576,6 +528,5 @@ function createUpgradeLevels(): Record<UpgradeType, number> {
     [UpgradeType.SupplyShips]: 0,
     [UpgradeType.BaseSupplyGeneration]: 0,
     [UpgradeType.BaseSupplyCapacity]: 0,
-    [UpgradeType.Mechanics]: 0,
   };
 }

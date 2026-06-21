@@ -26,7 +26,6 @@ export const TEXT = {
       supplyShips: "SUP",
       baseSupplyGeneration: "GEN",
       baseSupplyCapacity: "CAP",
-      mechanics: "MEC",
     },
   },
   launcher: {

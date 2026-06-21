@@ -20,7 +20,6 @@ export type InvadersState = {
   fireMode: FireMode;
   ships: Ship[];
   supplyShips: Ship[];
-  mechanics: Ship[];
   enemies: Ship[];
   projectiles: Projectile[];
   base: Body;

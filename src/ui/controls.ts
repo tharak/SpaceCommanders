@@ -147,7 +147,6 @@ function createUpgradeButtons(
       TEXT.controls.upgradeLabels.baseSupplyGeneration,
     [UpgradeType.BaseSupplyCapacity]:
       TEXT.controls.upgradeLabels.baseSupplyCapacity,
-    [UpgradeType.Mechanics]: TEXT.controls.upgradeLabels.mechanics,
   };
   for (const upgrade of Object.values(UpgradeType)) {
     const button = document.createElement("button");

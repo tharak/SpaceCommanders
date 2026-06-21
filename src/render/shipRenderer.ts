@@ -20,8 +20,6 @@ export function drawShips(
     context.beginPath();
     if (ship.role === ShipRole.Supply) {
       context.rect(-5, -5, 10, 10);
-    } else if (ship.role === ShipRole.Mechanic) {
-      context.arc(0, 0, 8, 0, Math.PI * 2);
     } else if (ship.role === ShipRole.Guard) {
       context.moveTo(0, -10);
       context.lineTo(8, -6);
