@@ -23,6 +23,7 @@ export const TEXT = {
       speed: "SPD",
       hull: "HP",
       range: "RNG",
+      supplyShips: "SUP",
     },
   },
   launcher: {

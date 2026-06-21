@@ -19,7 +19,7 @@ export type InvadersState = {
   captainFavorite: Formation;
   fireMode: FireMode;
   ships: Ship[];
-  supplyShip: Ship;
+  supplyShips: Ship[];
   enemies: Ship[];
   projectiles: Projectile[];
   base: Body;

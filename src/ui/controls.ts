@@ -142,6 +142,7 @@ function createUpgradeButtons(
     [UpgradeType.Speed]: TEXT.controls.upgradeLabels.speed,
     [UpgradeType.Hull]: TEXT.controls.upgradeLabels.hull,
     [UpgradeType.Range]: TEXT.controls.upgradeLabels.range,
+    [UpgradeType.SupplyShips]: TEXT.controls.upgradeLabels.supplyShips,
   };
   for (const upgrade of Object.values(UpgradeType)) {
     const button = document.createElement("button");

@@ -35,7 +35,7 @@ export function createInvadersState(): InvadersState {
     captainFavorite: Formation.Line,
     fireMode: FireMode.AtWill,
     ships: [],
-    supplyShip: createSupplyShip({ x: 0, y: 0 }, 0),
+    supplyShips: [],
     enemies: [],
     projectiles: [],
     base: {
@@ -99,7 +99,7 @@ export function resetInvaders(
     ShipRole.Battleship,
     state,
   );
-  state.supplyShip = createSupplyShip(state.base.pos, state.nextShipId++);
+  state.supplyShips = [createSupplyShip(state.base.pos, state.nextShipId++)];
   spawnEnemyWave(state, viewport);
 }
 
@@ -138,7 +138,14 @@ export function purchaseInvadersUpgrade(
       case UpgradeType.Range:
         ship.range += 15;
         break;
+      case UpgradeType.SupplyShips:
+        break;
     }
+  }
+  if (upgrade === UpgradeType.SupplyShips) {
+    state.supplyShips.push(
+      createSupplyShip(state.base.pos, state.nextShipId++),
+    );
   }
   return cost;
 }
@@ -218,7 +225,7 @@ export function updateInvaders(
     ship.cooldown -= elapsed;
   });
   replenishBaseSupplies(state, elapsed);
-  updateSupplyShip(state, viewport, elapsed);
+  updateSupplyShips(state, viewport, elapsed);
   resolveGuardBaseContacts(state);
   if (state.winner) return;
   fireWeapons(state);
@@ -451,12 +458,22 @@ function replenishBaseSupplies(state: InvadersState, elapsed: number): void {
   );
 }
 
-function updateSupplyShip(
+function updateSupplyShips(
   state: InvadersState,
   viewport: Viewport,
   elapsed: number,
 ): void {
-  const ship = state.supplyShip;
+  for (const ship of state.supplyShips) {
+    updateSupplyShip(state, ship, viewport, elapsed);
+  }
+}
+
+function updateSupplyShip(
+  state: InvadersState,
+  ship: Ship,
+  viewport: Viewport,
+  elapsed: number,
+): void {
   if (ship.supplies === 0) {
     ship.target = { ...state.base.pos };
     if (distance(ship.pos, state.base.pos) <= state.base.radius + 12) {
@@ -483,7 +500,7 @@ function updateSupplyShip(
   }
   moveShipWithBoids(
     ship,
-    [...state.ships, ...state.enemies, ship],
+    [...state.ships, ...state.enemies, ...state.supplyShips],
     [],
     viewport,
     elapsed,
@@ -496,5 +513,6 @@ function createUpgradeLevels(): Record<UpgradeType, number> {
     [UpgradeType.Speed]: 0,
     [UpgradeType.Hull]: 0,
     [UpgradeType.Range]: 0,
+    [UpgradeType.SupplyShips]: 0,
   };
 }
