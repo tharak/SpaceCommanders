@@ -1,5 +1,5 @@
 import { COLORS } from "../game/constants";
-import { formationSlots } from "../game/formations";
+import { formationSlotHeadings, formationSlots } from "../game/formations";
 import { clamp } from "../game/math";
 import { drawGameBackground } from "./backgroundRenderer";
 import { drawFiringRangeCones, drawShips } from "./shipRenderer";
@@ -158,16 +158,21 @@ function drawFormationPreview(
     ),
     rotation,
   );
+  const headings = formationSlotHeadings(
+    state.selectedFormation,
+    state.config.ships,
+    rotation,
+  );
   context.strokeStyle = "#62e8ff66";
   context.setLineDash([5, 5]);
   context.beginPath();
   context.arc(center.x, center.y, 10, 0, 7);
   context.stroke();
   context.setLineDash([]);
-  for (const slot of slots) {
+  for (const [index, slot] of slots.entries()) {
     context.save();
     context.translate(slot.x, slot.y);
-    context.rotate(rotation);
+    context.rotate(Math.atan2(headings[index].y, headings[index].x));
     context.fillStyle = "#62e8ff99";
     context.beginPath();
     context.moveTo(7, 0);
