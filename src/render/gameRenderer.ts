@@ -1,7 +1,7 @@
 import { COLORS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp } from "../game/math";
-import { drawShips } from "./shipRenderer";
+import { drawFiringRangeCones, drawShips } from "./shipRenderer";
 import { BodyKind, ShipRole, Side } from "../game/types";
 import type { Body, GameState, Ship, Vec, Viewport } from "../game/types";
 
@@ -33,6 +33,7 @@ export function renderGame(
   drawBodies(context, state);
   drawFormationPreview(context, state);
   drawProjectiles(context, state);
+  drawFiringRangeCones(context, state.ships);
   drawShips(context, state.ships);
   updateStatus(renderContext.status, state);
 }

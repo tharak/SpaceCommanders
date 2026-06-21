@@ -1,6 +1,6 @@
 import { COLORS } from "../game/constants";
 import { Side } from "../game/types";
-import { drawShips } from "../render/shipRenderer";
+import { drawFiringRangeCones, drawShips } from "../render/shipRenderer";
 import type { Vec } from "../game/types";
 import type { InvadersRenderContext, InvadersState } from "./types";
 
@@ -13,6 +13,7 @@ export function renderInvaders(
   context.fillRect(0, 0, viewport.width, viewport.height);
   drawStars(context, viewport);
   drawPlanet(context, state);
+  drawFiringRangeCones(context, [...state.ships, ...state.enemies]);
   drawShips(context, state.ships);
   drawShips(context, state.enemies);
   for (const projectile of state.projectiles) {

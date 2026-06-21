@@ -76,3 +76,26 @@ function drawSupplyMarkers(
     context.stroke();
   }
 }
+
+export function drawFiringRangeCones(
+  context: CanvasRenderingContext2D,
+  ships: Ship[],
+): void {
+  const halfAngle = Math.PI / 3;
+  for (const ship of ships) {
+    if (ship.role !== ShipRole.Battleship) continue;
+    const angle = Math.atan2(ship.heading.y, ship.heading.x);
+    context.save();
+    context.translate(ship.pos.x, ship.pos.y);
+    context.fillStyle = `${COLORS[ship.side]}18`;
+    context.strokeStyle = `${COLORS[ship.side]}66`;
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.arc(0, 0, ship.range, angle - halfAngle, angle + halfAngle);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.restore();
+  }
+}
