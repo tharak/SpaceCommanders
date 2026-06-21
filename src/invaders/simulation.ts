@@ -1,3 +1,4 @@
+import { hasLineOfSight } from "../game/combat";
 import { FORMATIONS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp, distance, normalize } from "../game/math";
@@ -155,7 +156,19 @@ function fireWeapons(state: InvadersState): void {
       state.enemies.length === 0
     )
       continue;
-    const target = state.enemies.reduce((closest, enemy) =>
+    const targets = state.enemies.filter(
+      (enemy) =>
+        distance(enemy.pos, ship.pos) < ship.range &&
+        hasLineOfSight(
+          ship,
+          enemy.pos,
+          [...state.ships, ...state.enemies],
+          [state.planet],
+          enemy,
+        ),
+    );
+    if (targets.length === 0) continue;
+    const target = targets.reduce((closest, enemy) =>
       distance(enemy.pos, ship.pos) < distance(closest.pos, ship.pos)
         ? enemy
         : closest,
@@ -168,7 +181,18 @@ function fireWeapons(state: InvadersState): void {
 
   for (const ship of state.enemies) {
     if (ship.role !== ShipRole.Battleship || ship.cooldown > 0) continue;
-    const target = state.ships.reduce<Ship | undefined>(
+    const targets = state.ships.filter(
+      (defender) =>
+        distance(defender.pos, ship.pos) < ship.range &&
+        hasLineOfSight(
+          ship,
+          defender.pos,
+          [...state.ships, ...state.enemies],
+          [state.planet],
+          defender,
+        ),
+    );
+    const target = targets.reduce<Ship | undefined>(
       (closest, defender) =>
         !closest ||
         distance(defender.pos, ship.pos) < distance(closest.pos, ship.pos)
@@ -176,6 +200,17 @@ function fireWeapons(state: InvadersState): void {
           : closest,
       undefined,
     );
+    const canAttackPlanet =
+      distance(state.planet.pos, ship.pos) < ship.range &&
+      hasLineOfSight(
+        ship,
+        state.planet.pos,
+        [...state.ships, ...state.enemies],
+        [state.planet],
+        undefined,
+        state.planet,
+      );
+    if (!target && !canAttackPlanet) continue;
     if (target) target.hp -= ship.attack;
     else state.planetHp = clamp(state.planetHp - ship.attack, 0, 100);
     ship.cooldown = 1.15;

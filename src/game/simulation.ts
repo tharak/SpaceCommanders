@@ -8,16 +8,11 @@ import {
   SUPPLY_TRANSFER_DISTANCE,
   SUPPLY_SHIP_CAPACITY,
 } from "./constants";
+import { hasLineOfSight } from "./combat";
 import { formationSlots } from "./formations";
 import { spawnShip } from "./ship-factory";
 import { moveShipWithBoids } from "./ship-movement";
-import {
-  clamp,
-  distance,
-  distanceToSegment,
-  normalize,
-  randomBetween,
-} from "./math";
+import { clamp, distance, normalize, randomBetween } from "./math";
 import {
   Body,
   Config,
@@ -502,29 +497,6 @@ function moveShip(
   );
 }
 
-function hasLineOfSight(
-  state: GameState,
-  ship: Ship,
-  target: Vec,
-  targetShip?: Ship,
-  targetBody?: Body,
-): boolean {
-  const allyBlocksLine = state.ships.some(
-    (other) =>
-      other !== ship &&
-      other !== targetShip &&
-      other.side === ship.side &&
-      distanceToSegment(other.pos, ship.pos, target) < 10,
-  );
-  if (allyBlocksLine) return false;
-
-  return !state.bodies.some(
-    (body) =>
-      body !== targetBody &&
-      distanceToSegment(body.pos, ship.pos, target) < body.radius,
-  );
-}
-
 function attackDamage(state: GameState, ship: Ship, defense = 0): number {
   const bonus =
     ship.side === Side.Player && state.formation === state.captainFavorite
@@ -538,7 +510,7 @@ function fireWeapons(state: GameState, ship: Ship): void {
     (candidate) =>
       candidate.side !== ship.side &&
       distance(candidate.pos, ship.pos) < ship.range &&
-      hasLineOfSight(state, ship, candidate.pos, candidate),
+      hasLineOfSight(ship, candidate.pos, state.ships, state.bodies, candidate),
   );
   const canFire =
     ship.role === ShipRole.Battleship &&
