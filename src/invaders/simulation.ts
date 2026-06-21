@@ -4,7 +4,7 @@ import { BodyKind, Formation, ShipRole, Side } from "../game/types";
 import type { Formation as FormationType, Ship, Viewport } from "../game/types";
 import type { InvadersState } from "./types";
 
-const FLEET_SIZE = 7;
+const FLEET_SIZE = 10;
 const PROJECTILE_SPEED = 330;
 const ENEMY_FLEET_Y = 105;
 const PLANET_BOTTOM_OFFSET = 130;
