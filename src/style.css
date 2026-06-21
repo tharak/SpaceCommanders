@@ -95,9 +95,8 @@ h1 b {
 }
 #command-deck {
   position: absolute;
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
+  display: grid;
+  gap: 10px;
   left: 50%;
   transform: translateX(-50%);
   bottom: max(18px, env(safe-area-inset-bottom));
@@ -106,6 +105,11 @@ h1 b {
   background: #071523d9;
   box-shadow: 0 12px 34px #0009;
   pointer-events: auto;
+}
+.command-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
 }
 .command-group {
   display: grid;
@@ -356,4 +360,8 @@ input[type="range"] {
   border-color: #f0cf77;
   color: #fff0bc;
   background: #3a3117e8;
+}
+.upgrade-row button small {
+  color: #f0cf77;
+  font-size: 9px;
 }

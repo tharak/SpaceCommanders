@@ -83,6 +83,20 @@ export function setCaptainFormation(
   selectActive(root, formation);
 }
 
+export function setUpgradePrices(
+  controls: Controls,
+  levels: Record<UpgradeType, number>,
+): void {
+  controls.upgradeControls
+    .querySelectorAll<HTMLButtonElement>("button")
+    .forEach((button) => {
+      const upgrade = button.dataset.value as UpgradeType;
+      const label = button.dataset.label;
+      if (!label || !(upgrade in levels)) return;
+      button.textContent = label + " " + 100 * (levels[upgrade] + 1);
+    });
+}
+
 export function setSelectedFormation(
   controls: Controls,
   formation: Formation,
@@ -121,7 +135,8 @@ function createUpgradeButtons(
     const button = document.createElement("button");
     button.ariaLabel = `Upgrade `;
     button.dataset.value = upgrade;
-    button.textContent = labels[upgrade];
+    button.dataset.label = labels[upgrade];
+    button.textContent = labels[upgrade] + " 100";
     button.addEventListener("click", () => onUpgrade(upgrade));
     controls.upgradeControls.append(button);
   }

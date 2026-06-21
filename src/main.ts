@@ -27,6 +27,7 @@ import {
   setupControls,
   setCaptainFormation,
   setSelectedFormation,
+  setUpgradePrices,
   showReadout,
 } from "./ui/controls";
 
@@ -59,6 +60,7 @@ function reset(): void {
     setSelectedFormation(controls, invadersState.selectedFormation);
   }
   setCaptainFormation(captainFormationControls, commandState.captainFavorite);
+  setUpgradePrices(controls, invadersState.upgrades);
   showReadout(
     controls,
     activeGame === "command"
@@ -141,6 +143,7 @@ setupControls(
         );
         return;
       }
+      setUpgradePrices(controls, invadersState.upgrades);
       showReadout(
         controls,
         upgrade.toUpperCase() + " UPGRADED — " + cost + " SCORE SPENT",
