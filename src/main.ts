@@ -168,7 +168,9 @@ canvas.addEventListener("pointermove", (event) => {
   if (!matchActive) return;
   const point = mapPoint(event);
   if (activeGame === "invaders") {
-    setInvadersAlignment(invadersState, point, viewport);
+    if (canvas.hasPointerCapture(event.pointerId)) {
+      setInvadersAlignment(invadersState, point, viewport);
+    }
     return;
   }
   commandState.pointer = point;

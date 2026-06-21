@@ -14,7 +14,7 @@ export function moveShipWithBoids(
   if (distance(ship.pos, ship.target) <= arrivalDistance) {
     ship.pos = { ...ship.target };
     ship.vel = { x: 0, y: 0 };
-    if (formationHeading) ship.heading = normalize(formationHeading);
+    if (formationHeading) steerHeading(ship, formationHeading, deltaTime);
     return;
   }
 
@@ -85,4 +85,12 @@ function steeringForce(ship: Ship): Vec {
     x: (vector.x / length) * ship.speed,
     y: (vector.y / length) * ship.speed,
   };
+}
+
+function steerHeading(ship: Ship, targetHeading: Vec, deltaTime: number): void {
+  const turnAmount = Math.min(1, deltaTime * 4);
+  ship.heading = normalize({
+    x: ship.heading.x + (targetHeading.x - ship.heading.x) * turnAmount,
+    y: ship.heading.y + (targetHeading.y - ship.heading.y) * turnAmount,
+  });
 }
