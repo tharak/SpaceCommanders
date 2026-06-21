@@ -242,6 +242,7 @@ function fireWeapons(state: InvadersState): void {
     if (
       ship.role !== ShipRole.Battleship ||
       state.fireMode === FireMode.Hold ||
+      ship.supplies < 1 ||
       ship.cooldown > 0 ||
       state.enemies.length === 0
     )
@@ -269,6 +270,7 @@ function fireWeapons(state: InvadersState): void {
     const dealtDamage = Math.min(target.hp, damage);
     target.hp -= dealtDamage;
     state.score += dealtDamage;
+    ship.supplies--;
     ship.cooldown = 0.7;
     spawnProjectile(state, ship, target.pos);
   }
