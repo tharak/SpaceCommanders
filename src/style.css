@@ -139,10 +139,9 @@ input[type="range"] {
   cursor: pointer;
 }
 #order-readout {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 97px;
+  position: static;
+  transform: none;
+  margin: 0;
   padding: 5px 11px;
   background: #071523ba;
   border: 1px solid #25485a;
