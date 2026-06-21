@@ -61,10 +61,28 @@ function drawBase(
   context.strokeRect(-width / 2, -height / 2, width, height);
   context.fillStyle = "#5de5ff66";
   context.fillRect(-width / 2, -4, width, 8);
+  drawBaseSupplies(context, base);
   const health = state.baseHp / state.baseMaxHp;
   context.fillStyle = "#031017";
   context.fillRect(-width / 2, -height / 2 - 9, width, 5);
   context.fillStyle = COLORS[Side.Player];
   context.fillRect(-width / 2, -height / 2 - 9, width * health, 5);
   context.restore();
+}
+
+function drawBaseSupplies(
+  context: CanvasRenderingContext2D,
+  base: InvadersState["base"],
+): void {
+  const supplyCount = Math.floor(base.stock ?? 0);
+  if (supplyCount <= 0) return;
+
+  const markerSpacing = 9;
+  context.fillStyle = "#e4ff91";
+  for (let index = 0; index < supplyCount; index++) {
+    const x = (index - (supplyCount - 1) / 2) * markerSpacing;
+    context.beginPath();
+    context.arc(x, 12, 2, 0, Math.PI * 2);
+    context.fill();
+  }
 }
