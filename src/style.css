@@ -139,8 +139,10 @@ input[type="range"] {
   cursor: pointer;
 }
 #order-readout {
-  position: static;
-  transform: none;
+  position: absolute;
+  top: max(70px, calc(env(safe-area-inset-top) + 56px));
+  left: 50%;
+  transform: translateX(-50%);
   margin: 0;
   padding: 5px 11px;
   background: #071523ba;
@@ -223,7 +225,8 @@ input[type="range"] {
     width: 28px;
   }
   #order-readout {
-    bottom: 88px;
+    top: 62px;
+    bottom: auto;
     font-size: 9px;
     max-width: 90%;
   }
