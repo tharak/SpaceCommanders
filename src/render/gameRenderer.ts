@@ -254,6 +254,9 @@ function drawFormationPreview(
   const center =
     state.previewCenter ?? state.destination ?? state.command ?? state.pointer;
   if (!center) return;
+  const rotation = state.previewCenter
+    ? state.previewRotation
+    : state.formationRotation;
   const slots = formationSlots(
     center,
     state.selectedFormation,
@@ -263,7 +266,7 @@ function drawFormationPreview(
       25,
       70,
     ),
-    state.previewCenter ? state.previewRotation : state.formationRotation,
+    rotation,
   );
   context.strokeStyle = "#62e8ff66";
   context.setLineDash([5, 5]);
@@ -272,10 +275,18 @@ function drawFormationPreview(
   context.stroke();
   context.setLineDash([]);
   for (const slot of slots) {
-    context.fillStyle = "#62e8ff77";
+    context.save();
+    context.translate(slot.x, slot.y);
+    context.rotate(rotation);
+    context.fillStyle = "#62e8ff99";
     context.beginPath();
-    context.arc(slot.x, slot.y, 5, 0, 7);
+    context.moveTo(7, 0);
+    context.lineTo(-5, -4);
+    context.lineTo(-2, 0);
+    context.lineTo(-5, 4);
+    context.closePath();
     context.fill();
+    context.restore();
   }
 }
 
