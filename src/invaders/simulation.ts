@@ -158,7 +158,12 @@ function createFleet(
 
 function fireWeapons(state: InvadersState): void {
   for (const ship of state.ships) {
-    if (ship.cooldown > 0 || state.enemies.length === 0) continue;
+    if (
+      ship.role !== ShipRole.Battleship ||
+      ship.cooldown > 0 ||
+      state.enemies.length === 0
+    )
+      continue;
     const target = state.enemies.reduce((closest, enemy) =>
       distance(enemy.pos, ship.pos) < distance(closest.pos, ship.pos)
         ? enemy
@@ -171,7 +176,7 @@ function fireWeapons(state: InvadersState): void {
   }
 
   for (const ship of state.enemies) {
-    if (ship.cooldown > 0) continue;
+    if (ship.role !== ShipRole.Battleship || ship.cooldown > 0) continue;
     const target = state.ships.reduce<Ship | undefined>(
       (closest, defender) =>
         !closest ||
