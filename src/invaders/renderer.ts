@@ -18,7 +18,7 @@ export function renderInvaders(
   for (const projectile of state.projectiles) {
     drawLaser(context, projectile.pos, projectile.vel, COLORS[projectile.side]);
   }
-  status.innerHTML = `<span style="color:#5de5ff">◈ DEFENSE FLEET</span><br><span style="color:#91c9de">BASE ${Math.ceil(state.baseHp)}% · WAVE ${state.wave}</span>`;
+  status.innerHTML = `<span style="color:#5de5ff">◈ DEFENSE FLEET</span><br><span style="color:#91c9de">SCORE ${Math.floor(state.score)} · BASE ${Math.ceil(state.baseHp)}% · WAVE ${state.wave}</span>`;
 }
 
 function drawLaser(

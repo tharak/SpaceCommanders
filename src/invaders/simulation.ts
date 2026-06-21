@@ -40,6 +40,7 @@ export function createInvadersState(): InvadersState {
     baseHp: BASE_MAX_HP,
     baseMaxHp: BASE_MAX_HP,
     wave: 1,
+    score: 0,
     waveOffset: 0,
     waveDirection: 1,
     nextShipId: 1,
@@ -73,6 +74,7 @@ export function resetInvaders(
   state.baseMaxHp = BASE_MAX_HP;
   state.projectiles = [];
   state.wave = 0;
+  state.score = 0;
   state.waveOffset = 0;
   state.nextShipId = 1;
   state.winner = null;
@@ -226,8 +228,11 @@ function fireWeapons(state: InvadersState): void {
         ? enemy
         : closest,
     );
-    target.hp -=
+    const damage =
       ship.attack * (state.formation === state.captainFavorite ? 1.25 : 1);
+    const dealtDamage = Math.min(target.hp, damage);
+    target.hp -= dealtDamage;
+    state.score += dealtDamage;
     ship.cooldown = 0.7;
     spawnProjectile(state, ship, target.pos);
   }

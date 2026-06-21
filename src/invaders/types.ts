@@ -22,6 +22,7 @@ export type InvadersState = {
   baseHp: number;
   baseMaxHp: number;
   wave: number;
+  score: number;
   waveOffset: number;
   waveDirection: number;
   nextShipId: number;
