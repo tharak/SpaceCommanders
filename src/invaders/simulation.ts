@@ -238,7 +238,7 @@ export function updateInvaders(
   });
   replenishBaseSupplies(state, elapsed);
   updateSupplyShips(state, viewport, elapsed);
-  resolveGuardBaseContacts(state);
+  resolveBaseContacts(state);
   if (state.winner) return;
   fireWeapons(state);
   updateProjectiles(state, elapsed, viewport);
@@ -258,11 +258,11 @@ function playerSteeringHeading(
   });
 }
 
-function resolveGuardBaseContacts(state: InvadersState): void {
-  for (const guard of state.enemies) {
-    if (guard.pos.y < state.base.pos.y - state.base.radius / 2 - 8) continue;
-    state.baseHp = clamp(state.baseHp - guard.hp, 0, state.baseMaxHp);
-    guard.hp = 0;
+function resolveBaseContacts(state: InvadersState): void {
+  for (const ship of state.enemies) {
+    if (ship.pos.y < state.base.pos.y - state.base.radius / 2 - 8) continue;
+    state.baseHp = clamp(state.baseHp - ship.hp, 0, state.baseMaxHp);
+    ship.hp = 0;
   }
   state.enemies = state.enemies.filter((ship) => ship.hp > 0);
   if (state.baseHp <= 0) state.winner = Side.Enemy;
@@ -444,7 +444,7 @@ function spawnEnemyWave(state: InvadersState, viewport: Viewport): void {
     Side.Enemy,
     { x: viewport.width / 2, y: ENEMY_FLEET_Y },
     state.enemyFormation,
-    ShipRole.Guard,
+    ShipRole.Battleship,
     state,
   );
 }
