@@ -140,14 +140,15 @@ function createFleet(
   role: ShipRole,
   state: InvadersState,
 ): Ship[] {
+  const hp = role === ShipRole.Guard ? 60 : 30;
   return formationSlots(center, formation, FLEET_SIZE, 34).map((pos) => ({
     id: state.nextShipId++,
     side,
     role,
     pos,
     vel: { x: 0, y: 0 },
-    hp: 30,
-    maxHp: 30,
+    hp,
+    maxHp: hp,
     attack: 10,
     defense: 0,
     speed: 0,
