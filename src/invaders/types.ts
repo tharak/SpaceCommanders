@@ -17,8 +17,8 @@ export type InvadersState = {
   ships: Ship[];
   enemies: Ship[];
   projectiles: Projectile[];
-  planet: Body;
-  planetHp: number;
+  base: Body;
+  baseHp: number;
   wave: number;
   waveOffset: number;
   waveDirection: number;

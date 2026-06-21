@@ -11,7 +11,7 @@ import type { InvadersState } from "./types";
 const FLEET_SIZE = 10;
 const PROJECTILE_SPEED = 330;
 const ENEMY_FLEET_Y = 105;
-const PLANET_BOTTOM_OFFSET = 130;
+const BASE_BOTTOM_OFFSET = 130;
 const PLAYER_FLEET_BOTTOM_OFFSET = 220;
 
 export function createInvadersState(): InvadersState {
@@ -24,9 +24,9 @@ export function createInvadersState(): InvadersState {
     ships: [],
     enemies: [],
     projectiles: [],
-    planet: {
+    base: {
       id: 0,
-      kind: BodyKind.Planet,
+      kind: BodyKind.Base,
       pos: { x: 0, y: 0 },
       radius: 40,
       base: Side.Player,
@@ -34,7 +34,7 @@ export function createInvadersState(): InvadersState {
       hue: 195,
       weight: 2.5,
     },
-    planetHp: 100,
+    baseHp: 100,
     wave: 1,
     waveOffset: 0,
     waveDirection: 1,
@@ -51,12 +51,12 @@ export function resetInvaders(
   state.formation = Formation.Line;
   state.selectedFormation = Formation.Line;
   state.captainFavorite = captain;
-  state.planet = {
+  state.base = {
     id: 0,
-    kind: BodyKind.Planet,
+    kind: BodyKind.Base,
     pos: {
       x: viewport.width / 2,
-      y: viewport.height - PLANET_BOTTOM_OFFSET,
+      y: viewport.height - BASE_BOTTOM_OFFSET,
     },
     radius: 40,
     base: Side.Player,
@@ -64,7 +64,7 @@ export function resetInvaders(
     hue: 195,
     weight: 2.5,
   };
-  state.planetHp = 100;
+  state.baseHp = 100;
   state.projectiles = [];
   state.wave = 0;
   state.waveOffset = 0;
@@ -119,11 +119,23 @@ export function updateInvaders(
   state.enemies.forEach((ship) => {
     ship.cooldown -= elapsed;
   });
+  resolveGuardBaseContacts(state);
+  if (state.winner) return;
   fireWeapons(state);
   updateProjectiles(state, elapsed, viewport);
   state.ships = state.ships.filter((ship) => ship.hp > 0);
   state.enemies = state.enemies.filter((ship) => ship.hp > 0);
   if (state.enemies.length === 0) spawnEnemyWave(state, viewport);
+}
+
+function resolveGuardBaseContacts(state: InvadersState): void {
+  for (const guard of state.enemies) {
+    if (distance(guard.pos, state.base.pos) > state.base.radius + 8) continue;
+    state.baseHp = clamp(state.baseHp - guard.hp, 0, 100);
+    guard.hp = 0;
+  }
+  state.enemies = state.enemies.filter((ship) => ship.hp > 0);
+  if (state.baseHp <= 0) state.winner = Side.Enemy;
 }
 
 function playerFleetCenter(viewport: Viewport): { x: number; y: number } {
@@ -175,7 +187,7 @@ function fireWeapons(state: InvadersState): void {
           ship,
           enemy.pos,
           [...state.ships, ...state.enemies],
-          [state.planet],
+          [state.base],
           enemy,
         ),
     );
@@ -201,7 +213,7 @@ function fireWeapons(state: InvadersState): void {
           ship,
           defender.pos,
           [...state.ships, ...state.enemies],
-          [state.planet],
+          [state.base],
           defender,
         ),
     );
@@ -213,21 +225,21 @@ function fireWeapons(state: InvadersState): void {
           : closest,
       undefined,
     );
-    const canAttackPlanet =
-      distance(state.planet.pos, ship.pos) < ship.range &&
+    const canAttackBase =
+      distance(state.base.pos, ship.pos) < ship.range &&
       hasLineOfSight(
         ship,
-        state.planet.pos,
+        state.base.pos,
         [...state.ships, ...state.enemies],
-        [state.planet],
+        [state.base],
         undefined,
-        state.planet,
+        state.base,
       );
-    if (!target && !canAttackPlanet) continue;
+    if (!target && !canAttackBase) continue;
     if (target) target.hp -= ship.attack;
-    else state.planetHp = clamp(state.planetHp - ship.attack, 0, 100);
+    else state.baseHp = clamp(state.baseHp - ship.attack, 0, 100);
     ship.cooldown = 1.15;
-    spawnProjectile(state, ship, target?.pos ?? state.planet.pos);
+    spawnProjectile(state, ship, target?.pos ?? state.base.pos);
   }
 }
 
@@ -264,11 +276,11 @@ function updateProjectiles(
         ship.id !== projectile.sourceShipId &&
         distance(ship.pos, projectile.pos) < 10,
     );
-    const hitPlanet =
-      distance(state.planet.pos, projectile.pos) < state.planet.radius;
+    const hitBase =
+      distance(state.base.pos, projectile.pos) < state.base.radius;
     return (
       !hitShip &&
-      !hitPlanet &&
+      !hitBase &&
       projectile.pos.x >= 0 &&
       projectile.pos.x <= viewport.width &&
       projectile.pos.y >= 0 &&

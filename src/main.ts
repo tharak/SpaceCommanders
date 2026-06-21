@@ -85,7 +85,7 @@ function showGameOver(winner: Side): void {
     playerWon ? "VICTORY" : "COMMAND FLEET LOST",
     playerWon
       ? "The sector is secure. Select a game to play again."
-      : "Your planet has fallen. Select a game to try again.",
+      : "Your base has fallen. Select a game to try again.",
     "PLAY AGAIN",
   );
 }
