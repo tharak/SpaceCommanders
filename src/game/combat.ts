@@ -1,4 +1,7 @@
 import { distanceToSegment } from "./math";
+
+export const FIRING_CONE_ANGLE = (20 * Math.PI) / 180;
+export const FIRING_CONE_HALF_ANGLE = FIRING_CONE_ANGLE / 2;
 import type { Body, Ship, Vec } from "./types";
 
 export function hasLineOfSight(
@@ -35,5 +38,5 @@ export function isTargetForward(ship: Ship, target: Vec): boolean {
   const dot =
     (ship.heading.x / headingLength) * (targetDirection.x / targetLength) +
     (ship.heading.y / headingLength) * (targetDirection.y / targetLength);
-  return dot >= 0.5;
+  return dot >= Math.cos(FIRING_CONE_HALF_ANGLE);
 }

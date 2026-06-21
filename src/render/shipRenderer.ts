@@ -1,3 +1,4 @@
+import { FIRING_CONE_HALF_ANGLE } from "../game/combat";
 import { COLORS } from "../game/constants";
 import { ShipRole, Side } from "../game/types";
 import type { Ship } from "../game/types";
@@ -81,7 +82,6 @@ export function drawFiringRangeCones(
   context: CanvasRenderingContext2D,
   ships: Ship[],
 ): void {
-  const halfAngle = Math.PI / 3;
   for (const ship of ships) {
     if (ship.role !== ShipRole.Battleship) continue;
     const angle = Math.atan2(ship.heading.y, ship.heading.x);
@@ -92,7 +92,13 @@ export function drawFiringRangeCones(
     context.lineWidth = 1;
     context.beginPath();
     context.moveTo(0, 0);
-    context.arc(0, 0, ship.range, angle - halfAngle, angle + halfAngle);
+    context.arc(
+      0,
+      0,
+      ship.range,
+      angle - FIRING_CONE_HALF_ANGLE,
+      angle + FIRING_CONE_HALF_ANGLE,
+    );
     context.closePath();
     context.fill();
     context.stroke();
