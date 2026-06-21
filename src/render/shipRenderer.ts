@@ -7,6 +7,7 @@ export function drawShips(
   context: CanvasRenderingContext2D,
   ships: Ship[],
 ): void {
+  const scale = mobileShipScale();
   for (const ship of ships) {
     const fillHeight = ship.role === ShipRole.Supply ? 10 : 18;
     const bottom = ship.role === ShipRole.Supply ? 5 : 8;
@@ -14,6 +15,7 @@ export function drawShips(
 
     context.save();
     context.translate(ship.pos.x, ship.pos.y);
+    context.scale(scale, scale);
     context.rotate(Math.atan2(ship.heading.y, ship.heading.x) + Math.PI / 2);
     context.beginPath();
     if (ship.role === ShipRole.Supply) {
@@ -50,18 +52,19 @@ export function drawShips(
     context.stroke();
     context.restore();
 
-    drawSupplyMarkers(context, ship);
+    drawSupplyMarkers(context, ship, scale);
   }
 }
 
 function drawSupplyMarkers(
   context: CanvasRenderingContext2D,
   ship: Ship,
+  scale: number,
 ): void {
   const supplyCount = Math.floor(ship.supplies);
   if (supplyCount <= 0) return;
 
-  const markerRadius = 18;
+  const markerRadius = 18 * scale;
   context.strokeStyle = ship.side === Side.Player ? "#9af4ff" : "#ffadc1";
   context.lineWidth = 1.25;
   for (let index = 0; index < supplyCount; index++) {
@@ -70,7 +73,7 @@ function drawSupplyMarkers(
     context.arc(
       ship.pos.x + Math.cos(angle) * markerRadius,
       ship.pos.y + Math.sin(angle) * markerRadius,
-      2,
+      2 * scale,
       0,
       Math.PI * 2,
     );
@@ -104,4 +107,8 @@ export function drawFiringRangeCones(
     context.stroke();
     context.restore();
   }
+}
+
+function mobileShipScale(): number {
+  return Math.min(1, Math.max(0.65, window.innerWidth / 600));
 }
