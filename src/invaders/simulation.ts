@@ -1,11 +1,12 @@
 import { formationSlots } from "../game/formations";
-import { clamp, distance, normalize } from "../game/math";
 import { BodyKind, Formation, ShipRole, Side } from "../game/types";
 import type { Formation as FormationType, Ship, Viewport } from "../game/types";
 import type { InvadersState } from "./types";
 
-const PLAYER_SHIPS = 7;
-const PROJECTILE_SPEED = 330;
+const FLEET_SIZE = 7;
+const ENEMY_FLEET_Y = 105;
+const PLANET_BOTTOM_OFFSET = 130;
+const PLAYER_FLEET_BOTTOM_OFFSET = 220;
 
 export function createInvadersState(): InvadersState {
   return {
@@ -26,7 +27,7 @@ export function createInvadersState(): InvadersState {
       weight: 2.5,
     },
     planetHp: 100,
-    wave: 0,
+    wave: 1,
     waveOffset: 0,
     waveDirection: 1,
     nextShipId: 1,
@@ -45,7 +46,10 @@ export function resetInvaders(
   state.planet = {
     id: 0,
     kind: BodyKind.Planet,
-    pos: { x: viewport.width / 2, y: viewport.height - 68 },
+    pos: {
+      x: viewport.width / 2,
+      y: viewport.height - PLANET_BOTTOM_OFFSET,
+    },
     radius: 40,
     base: Side.Player,
     stock: 0,
@@ -53,21 +57,22 @@ export function resetInvaders(
     weight: 2.5,
   };
   state.planetHp = 100;
-  state.ships = [];
-  state.enemies = [];
   state.projectiles = [];
-  state.wave = 0;
+  state.wave = 1;
   state.nextShipId = 1;
   state.winner = null;
-  for (const position of formationSlots(
-    { x: viewport.width / 2, y: viewport.height - 145 },
+  state.ships = createFleet(
+    Side.Player,
+    playerFleetCenter(viewport),
+    state.formation,
+    state,
+  );
+  state.enemies = createFleet(
+    Side.Enemy,
+    { x: viewport.width / 2, y: ENEMY_FLEET_Y },
     Formation.Line,
-    PLAYER_SHIPS,
-    34,
-  )) {
-    state.ships.push(createShip(Side.Player, position, state.nextShipId++));
-  }
-  spawnWave(state, viewport);
+    state,
+  );
 }
 
 export function setInvadersFormation(
@@ -78,168 +83,47 @@ export function setInvadersFormation(
   state.formation = formation;
 }
 
-export function updateInvaders(
-  state: InvadersState,
-  viewport: Viewport,
-  elapsed: number,
-): void {
-  if (state.winner) return;
+export function updateInvaders(state: InvadersState, viewport: Viewport): void {
   const slots = formationSlots(
-    { x: viewport.width / 2, y: viewport.height - 145 },
+    playerFleetCenter(viewport),
     state.formation,
     state.ships.length,
     32,
   );
-  state.ships.forEach((ship, index) => moveTo(ship, slots[index], elapsed));
-
-  state.waveOffset += state.waveDirection * elapsed * (28 + state.wave * 2);
-  const limit = Math.max(70, viewport.width * 0.32);
-  if (Math.abs(state.waveOffset) > limit) state.waveDirection *= -1;
-  const enemySlots = formationSlots(
-    { x: viewport.width / 2 + state.waveOffset, y: 110 + state.wave * 2 },
-    Formation.Line,
-    state.enemies.length,
-    38,
-  );
-  state.enemies.forEach((ship, index) =>
-    moveTo(ship, enemySlots[index], elapsed),
-  );
-
-  for (const ship of [...state.ships, ...state.enemies])
-    ship.cooldown -= elapsed;
-  firePlayerWeapons(state);
-  fireEnemyWeapons(state);
-  updateProjectiles(state, elapsed, viewport);
-  state.ships = state.ships.filter((ship) => ship.hp > 0);
-  state.enemies = state.enemies.filter((ship) => ship.hp > 0);
-  if (state.planetHp <= 0 || state.ships.length === 0)
-    state.winner = Side.Enemy;
-  if (state.enemies.length === 0) spawnWave(state, viewport);
+  state.ships.forEach((ship, index) => {
+    ship.pos = { ...slots[index] };
+    ship.vel = { x: 0, y: 0 };
+  });
 }
 
-function spawnWave(state: InvadersState, viewport: Viewport): void {
-  state.wave++;
-  state.waveOffset = 0;
-  state.waveDirection = 1;
-  const count = 6 + state.wave * 2;
-  const slots = formationSlots(
-    { x: viewport.width / 2, y: 110 },
-    Formation.Line,
-    count,
-    38,
-  );
-  state.enemies = slots.map((position) =>
-    createShip(Side.Enemy, position, state.nextShipId++),
-  );
-}
-
-function createShip(
-  side: Side,
-  pos: { x: number; y: number },
-  id: number,
-): Ship {
+function playerFleetCenter(viewport: Viewport): { x: number; y: number } {
   return {
-    id,
+    x: viewport.width / 2,
+    y: viewport.height - PLAYER_FLEET_BOTTOM_OFFSET,
+  };
+}
+
+function createFleet(
+  side: Side,
+  center: { x: number; y: number },
+  formation: Formation,
+  state: InvadersState,
+): Ship[] {
+  return formationSlots(center, formation, FLEET_SIZE, 34).map((pos) => ({
+    id: state.nextShipId++,
     side,
     role: ShipRole.Battleship,
-    pos: { ...pos },
+    pos,
     vel: { x: 0, y: 0 },
     hp: 30,
     maxHp: 30,
     attack: 10,
     defense: 0,
-    speed: 180,
-    sight: 999,
+    speed: 0,
+    sight: 0,
     moral: 100,
-    supplies: 999,
-    range: 999,
-    cooldown: 0.5,
-  };
-}
-
-function moveTo(
-  ship: Ship,
-  target: { x: number; y: number },
-  elapsed: number,
-): void {
-  const vector = { x: target.x - ship.pos.x, y: target.y - ship.pos.y };
-  const length = Math.hypot(vector.x, vector.y);
-  if (length < 1) return;
-  const step = Math.min(length, ship.speed * elapsed);
-  ship.vel = {
-    x: (vector.x / length) * ship.speed,
-    y: (vector.y / length) * ship.speed,
-  };
-  ship.pos.x += (vector.x / length) * step;
-  ship.pos.y += (vector.y / length) * step;
-}
-
-function firePlayerWeapons(state: InvadersState): void {
-  for (const ship of state.ships) {
-    if (ship.cooldown > 0 || state.enemies.length === 0) continue;
-    const target = state.enemies.reduce((closest, enemy) =>
-      distance(enemy.pos, ship.pos) < distance(closest.pos, ship.pos)
-        ? enemy
-        : closest,
-    );
-    target.hp -=
-      ship.attack * (state.formation === state.captainFavorite ? 1.25 : 1);
-    ship.cooldown = 0.65;
-    spawnProjectile(state, ship, target.pos);
-  }
-}
-
-function fireEnemyWeapons(state: InvadersState): void {
-  for (const ship of state.enemies) {
-    if (ship.cooldown > 0) continue;
-    state.planetHp = clamp(state.planetHp - 1.4, 0, 100);
-    ship.cooldown = Math.max(0.45, 1.3 - state.wave * 0.04);
-    spawnProjectile(state, ship, state.planet.pos);
-  }
-}
-
-function spawnProjectile(
-  state: InvadersState,
-  ship: Ship,
-  target: { x: number; y: number },
-): void {
-  const direction = normalize({
-    x: target.x - ship.pos.x,
-    y: target.y - ship.pos.y,
-  });
-  state.projectiles.push({
-    pos: { ...ship.pos },
-    vel: {
-      x: direction.x * PROJECTILE_SPEED,
-      y: direction.y * PROJECTILE_SPEED,
-    },
-    side: ship.side,
-    sourceShipId: ship.id,
-  });
-}
-
-function updateProjectiles(
-  state: InvadersState,
-  elapsed: number,
-  viewport: Viewport,
-): void {
-  state.projectiles = state.projectiles.filter((projectile) => {
-    projectile.pos.x += projectile.vel.x * elapsed;
-    projectile.pos.y += projectile.vel.y * elapsed;
-    const hitShip = [...state.ships, ...state.enemies].some(
-      (ship) =>
-        ship.id !== projectile.sourceShipId &&
-        distance(ship.pos, projectile.pos) < 10,
-    );
-    const hitPlanet =
-      distance(state.planet.pos, projectile.pos) < state.planet.radius;
-    return (
-      !hitShip &&
-      !hitPlanet &&
-      projectile.pos.x >= 0 &&
-      projectile.pos.x <= viewport.width &&
-      projectile.pos.y >= 0 &&
-      projectile.pos.y <= viewport.height
-    );
-  });
+    supplies: 0,
+    range: 0,
+    cooldown: 0,
+  }));
 }
