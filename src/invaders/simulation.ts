@@ -1,3 +1,4 @@
+import { FORMATIONS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp, distance, normalize } from "../game/math";
 import { BodyKind, Formation, ShipRole, Side } from "../game/types";
@@ -15,6 +16,7 @@ export function createInvadersState(): InvadersState {
   return {
     formation: Formation.Line,
     selectedFormation: Formation.Line,
+    enemyFormation: Formation.Line,
     captainFavorite: Formation.Line,
     ships: [],
     enemies: [],
@@ -61,7 +63,7 @@ export function resetInvaders(
   };
   state.planetHp = 100;
   state.projectiles = [];
-  state.wave = 1;
+  state.wave = 0;
   state.waveOffset = 0;
   state.nextShipId = 1;
   state.winner = null;
@@ -72,13 +74,7 @@ export function resetInvaders(
     ShipRole.Battleship,
     state,
   );
-  state.enemies = createFleet(
-    Side.Enemy,
-    { x: viewport.width / 2, y: ENEMY_FLEET_Y },
-    Formation.Line,
-    ShipRole.Guard,
-    state,
-  );
+  spawnEnemyWave(state, viewport);
 }
 
 export function setInvadersFormation(
@@ -97,7 +93,7 @@ export function updateInvaders(
   state.waveOffset += ENEMY_FLEET_SPEED * elapsed;
   const enemySlots = formationSlots(
     { x: viewport.width / 2, y: ENEMY_FLEET_Y + state.waveOffset },
-    Formation.Line,
+    state.enemyFormation,
     state.enemies.length,
     34,
   );
@@ -123,6 +119,7 @@ export function updateInvaders(
   updateProjectiles(state, elapsed, viewport);
   state.ships = state.ships.filter((ship) => ship.hp > 0);
   state.enemies = state.enemies.filter((ship) => ship.hp > 0);
+  if (state.enemies.length === 0) spawnEnemyWave(state, viewport);
 }
 
 function playerFleetCenter(viewport: Viewport): { x: number; y: number } {
@@ -273,4 +270,18 @@ function movePlayerShip(
   ship.vel.y += (force.y - ship.vel.y) * Math.min(1, elapsed * 4);
   ship.pos.x += ship.vel.x * elapsed;
   ship.pos.y += ship.vel.y * elapsed;
+}
+
+function spawnEnemyWave(state: InvadersState, viewport: Viewport): void {
+  state.wave++;
+  state.waveOffset = 0;
+  state.enemyFormation =
+    FORMATIONS[Math.floor(Math.random() * FORMATIONS.length)];
+  state.enemies = createFleet(
+    Side.Enemy,
+    { x: viewport.width / 2, y: ENEMY_FLEET_Y },
+    state.enemyFormation,
+    ShipRole.Guard,
+    state,
+  );
 }

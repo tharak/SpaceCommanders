@@ -10,6 +10,7 @@ import type {
 export type InvadersState = {
   formation: Formation;
   selectedFormation: Formation;
+  enemyFormation: Formation;
   captainFavorite: Formation;
   ships: Ship[];
   enemies: Ship[];
