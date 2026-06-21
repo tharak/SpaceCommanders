@@ -181,6 +181,7 @@ export function updateGame(
   if (state.winner) return;
   spawnResupplyShips(state);
   assignFormationTargets(state);
+  applyFireModeSteering(state);
 
   for (const ship of state.ships) {
     ship.cooldown -= deltaTime;
@@ -475,6 +476,29 @@ function assignFormationTargets(state: GameState): void {
   }
 }
 
+function applyFireModeSteering(state: GameState): void {
+  if (state.fireMode !== FireMode.AtWill) return;
+  for (const ship of state.ships) {
+    if (ship.side !== Side.Player || ship.role !== ShipRole.Battleship)
+      continue;
+    const target = state.ships
+      .filter(
+        (candidate) =>
+          candidate.side !== ship.side &&
+          distance(candidate.pos, ship.pos) < ship.range,
+      )
+      .reduce<
+        Ship | undefined
+      >((closest, candidate) => (!closest || distance(candidate.pos, ship.pos) < distance(closest.pos, ship.pos) ? candidate : closest), undefined);
+    if (target) {
+      ship.targetHeading = {
+        x: target.pos.x - ship.pos.x,
+        y: target.pos.y - ship.pos.y,
+      };
+    }
+  }
+}
+
 function collectPlanetSupplies(state: GameState, ship: Ship): void {
   if (ship.supplyMission == null) {
     return;
@@ -539,7 +563,11 @@ function fireWeapons(state: GameState, ship: Ship): void {
     (ship.side === Side.Enemy || state.fireMode !== FireMode.Hold);
   if (!canFire) return;
 
-  let target = targets[0];
+  let target = targets.reduce((closest, candidate) =>
+    distance(candidate.pos, ship.pos) < distance(closest.pos, ship.pos)
+      ? candidate
+      : closest,
+  );
   if (
     ship.side === Side.Player &&
     state.fireMode === FireMode.Focus &&
