@@ -14,11 +14,12 @@ export function renderInvaders(
   drawBase(context, state, viewport);
   drawFiringRangeCones(context, [...state.ships, ...state.enemies]);
   drawShips(context, state.ships);
+  drawShips(context, [state.supplyShip]);
   drawShips(context, state.enemies);
   for (const projectile of state.projectiles) {
     drawLaser(context, projectile.pos, projectile.vel, COLORS[projectile.side]);
   }
-  status.innerHTML = `<span style="color:#5de5ff">◈ DEFENSE FLEET</span><br><span style="color:#91c9de">SCORE ${Math.floor(state.score)} · BASE ${Math.ceil(state.baseHp)}% · WAVE ${state.wave}</span>`;
+  status.innerHTML = `<span style="color:#5de5ff">◈ DEFENSE FLEET</span><br><span style="color:#91c9de">SCORE ${Math.floor(state.score)} · BASE ${Math.ceil(state.baseHp)}% · SUPPLY ${Math.floor(state.base.stock ?? 0)} · WAVE ${state.wave}</span>`;
 }
 
 function drawLaser(
