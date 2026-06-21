@@ -69,12 +69,14 @@ export function resetInvaders(
     Side.Player,
     playerFleetCenter(viewport),
     state.formation,
+    ShipRole.Battleship,
     state,
   );
   state.enemies = createFleet(
     Side.Enemy,
     { x: viewport.width / 2, y: ENEMY_FLEET_Y },
     Formation.Line,
+    ShipRole.Guard,
     state,
   );
 }
@@ -135,12 +137,13 @@ function createFleet(
   side: Side,
   center: { x: number; y: number },
   formation: Formation,
+  role: ShipRole,
   state: InvadersState,
 ): Ship[] {
   return formationSlots(center, formation, FLEET_SIZE, 34).map((pos) => ({
     id: state.nextShipId++,
     side,
-    role: ShipRole.Battleship,
+    role,
     pos,
     vel: { x: 0, y: 0 },
     hp: 30,
