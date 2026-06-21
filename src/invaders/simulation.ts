@@ -6,6 +6,7 @@ import type { InvadersState } from "./types";
 const FLEET_SIZE = 7;
 const ENEMY_FLEET_Y = 105;
 const PLANET_BOTTOM_OFFSET = 130;
+const ENEMY_FLEET_SPEED = 20;
 const PLAYER_FLEET_BOTTOM_OFFSET = 220;
 
 export function createInvadersState(): InvadersState {
@@ -59,6 +60,7 @@ export function resetInvaders(
   state.planetHp = 100;
   state.projectiles = [];
   state.wave = 1;
+  state.waveOffset = 0;
   state.nextShipId = 1;
   state.winner = null;
   state.ships = createFleet(
@@ -83,7 +85,23 @@ export function setInvadersFormation(
   state.formation = formation;
 }
 
-export function updateInvaders(state: InvadersState, viewport: Viewport): void {
+export function updateInvaders(
+  state: InvadersState,
+  viewport: Viewport,
+  elapsed: number,
+): void {
+  state.waveOffset += ENEMY_FLEET_SPEED * elapsed;
+  const enemySlots = formationSlots(
+    { x: viewport.width / 2, y: ENEMY_FLEET_Y + state.waveOffset },
+    Formation.Line,
+    state.enemies.length,
+    34,
+  );
+  state.enemies.forEach((ship, index) => {
+    ship.pos = { ...enemySlots[index] };
+    ship.vel = { x: 0, y: ENEMY_FLEET_SPEED };
+  });
+
   const slots = formationSlots(
     playerFleetCenter(viewport),
     state.formation,

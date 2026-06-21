@@ -214,7 +214,7 @@ function animationLoop(now: number): void {
       if (commandState.winner) showGameOver(commandState.winner);
     }
     if (activeGame === "invaders") {
-      updateInvaders(invadersState, viewport);
+      updateInvaders(invadersState, viewport, deltaTime);
       if (invadersState.winner) showGameOver(invadersState.winner);
     }
   }
