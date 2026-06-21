@@ -113,8 +113,7 @@ export function updateInvaders(
     32,
   );
   state.ships.forEach((ship, index) => {
-    ship.pos = { ...slots[index] };
-    ship.vel = { x: 0, y: 0 };
+    movePlayerShip(state, ship, slots[index], elapsed);
     ship.cooldown -= elapsed;
   });
   state.enemies.forEach((ship) => {
@@ -240,4 +239,38 @@ function updateProjectiles(
       projectile.pos.y <= viewport.height
     );
   });
+}
+
+function movePlayerShip(
+  state: InvadersState,
+  ship: Ship,
+  target: { x: number; y: number },
+  elapsed: number,
+): void {
+  const offset = { x: target.x - ship.pos.x, y: target.y - ship.pos.y };
+  const targetDistance = Math.hypot(offset.x, offset.y);
+  if (targetDistance <= 3) {
+    ship.pos = { ...target };
+    ship.vel = { x: 0, y: 0 };
+    return;
+  }
+
+  const direction = normalize(offset);
+  const force = { x: direction.x * 120, y: direction.y * 120 };
+  for (const other of state.ships) {
+    if (other === ship) continue;
+    const separation = distance(ship.pos, other.pos);
+    if (separation >= 38 || separation === 0) continue;
+    const repulsion = normalize({
+      x: ship.pos.x - other.pos.x,
+      y: ship.pos.y - other.pos.y,
+    });
+    force.x += repulsion.x * (38 - separation) * 4;
+    force.y += repulsion.y * (38 - separation) * 4;
+  }
+
+  ship.vel.x += (force.x - ship.vel.x) * Math.min(1, elapsed * 4);
+  ship.vel.y += (force.y - ship.vel.y) * Math.min(1, elapsed * 4);
+  ship.pos.x += ship.vel.x * elapsed;
+  ship.pos.y += ship.vel.y * elapsed;
 }
