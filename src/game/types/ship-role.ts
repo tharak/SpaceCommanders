@@ -3,4 +3,5 @@ export enum ShipRole {
   Captain = "captain",
   Supply = "supply",
   Guard = "guard",
+  Mechanic = "mechanic",
 }

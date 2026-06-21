@@ -16,6 +16,7 @@ export function renderInvaders(
   drawFiringRangeCones(context, [...state.ships, ...state.enemies]);
   drawShips(context, state.ships);
   drawShips(context, state.supplyShips);
+  drawShips(context, state.mechanics);
   drawShips(context, state.enemies);
   for (const projectile of state.projectiles) {
     drawLaser(context, projectile.pos, projectile.vel, COLORS[projectile.side]);
