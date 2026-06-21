@@ -22,7 +22,7 @@ const BASE_BOTTOM_OFFSET = 180;
 const PLAYER_FLEET_BOTTOM_OFFSET = 340;
 const BASE_MAX_HP = 1000;
 const BASE_SUPPLY_CAPACITY = 20;
-const BASE_SUPPLY_RATE = 0.35;
+const BASE_SUPPLY_RATE = 1;
 const SUPPLY_SHIP_CAPACITY = 1;
 
 export function createInvadersState(): InvadersState {
