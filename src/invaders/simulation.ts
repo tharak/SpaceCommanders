@@ -80,12 +80,15 @@ export function resetInvaders(
   spawnEnemyWave(state, viewport);
 }
 
-export function setInvadersFormation(
+export function selectInvadersFormation(
   state: InvadersState,
   formation: Formation,
 ): void {
   state.selectedFormation = formation;
-  state.formation = formation;
+}
+
+export function applyInvadersFormation(state: InvadersState): void {
+  state.formation = state.selectedFormation;
 }
 
 export function updateInvaders(

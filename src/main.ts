@@ -2,7 +2,8 @@ import "./style.css";
 import {
   createInvadersState,
   resetInvaders,
-  setInvadersFormation,
+  applyInvadersFormation,
+  selectInvadersFormation,
   updateInvaders,
 } from "./invaders/simulation";
 import { renderInvaders } from "./invaders/renderer";
@@ -94,10 +95,10 @@ setupControls(
   {
     onFormationChange: (formation) => {
       if (activeGame === "invaders") {
-        setInvadersFormation(invadersState, formation);
+        selectInvadersFormation(invadersState, formation);
         showReadout(
           controls,
-          `${formation.toUpperCase()} DEFENSIVE FORMATION ACTIVE`,
+          formation.toUpperCase() + " SELECTED — TAP THE MAP TO APPLY",
         );
         return;
       }
@@ -179,7 +180,11 @@ canvas.addEventListener("pointerleave", () => {
   if (!commandState.previewCenter) commandState.pointer = null;
 });
 canvas.addEventListener("pointerdown", (event) => {
-  if (!matchActive || activeGame !== "command") return;
+  if (!matchActive) return;
+  if (activeGame === "invaders") {
+    canvas.setPointerCapture(event.pointerId);
+    return;
+  }
   const point = mapPoint(event);
   canvas.setPointerCapture(event.pointerId);
   commandState.pointer = point;
@@ -189,8 +194,19 @@ canvas.addEventListener("pointerdown", (event) => {
   dragStartCohesion = commandState.cohesion;
 });
 canvas.addEventListener("pointerup", (event) => {
-  if (!matchActive || activeGame !== "command" || !commandState.previewCenter)
+  if (!matchActive) return;
+  if (activeGame === "invaders") {
+    applyInvadersFormation(invadersState);
+    if (canvas.hasPointerCapture(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
+    showReadout(
+      controls,
+      invadersState.formation.toUpperCase() + " DEFENSIVE FORMATION ACTIVE",
+    );
     return;
+  }
+  if (!commandState.previewCenter) return;
   commandState.pointer = mapPoint(event);
   issueFormationOrder(commandState, commandState.previewCenter);
   commandState.previewCenter = null;
