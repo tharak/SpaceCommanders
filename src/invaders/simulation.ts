@@ -21,6 +21,7 @@ export function createInvadersState(): InvadersState {
     selectedFormation: Formation.Line,
     enemyFormation: Formation.Line,
     enemyDestination: { x: 0, y: 0 },
+    playerAlignment: { x: 0, y: -1 },
     captainFavorite: Formation.Line,
     ships: [],
     enemies: [],
@@ -53,6 +54,7 @@ export function resetInvaders(
   state.formation = Formation.Line;
   state.selectedFormation = Formation.Line;
   state.captainFavorite = captain;
+  state.playerAlignment = { x: 0, y: -1 };
   state.base = {
     id: 0,
     kind: BodyKind.Base,
@@ -94,6 +96,17 @@ export function applyInvadersFormation(state: InvadersState): void {
   state.formation = state.selectedFormation;
 }
 
+export function setInvadersAlignment(
+  state: InvadersState,
+  point: { x: number; y: number },
+  viewport: Viewport,
+): void {
+  state.playerAlignment = normalize({
+    x: point.x - playerFleetCenter(viewport).x,
+    y: point.y - playerFleetCenter(viewport).y,
+  });
+}
+
 export function updateInvaders(
   state: InvadersState,
   viewport: Viewport,
@@ -106,7 +119,10 @@ export function updateInvaders(
     34,
   );
   state.enemies.forEach((ship, index) => {
-    moveFleetShip(state.enemies, ship, enemySlots[index], viewport, elapsed);
+    moveFleetShip(state.enemies, ship, enemySlots[index], viewport, elapsed, {
+      x: 0,
+      y: 1,
+    });
   });
 
   const slots = formationSlots(
@@ -116,7 +132,14 @@ export function updateInvaders(
     32,
   );
   state.ships.forEach((ship, index) => {
-    moveFleetShip(state.ships, ship, slots[index], viewport, elapsed);
+    moveFleetShip(
+      state.ships,
+      ship,
+      slots[index],
+      viewport,
+      elapsed,
+      state.playerAlignment,
+    );
     ship.cooldown -= elapsed;
   });
   state.enemies.forEach((ship) => {
@@ -292,17 +315,10 @@ function moveFleetShip(
   target: { x: number; y: number },
   viewport: Viewport,
   elapsed: number,
+  formationHeading: { x: number; y: number },
 ): void {
   ship.target = target;
-  moveShipWithBoids(
-    ship,
-    fleet,
-    [],
-    viewport,
-    elapsed,
-    4,
-    ship.side === Side.Player ? { x: 0, y: -1 } : { x: 0, y: 1 },
-  );
+  moveShipWithBoids(ship, fleet, [], viewport, elapsed, 4, formationHeading);
 }
 
 function spawnEnemyWave(state: InvadersState, viewport: Viewport): void {

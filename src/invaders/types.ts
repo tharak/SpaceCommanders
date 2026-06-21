@@ -13,6 +13,7 @@ export type InvadersState = {
   selectedFormation: Formation;
   enemyFormation: Formation;
   enemyDestination: Vec;
+  playerAlignment: Vec;
   captainFavorite: Formation;
   ships: Ship[];
   enemies: Ship[];

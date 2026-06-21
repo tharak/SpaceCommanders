@@ -4,6 +4,7 @@ import {
   resetInvaders,
   applyInvadersFormation,
   selectInvadersFormation,
+  setInvadersAlignment,
   updateInvaders,
 } from "./invaders/simulation";
 import { renderInvaders } from "./invaders/renderer";
@@ -96,9 +97,10 @@ setupControls(
     onFormationChange: (formation) => {
       if (activeGame === "invaders") {
         selectInvadersFormation(invadersState, formation);
+        applyInvadersFormation(invadersState);
         showReadout(
           controls,
-          formation.toUpperCase() + " SELECTED — TAP THE MAP TO APPLY",
+          formation.toUpperCase() + " DEFENSIVE FORMATION ACTIVE",
         );
         return;
       }
@@ -163,8 +165,12 @@ function mapPoint(event: PointerEvent): Vec {
 }
 
 canvas.addEventListener("pointermove", (event) => {
-  if (!matchActive || activeGame !== "command") return;
+  if (!matchActive) return;
   const point = mapPoint(event);
+  if (activeGame === "invaders") {
+    setInvadersAlignment(invadersState, point, viewport);
+    return;
+  }
   commandState.pointer = point;
   if (!commandState.previewCenter) return;
   const offsetX = point.x - commandState.previewCenter.x;
@@ -182,6 +188,7 @@ canvas.addEventListener("pointerleave", () => {
 canvas.addEventListener("pointerdown", (event) => {
   if (!matchActive) return;
   if (activeGame === "invaders") {
+    setInvadersAlignment(invadersState, mapPoint(event), viewport);
     canvas.setPointerCapture(event.pointerId);
     return;
   }
@@ -196,14 +203,9 @@ canvas.addEventListener("pointerdown", (event) => {
 canvas.addEventListener("pointerup", (event) => {
   if (!matchActive) return;
   if (activeGame === "invaders") {
-    applyInvadersFormation(invadersState);
     if (canvas.hasPointerCapture(event.pointerId)) {
       canvas.releasePointerCapture(event.pointerId);
     }
-    showReadout(
-      controls,
-      invadersState.formation.toUpperCase() + " DEFENSIVE FORMATION ACTIVE",
-    );
     return;
   }
   if (!commandState.previewCenter) return;
