@@ -1,11 +1,18 @@
 import "./style.css";
 import {
+  createInvadersState,
+  resetInvaders,
+  setInvadersFormation,
+  updateInvaders,
+} from "./invaders/simulation";
+import { renderInvaders } from "./invaders/renderer";
+import {
   createGameState,
   issueFormationOrder,
   resetGame,
   updateGame,
 } from "./game/simulation";
-import { FireMode, Side } from "./game/types";
+import { FireMode, Formation, Side } from "./game/types";
 import type { Vec, Viewport } from "./game/types";
 import { renderGame, resizeCanvas } from "./render/gameRenderer";
 import {
@@ -18,6 +25,8 @@ import {
   showReadout,
 } from "./ui/controls";
 
+type GameId = "command" | "invaders";
+
 const canvas = requiredCanvas("#game");
 const context = requiredContext(canvas);
 const status = requiredElement("#status");
@@ -26,23 +35,35 @@ const setupMessage = requiredElement("#setup-message");
 const startButton = requiredElement("#reset-game");
 const controls = getControls();
 const captainFormationControls = requiredElement("#captain-formation-controls");
-const state = createGameState();
+const gameSelection = requiredElement("#game-selection");
+const commandState = createGameState();
+const invadersState = createInvadersState();
+let selectedGame: GameId = "command";
+let activeGame: GameId = "command";
 let viewport: Viewport;
 let lastFrame = performance.now();
-let dragStartCohesion = state.cohesion;
+let dragStartCohesion = commandState.cohesion;
 let matchActive = false;
 
 function reset(): void {
-  resetGame(state, readConfig(), viewport);
-  setCaptainFormation(captainFormationControls, state.captainFavorite);
-  setSelectedFormation(controls, state.selectedFormation);
+  if (activeGame === "command") {
+    resetGame(commandState, readConfig(), viewport);
+    setSelectedFormation(controls, commandState.selectedFormation);
+  } else {
+    resetInvaders(invadersState, viewport, commandState.captainFavorite);
+    setSelectedFormation(controls, invadersState.selectedFormation);
+  }
+  setCaptainFormation(captainFormationControls, commandState.captainFavorite);
   showReadout(
     controls,
-    `CAPTAIN FAVORS ${state.captainFavorite.toUpperCase()} — SELECT A FORMATION, THEN TAP THE MAP`,
+    activeGame === "command"
+      ? "SELECT A FORMATION, THEN TAP THE MAP TO ISSUE AN ORDER"
+      : "SELECT A FORMATION TO REORGANIZE YOUR DEFENSIVE FLEET",
   );
 }
 
 function startMatch(): void {
+  activeGame = selectedGame;
   reset();
   matchActive = true;
   document.body.classList.remove("setup-open", "debug-open");
@@ -62,9 +83,9 @@ function showGameOver(winner: Side): void {
   showSetup(
     playerWon ? "VICTORY" : "COMMAND FLEET LOST",
     playerWon
-      ? "Enemy forces control no planets. Tune the simulation and begin another match."
-      : "Your forces control no planets. Tune the simulation and try again.",
-    "START NEW MATCH",
+      ? "The sector is secure. Select a game to play again."
+      : "Your planet has fallen. Select a game to try again.",
+    "PLAY AGAIN",
   );
 }
 
@@ -72,14 +93,22 @@ setupControls(
   controls,
   {
     onFormationChange: (formation) => {
-      state.selectedFormation = formation;
+      if (activeGame === "invaders") {
+        setInvadersFormation(invadersState, formation);
+        showReadout(
+          controls,
+          `${formation.toUpperCase()} DEFENSIVE FORMATION ACTIVE`,
+        );
+        return;
+      }
+      commandState.selectedFormation = formation;
       showReadout(
         controls,
         `${formation.toUpperCase()} SELECTED — TAP MAP TO SET FLEET POSITION`,
       );
     },
     onFireModeChange: (mode) => {
-      state.fireMode = mode;
+      commandState.fireMode = mode;
       const message =
         mode === FireMode.Hold
           ? "WEAPONS HOLD"
@@ -90,138 +119,133 @@ setupControls(
     },
     onReset: startMatch,
   },
-  state.selectedFormation,
-  state.fireMode,
+  commandState.selectedFormation,
+  commandState.fireMode,
 );
 
 createCaptainFormationPicker(
   captainFormationControls,
   (formation) => {
-    state.captainFavorite = formation;
+    commandState.captainFavorite = formation;
+    invadersState.captainFavorite = formation;
   },
-  state.captainFavorite,
+  commandState.captainFavorite,
 );
+
+gameSelection
+  .querySelectorAll<HTMLButtonElement>("button[data-game]")
+  .forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedGame =
+        button.dataset.game === "invaders" ? "invaders" : "command";
+      gameSelection
+        .querySelectorAll("button")
+        .forEach((candidate) =>
+          candidate.classList.toggle("active", candidate === button),
+        );
+      startButton.textContent =
+        selectedGame === "command"
+          ? "START COMMANDERS"
+          : "START PLANETARY DEFENSE";
+    });
+  });
+gameSelection
+  .querySelector<HTMLButtonElement>("[data-game='command']")
+  ?.classList.add("active");
 
 function updateViewport(): void {
   viewport = resizeCanvas(canvas, context);
 }
-
 function mapPoint(event: PointerEvent): Vec {
   const bounds = canvas.getBoundingClientRect();
   return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
 }
 
 canvas.addEventListener("pointermove", (event) => {
-  if (!matchActive) return;
-
+  if (!matchActive || activeGame !== "command") return;
   const point = mapPoint(event);
-  state.pointer = point;
-  if (!state.previewCenter) return;
-
-  const offsetX = point.x - state.previewCenter.x;
-  const offsetY = point.y - state.previewCenter.y;
-  if (Math.hypot(offsetX, offsetY) >= 8) {
-    state.previewRotation = Math.atan2(offsetY, offsetX);
-  }
-  state.previewCohesion = Math.min(
+  commandState.pointer = point;
+  if (!commandState.previewCenter) return;
+  const offsetX = point.x - commandState.previewCenter.x;
+  const offsetY = point.y - commandState.previewCenter.y;
+  if (Math.hypot(offsetX, offsetY) >= 8)
+    commandState.previewRotation = Math.atan2(offsetY, offsetX);
+  commandState.previewCohesion = Math.min(
     1,
     Math.max(0.25, dragStartCohesion - offsetX / 200),
   );
 });
-
 canvas.addEventListener("pointerleave", () => {
-  if (!state.previewCenter) state.pointer = null;
+  if (!commandState.previewCenter) commandState.pointer = null;
 });
-
 canvas.addEventListener("pointerdown", (event) => {
-  if (!matchActive) return;
-
+  if (!matchActive || activeGame !== "command") return;
   const point = mapPoint(event);
   canvas.setPointerCapture(event.pointerId);
-  state.pointer = point;
-  state.previewCenter = { ...point };
-  state.previewRotation = 0;
-  state.previewCohesion = state.cohesion;
-  dragStartCohesion = state.cohesion;
-  showReadout(
-    controls,
-    `DRAG TO ROTATE ${state.selectedFormation.toUpperCase()} FORMATION — RELEASE TO ISSUE ORDER`,
-  );
+  commandState.pointer = point;
+  commandState.previewCenter = { ...point };
+  commandState.previewRotation = 0;
+  commandState.previewCohesion = commandState.cohesion;
+  dragStartCohesion = commandState.cohesion;
 });
-
 canvas.addEventListener("pointerup", (event) => {
-  if (!matchActive || !state.previewCenter) return;
-
-  state.pointer = mapPoint(event);
-  issueFormationOrder(state, state.previewCenter);
-  state.previewCenter = null;
+  if (!matchActive || activeGame !== "command" || !commandState.previewCenter)
+    return;
+  commandState.pointer = mapPoint(event);
+  issueFormationOrder(commandState, commandState.previewCenter);
+  commandState.previewCenter = null;
   canvas.releasePointerCapture(event.pointerId);
-  showReadout(
-    controls,
-    "FLEET MOVING IN " + state.selectedFormation.toUpperCase() + " FORMATION",
-  );
 });
-
-canvas.addEventListener("pointercancel", (event) => {
-  state.previewCenter = null;
-  state.previewRotation = state.formationRotation;
-  state.previewCohesion = state.cohesion;
-  state.pointer = null;
-  if (canvas.hasPointerCapture(event.pointerId)) {
-    canvas.releasePointerCapture(event.pointerId);
-  }
+canvas.addEventListener("pointercancel", () => {
+  commandState.previewCenter = null;
+  commandState.pointer = null;
 });
-
 window.addEventListener("resize", () => {
   updateViewport();
-  reset();
-  if (!matchActive) {
-    showSetup(
-      "SIMULATION TUNING",
-      "Configure the simulation, then begin the match.",
-      "START MATCH",
-    );
-  }
+  if (matchActive) reset();
 });
 
 function animationLoop(now: number): void {
   const deltaTime = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
-  if (matchActive && state.command) {
-    updateGame(state, viewport, deltaTime);
-    if (state.winner) showGameOver(state.winner);
+  if (matchActive) {
+    if (activeGame === "command" && commandState.command) {
+      updateGame(commandState, viewport, deltaTime);
+      if (commandState.winner) showGameOver(commandState.winner);
+    }
+    if (activeGame === "invaders") {
+      updateInvaders(invadersState, viewport, deltaTime);
+      if (invadersState.winner) showGameOver(invadersState.winner);
+    }
   }
-  renderGame(state, { canvas, context, status, viewport });
+  if (activeGame === "command")
+    renderGame(commandState, { canvas, context, status, viewport });
+  else renderInvaders(invadersState, { canvas, context, status, viewport });
   requestAnimationFrame(animationLoop);
 }
-
 function requiredContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Canvas 2D context is unavailable");
-  return context;
+  const result = canvas.getContext("2d");
+  if (!result) throw new Error("Canvas 2D context is unavailable");
+  return result;
 }
-
 function requiredCanvas(selector: string): HTMLCanvasElement {
   const element = document.querySelector(selector);
-  if (!(element instanceof HTMLCanvasElement)) {
+  if (!(element instanceof HTMLCanvasElement))
     throw new Error(`Missing required canvas: ${selector}`);
-  }
   return element;
 }
-
 function requiredElement(selector: string): HTMLElement {
   const element = document.querySelector(selector);
-  if (!(element instanceof HTMLElement)) {
+  if (!(element instanceof HTMLElement))
     throw new Error(`Missing required element: ${selector}`);
-  }
   return element;
 }
 
 updateViewport();
 reset();
 showSetup(
-  "SIMULATION TUNING",
-  "Configure the simulation, then begin the match.",
-  "START MATCH",
+  "CHOOSE YOUR COMMAND",
+  "Select a game, choose a captain formation, and begin.",
+  "START COMMANDERS",
 );
 requestAnimationFrame(animationLoop);

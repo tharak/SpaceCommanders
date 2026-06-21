@@ -1,0 +1,31 @@
+import type {
+  Body,
+  Formation,
+  Projectile,
+  Ship,
+  Side,
+  Viewport,
+} from "../game/types";
+
+export type InvadersState = {
+  formation: Formation;
+  selectedFormation: Formation;
+  captainFavorite: Formation;
+  ships: Ship[];
+  enemies: Ship[];
+  projectiles: Projectile[];
+  planet: Body;
+  planetHp: number;
+  wave: number;
+  waveOffset: number;
+  waveDirection: number;
+  nextShipId: number;
+  winner: Side | null;
+};
+
+export type InvadersRenderContext = {
+  canvas: HTMLCanvasElement;
+  context: CanvasRenderingContext2D;
+  status: HTMLElement;
+  viewport: Viewport;
+};

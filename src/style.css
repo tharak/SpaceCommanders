@@ -291,3 +291,28 @@ input[type="range"] {
   letter-spacing: 1.7px;
   color: #73a4be;
 }
+.game-selection {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+}
+.game-selection button {
+  border: 1px solid #48728a;
+  color: #b8ddeb;
+  background: #081724d9;
+  padding: 10px;
+  cursor: pointer;
+  text-align: left;
+  letter-spacing: 1px;
+}
+.game-selection button.active {
+  border-color: #64e3ff;
+  color: #dfffff;
+  background: #0d3650e8;
+}
+.game-selection small {
+  display: block;
+  margin-top: 3px;
+  color: #73a4be;
+  font-size: 10px;
+}
