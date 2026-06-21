@@ -1,4 +1,5 @@
 import { COLORS } from "../game/constants";
+import { TEXT } from "../ui/strings";
 import { formationSlotHeadings, formationSlots } from "../game/formations";
 import { clamp } from "../game/math";
 import { drawGameBackground } from "./backgroundRenderer";
@@ -217,5 +218,5 @@ function updateStatus(status: HTMLElement, state: GameState): void {
   const enemyShips = state.ships.filter(
     (ship) => ship.side === Side.Enemy,
   ).length;
-  status.innerHTML = `<span style="color:#5de5ff">◈ ${playerShips} FLEET</span><br><span style="color:#ff7898">◇ ${enemyShips} HOSTILES</span>`;
+  status.innerHTML = TEXT.status.commanders(playerShips, enemyShips);
 }

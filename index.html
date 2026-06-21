@@ -11,84 +11,72 @@
   </head>
   <body>
     <main id="app">
-      <canvas id="game" aria-label="Space Commanders tactical map"></canvas>
+      <canvas id="game" aria-label=""></canvas>
       <div id="hud">
         <header class="topbar">
           <div>
-            <span class="eyebrow">FLEET COMMAND // 01</span>
-            <h1>SPACE <b>COMMANDERS</b></h1>
+            <span class="eyebrow"></span>
+            <h1></h1>
           </div>
           <div id="status"></div>
-          <button
-            id="debug-toggle"
-            class="icon-button debug"
-            aria-label="Open simulation tuning"
-          >
+          <button id="debug-toggle" class="icon-button debug" aria-label="">
             ⌘
           </button>
         </header>
         <section id="command-deck">
           <div class="command-group">
-            <span>UPGRADES</span>
+            <span data-text="upgrades"></span>
             <div id="upgrade-controls" class="upgrade-row"></div>
           </div>
           <div class="command-row">
             <div class="command-group">
-              <span>FORMATION</span>
+              <span data-text="formation"></span>
               <div id="formation-controls" class="icon-row"></div>
             </div>
             <div class="command-group">
-              <span>SHOOT MODE</span>
+              <span data-text="shoot-mode"></span>
               <div id="fire-controls" class="icon-row"></div>
             </div>
           </div>
         </section>
-        <div id="order-readout">
-          SELECT A FORMATION, THEN TAP THE MAP TO ISSUE AN ORDER
-        </div>
+        <div id="order-readout"></div>
         <aside id="debug-panel" aria-label="Simulation tuning">
-          <div id="setup-title" class="panel-title">SIMULATION TUNING</div>
-          <p id="setup-message">
-            Configure the simulation, then begin the match.
-          </p>
+          <div id="setup-title" class="panel-title"></div>
+          <p id="setup-message"></p>
           <div id="game-selection" class="game-selection">
-            <button type="button" data-game="command">
-              COMMANDERS <small>TACTICAL CONQUEST</small>
-            </button>
-            <button type="button" data-game="invaders">
-              PLANETARY DEFENSE <small>WAVE DEFENSE</small>
-            </button>
+            <button type="button" data-game="command"></button>
+            <button type="button" data-game="invaders"></button>
           </div>
           <div class="captain-selection">
-            <span>CAPTAIN FORMATION</span>
+            <span data-text="captain-formation"></span>
             <div id="captain-formation-controls" class="icon-row"></div>
           </div>
-          <label
-            >BATTLESHIPS
+          <label>
+            <span data-text="battleships"></span>
             <input
               id="ship-count"
               type="range"
               min="3"
               max="20"
               value="10" /><output></output></label
-          ><label
-            >PLANETS
+          ><label>
+            <span data-text="planets"></span>
             <input
               id="planet-count"
               type="range"
               min="2"
               max="8"
               value="5" /><output></output></label
-          ><label
-            >ASTEROID FIELDS
+          ><label>
+            <span data-text="asteroids"></span>
             <input
               id="asteroid-count"
               type="range"
               min="0"
               max="6"
               value="3" /><output></output></label
-          ><label
-            >GAME SPEED
+          ><label>
+            <span data-text="speed"></span>
             <input
               id="game-speed"
               type="range"
@@ -97,10 +85,8 @@
               step="0.25"
               value="1" /><output></output
           ></label>
-          <p>Changes apply when a new match starts.</p>
-          <button id="reset-game" class="start-button" type="button">
-            START MATCH
-          </button>
+          <p data-text="apply-on-start"></p>
+          <button id="reset-game" class="start-button" type="button"></button>
         </aside>
       </div>
     </main>

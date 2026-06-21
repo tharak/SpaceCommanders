@@ -11,6 +11,7 @@ import {
 } from "./invaders/simulation";
 import { renderInvaders } from "./invaders/renderer";
 import { UpgradeType } from "./invaders/upgrade-type";
+import { applyStaticScreenText, TEXT } from "./ui/strings";
 import {
   createGameState,
   issueFormationOrder,
@@ -32,6 +33,8 @@ import {
 } from "./ui/controls";
 
 type GameId = "command" | "invaders";
+
+applyStaticScreenText();
 
 const canvas = requiredCanvas("#game");
 const context = requiredContext(canvas);
@@ -64,8 +67,8 @@ function reset(): void {
   showReadout(
     controls,
     activeGame === "command"
-      ? "SELECT A FORMATION, THEN TAP THE MAP TO ISSUE AN ORDER"
-      : "SELECT A FORMATION TO REORGANIZE YOUR DEFENSIVE FLEET",
+      ? TEXT.readout.commandOrder
+      : TEXT.readout.defenseFormation,
   );
 }
 
@@ -88,11 +91,9 @@ function showSetup(title: string, message: string, buttonLabel: string): void {
 function showGameOver(winner: Side): void {
   const playerWon = winner === Side.Player;
   showSetup(
-    playerWon ? "VICTORY" : "COMMAND FLEET LOST",
-    playerWon
-      ? "The sector is secure. Select a game to play again."
-      : "Your base has fallen. Select a game to try again.",
-    "PLAY AGAIN",
+    playerWon ? TEXT.match.victory : TEXT.match.defeat,
+    playerWon ? TEXT.match.victoryMessage : TEXT.match.defeatMessage,
+    TEXT.match.replay,
   );
 }
 
@@ -103,17 +104,11 @@ setupControls(
       if (activeGame === "invaders") {
         selectInvadersFormation(invadersState, formation);
         applyInvadersFormation(invadersState);
-        showReadout(
-          controls,
-          formation.toUpperCase() + " DEFENSIVE FORMATION ACTIVE",
-        );
+        showReadout(controls, TEXT.readout.defenseFormationActive(formation));
         return;
       }
       commandState.selectedFormation = formation;
-      showReadout(
-        controls,
-        `${formation.toUpperCase()} SELECTED — TAP MAP TO SET FLEET POSITION`,
-      );
+      showReadout(controls, TEXT.readout.formationSelected(formation));
     },
     onFireModeChange: (mode) => {
       if (activeGame === "invaders") {
@@ -123,31 +118,25 @@ setupControls(
       }
       const message =
         mode === FireMode.Hold
-          ? "WEAPONS HOLD"
+          ? TEXT.readout.weaponsHold
           : mode === FireMode.Focus
-            ? "FOCUS FIRE — TAP AN ENEMY TO DESIGNATE"
-            : "WEAPONS FREE — ENGAGING HOSTILES IN RANGE";
+            ? TEXT.readout.focusFire
+            : TEXT.readout.weaponsFree;
       showReadout(controls, message);
     },
     onUpgrade: (upgrade: UpgradeType) => {
       if (activeGame !== "invaders") {
-        showReadout(controls, "UPGRADES ARE AVAILABLE IN PLANETARY DEFENSE");
+        showReadout(controls, TEXT.readout.upgradesDefenseOnly);
         return;
       }
       const cost = purchaseInvadersUpgrade(invadersState, upgrade);
       if (cost == null) {
         const nextCost = 100 * (invadersState.upgrades[upgrade] + 1);
-        showReadout(
-          controls,
-          "NEED " + nextCost + " SCORE FOR " + upgrade.toUpperCase(),
-        );
+        showReadout(controls, TEXT.readout.upgradeNeeded(nextCost, upgrade));
         return;
       }
       setUpgradePrices(controls, invadersState.upgrades);
-      showReadout(
-        controls,
-        upgrade.toUpperCase() + " UPGRADED — " + cost + " SCORE SPENT",
-      );
+      showReadout(controls, TEXT.readout.upgradePurchased(upgrade, cost));
     },
     onReset: startMatch,
   },
@@ -177,8 +166,8 @@ gameSelection
         );
       startButton.textContent =
         selectedGame === "command"
-          ? "START COMMANDERS"
-          : "START PLANETARY DEFENSE";
+          ? TEXT.launcher.startCommanders
+          : TEXT.launcher.startDefense;
     });
   });
 gameSelection
@@ -293,8 +282,8 @@ function requiredElement(selector: string): HTMLElement {
 updateViewport();
 reset();
 showSetup(
-  "CHOOSE YOUR COMMAND",
-  "Select a game, choose a captain formation, and begin.",
-  "START COMMANDERS",
+  TEXT.launcher.title,
+  TEXT.launcher.message,
+  TEXT.launcher.startCommanders,
 );
 requestAnimationFrame(animationLoop);

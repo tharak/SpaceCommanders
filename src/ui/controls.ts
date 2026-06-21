@@ -1,4 +1,5 @@
 import { FIRE_MODES, FORMATIONS } from "../game/constants";
+import { TEXT } from "./strings";
 import { UpgradeType } from "../invaders/upgrade-type";
 import { FireMode, Formation } from "../game/types";
 import type { Config } from "../game/types";
@@ -64,7 +65,7 @@ export function createCaptainFormationPicker(
 ): void {
   for (const formation of FORMATIONS) {
     const button = document.createElement("button");
-    button.ariaLabel = `Select  captain`;
+    button.ariaLabel = TEXT.controls.captainFormation;
     button.dataset.value = formation;
     button.innerHTML = formationIcon(formation);
     button.addEventListener("click", () => {
@@ -126,14 +127,14 @@ function createUpgradeButtons(
   onUpgrade: (upgrade: UpgradeType) => void,
 ): void {
   const labels: Record<UpgradeType, string> = {
-    [UpgradeType.Damage]: "DMG",
-    [UpgradeType.Speed]: "SPD",
-    [UpgradeType.Hull]: "HP",
-    [UpgradeType.Range]: "RNG",
+    [UpgradeType.Damage]: TEXT.controls.upgradeLabels.damage,
+    [UpgradeType.Speed]: TEXT.controls.upgradeLabels.speed,
+    [UpgradeType.Hull]: TEXT.controls.upgradeLabels.hull,
+    [UpgradeType.Range]: TEXT.controls.upgradeLabels.range,
   };
   for (const upgrade of Object.values(UpgradeType)) {
     const button = document.createElement("button");
-    button.ariaLabel = `Upgrade `;
+    button.ariaLabel = TEXT.controls.upgrades;
     button.dataset.value = upgrade;
     button.dataset.label = labels[upgrade];
     button.textContent = labels[upgrade] + " 100";

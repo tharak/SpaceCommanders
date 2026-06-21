@@ -1,4 +1,5 @@
 import { COLORS } from "../game/constants";
+import { TEXT } from "../ui/strings";
 import { Side } from "../game/types";
 import { drawGameBackground } from "../render/backgroundRenderer";
 import { drawFiringRangeCones, drawShips } from "../render/shipRenderer";
@@ -19,7 +20,12 @@ export function renderInvaders(
   for (const projectile of state.projectiles) {
     drawLaser(context, projectile.pos, projectile.vel, COLORS[projectile.side]);
   }
-  status.innerHTML = `<span style="color:#5de5ff">◈ DEFENSE FLEET</span><br><span style="color:#91c9de">SCORE ${Math.floor(state.score)} · BASE ${Math.ceil(state.baseHp)}% · SUPPLY ${Math.floor(state.base.stock ?? 0)} · WAVE ${state.wave}</span>`;
+  status.innerHTML = TEXT.status.defense(
+    Math.floor(state.score),
+    Math.ceil(state.baseHp),
+    Math.floor(state.base.stock ?? 0),
+    state.wave,
+  );
 }
 
 function drawLaser(
