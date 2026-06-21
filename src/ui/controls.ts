@@ -8,7 +8,6 @@ type Controls = {
   formationControls: HTMLElement;
   fireControls: HTMLElement;
   upgradeControls: HTMLElement;
-  readout: HTMLElement;
 };
 
 type ControlCallbacks = {
@@ -23,7 +22,6 @@ export function getControls(): Controls {
     formationControls: requiredElement("#formation-controls"),
     fireControls: requiredElement("#fire-controls"),
     upgradeControls: requiredElement("#upgrade-controls"),
-    readout: requiredElement("#order-readout"),
   };
 }
 
@@ -54,9 +52,7 @@ export function readConfig(): Config {
   };
 }
 
-export function showReadout(controls: Controls, message: string): void {
-  controls.readout.textContent = message;
-}
+export function showReadout(_controls: Controls, _message: string): void {}
 
 export function createCaptainFormationPicker(
   root: HTMLElement,
