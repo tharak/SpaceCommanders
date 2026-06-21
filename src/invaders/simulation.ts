@@ -1,5 +1,6 @@
 import { hasLineOfSight, isTargetForward } from "../game/combat";
 import { FORMATIONS } from "../game/constants";
+import { assignNearestFormationSlots } from "../game/formation-assignment";
 import { formationSlots } from "../game/formations";
 import { clamp, distance, normalize } from "../game/math";
 import { spawnFleet } from "../game/ship-factory";
@@ -131,17 +132,20 @@ export function updateInvaders(
     state.ships.length,
     FLEET_SPACING,
   );
-  state.ships.forEach((ship, index) => {
+  for (const [ship, target] of assignNearestFormationSlots(
+    state.ships,
+    slots,
+  )) {
     moveFleetShip(
       [...state.ships, ...state.enemies],
       ship,
-      slots[index],
+      target,
       viewport,
       elapsed,
       playerSteeringHeading(state, ship),
     );
     ship.cooldown -= elapsed;
-  });
+  }
   state.enemies.forEach((ship) => {
     ship.cooldown -= elapsed;
   });

@@ -9,6 +9,7 @@ import {
   SUPPLY_SHIP_CAPACITY,
 } from "./constants";
 import { hasLineOfSight, isTargetForward } from "./combat";
+import { assignNearestFormationSlots } from "./formation-assignment";
 import { formationSlots } from "./formations";
 import { spawnFleet, spawnShip } from "./ship-factory";
 import { moveShipWithBoids } from "./ship-movement";
@@ -453,9 +454,12 @@ function assignFormationTargets(state: GameState): void {
       side === Side.Player ? state.formationRotation : 0,
     );
 
-    battleships.forEach((ship, index) => {
-      ship.target = targets[index];
-    });
+    for (const [ship, target] of assignNearestFormationSlots(
+      battleships,
+      targets,
+    )) {
+      ship.target = target;
+    }
     fleet
       .filter((ship) => ship.role === ShipRole.Captain)
       .forEach((ship, index) => {
