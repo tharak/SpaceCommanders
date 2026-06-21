@@ -162,12 +162,6 @@ function createFleet(
     state.nextShipId,
   );
   state.nextShipId += fleet.length;
-  if (role === ShipRole.Guard) {
-    fleet.forEach((ship) => {
-      ship.hp *= 2;
-      ship.maxHp *= 2;
-    });
-  }
   return fleet;
 }
 

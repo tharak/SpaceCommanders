@@ -25,7 +25,7 @@ export function spawnShip(
     speed: 56,
     sight: 260,
     moral: 70,
-    supplies: 10,
+    supplies: role === ShipRole.Guard ? 0 : 10,
     range: 135,
     cooldown: 1,
   };
