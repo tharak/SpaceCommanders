@@ -22,7 +22,7 @@ export function createInvadersState(): InvadersState {
     selectedFormation: Formation.Line,
     enemyFormation: Formation.Line,
     enemyDestination: { x: 0, y: 0 },
-    playerAlignment: { x: 0, y: -1 },
+    playerSteeringTarget: null,
     captainFavorite: Formation.Line,
     ships: [],
     enemies: [],
@@ -55,7 +55,7 @@ export function resetInvaders(
   state.formation = Formation.Line;
   state.selectedFormation = Formation.Line;
   state.captainFavorite = captain;
-  state.playerAlignment = { x: 0, y: -1 };
+  state.playerSteeringTarget = null;
   state.base = {
     id: 0,
     kind: BodyKind.Base,
@@ -102,10 +102,7 @@ export function setInvadersAlignment(
   point: { x: number; y: number },
   viewport: Viewport,
 ): void {
-  state.playerAlignment = normalize({
-    x: point.x - playerFleetCenter(viewport).x,
-    y: point.y - playerFleetCenter(viewport).y,
-  });
+  state.playerSteeringTarget = { ...point };
 }
 
 export function updateInvaders(
@@ -139,7 +136,7 @@ export function updateInvaders(
       slots[index],
       viewport,
       elapsed,
-      state.playerAlignment,
+      playerSteeringHeading(state, ship),
     );
     ship.cooldown -= elapsed;
   });
@@ -153,6 +150,17 @@ export function updateInvaders(
   state.ships = state.ships.filter((ship) => ship.hp > 0);
   state.enemies = state.enemies.filter((ship) => ship.hp > 0);
   if (state.enemies.length === 0) spawnEnemyWave(state, viewport);
+}
+
+function playerSteeringHeading(
+  state: InvadersState,
+  ship: Ship,
+): { x: number; y: number } {
+  if (!state.playerSteeringTarget) return { x: 0, y: -1 };
+  return normalize({
+    x: state.playerSteeringTarget.x - ship.pos.x,
+    y: state.playerSteeringTarget.y - ship.pos.y,
+  });
 }
 
 function resolveGuardBaseContacts(state: InvadersState): void {
