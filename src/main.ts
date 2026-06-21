@@ -9,9 +9,11 @@ import { FireMode, Side } from "./game/types";
 import type { Vec, Viewport } from "./game/types";
 import { renderGame, resizeCanvas } from "./render/gameRenderer";
 import {
+  createCaptainFormationPicker,
   getControls,
   readConfig,
   setupControls,
+  setCaptainFormation,
   setSelectedFormation,
   showReadout,
 } from "./ui/controls";
@@ -23,6 +25,7 @@ const setupTitle = requiredElement("#setup-title");
 const setupMessage = requiredElement("#setup-message");
 const startButton = requiredElement("#reset-game");
 const controls = getControls();
+const captainFormationControls = requiredElement("#captain-formation-controls");
 const state = createGameState();
 let viewport: Viewport;
 let lastFrame = performance.now();
@@ -31,6 +34,7 @@ let matchActive = false;
 
 function reset(): void {
   resetGame(state, readConfig(), viewport);
+  setCaptainFormation(captainFormationControls, state.captainFavorite);
   setSelectedFormation(controls, state.selectedFormation);
   showReadout(
     controls,
@@ -88,6 +92,14 @@ setupControls(
   },
   state.selectedFormation,
   state.fireMode,
+);
+
+createCaptainFormationPicker(
+  captainFormationControls,
+  (formation) => {
+    state.captainFavorite = formation;
+  },
+  state.captainFavorite,
 );
 
 function updateViewport(): void {

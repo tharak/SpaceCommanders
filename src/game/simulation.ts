@@ -139,8 +139,6 @@ export function resetGame(
     });
   }
 
-  state.captainFavorite =
-    FORMATIONS[Math.floor(Math.random() * FORMATIONS.length)];
   let id = 0;
   for (const side of [Side.Player, Side.Enemy] as const) {
     const base = side === Side.Player ? playerBase : enemyBase;

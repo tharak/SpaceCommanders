@@ -52,6 +52,32 @@ export function showReadout(controls: Controls, message: string): void {
   controls.readout.textContent = message;
 }
 
+export function createCaptainFormationPicker(
+  root: HTMLElement,
+  onChange: (formation: Formation) => void,
+  initialFormation: Formation,
+): void {
+  for (const formation of FORMATIONS) {
+    const button = document.createElement("button");
+    button.ariaLabel = `Select  captain`;
+    button.dataset.value = formation;
+    button.innerHTML = formationIcon(formation);
+    button.addEventListener("click", () => {
+      selectActive(root, formation);
+      onChange(formation);
+    });
+    root.append(button);
+  }
+  selectActive(root, initialFormation);
+}
+
+export function setCaptainFormation(
+  root: HTMLElement,
+  formation: Formation,
+): void {
+  selectActive(root, formation);
+}
+
 export function setSelectedFormation(
   controls: Controls,
   formation: Formation,

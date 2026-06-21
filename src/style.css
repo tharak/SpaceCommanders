@@ -279,3 +279,15 @@ input[type="range"] {
   font-size: 13px;
   text-align: center;
 }
+.captain-selection {
+  display: grid;
+  gap: 6px;
+  margin: 16px 0;
+}
+.captain-selection > span {
+  font:
+    600 11px/1 Barlow Condensed,
+    sans-serif;
+  letter-spacing: 1.7px;
+  color: #73a4be;
+}
