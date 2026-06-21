@@ -9,6 +9,8 @@ import {
   SUPPLY_SHIP_CAPACITY,
 } from "./constants";
 import { formationSlots } from "./formations";
+import { spawnShip } from "./ship-factory";
+import { moveShipWithBoids } from "./ship-movement";
 import {
   clamp,
   distance,
@@ -245,35 +247,6 @@ function updateProjectiles(
       projectile.pos.y <= viewport.height
     );
   });
-}
-
-function spawnShip(
-  side: Side,
-  role: ShipRole,
-  position: Vec,
-  id: number,
-): Ship {
-  const battleship = role === ShipRole.Battleship;
-  const captain = role === ShipRole.Captain;
-  const hp = 50;
-
-  return {
-    id,
-    side,
-    role,
-    pos: { ...position },
-    vel: { x: randomBetween(-12, 12), y: randomBetween(-12, 12) },
-    hp,
-    maxHp: hp,
-    attack: 10,
-    defense: 3,
-    speed: 56,
-    sight: 260,
-    moral: 70,
-    supplies: 10,
-    range: 135,
-    cooldown: 1,
-  };
 }
 
 function replenishPlanets(state: GameState, deltaTime: number): void {
@@ -519,67 +492,14 @@ function moveShip(
   viewport: Viewport,
   deltaTime: number,
 ): void {
-  if (
-    ship.target &&
-    distance(ship.pos, ship.target) <= FORMATION_ARRIVAL_DISTANCE
-  ) {
-    ship.pos = { ...ship.target };
-    ship.vel = { x: 0, y: 0 };
-    return;
-  }
-
-  let force = steeringForce(ship);
-
-  for (const other of state.ships) {
-    if (other === ship) continue;
-    const separation = distance(ship.pos, other.pos);
-    if (separation >= 42) continue;
-    const direction = normalize({
-      x: ship.pos.x - other.pos.x,
-      y: ship.pos.y - other.pos.y,
-    });
-    force.x += direction.x * (42 - separation) * 3;
-    force.y += direction.y * (42 - separation) * 3;
-  }
-
-  for (const body of state.bodies) {
-    const separation = distance(ship.pos, body.pos);
-    const safeDistance = body.radius + 30;
-    if (separation >= safeDistance) continue;
-    const direction = normalize({
-      x: ship.pos.x - body.pos.x,
-      y: ship.pos.y - body.pos.y,
-    });
-    force.x += direction.x * (safeDistance - separation) * 5;
-    force.y += direction.y * (safeDistance - separation) * 5;
-  }
-
-  ship.vel.x += (force.x - ship.vel.x) * Math.min(1, deltaTime * 2.2);
-  ship.vel.y += (force.y - ship.vel.y) * Math.min(1, deltaTime * 2.2);
-  ship.pos.x = clamp(
-    ship.pos.x + ship.vel.x * deltaTime,
-    10,
-    viewport.width - 10,
+  moveShipWithBoids(
+    ship,
+    state.ships,
+    state.bodies,
+    viewport,
+    deltaTime,
+    FORMATION_ARRIVAL_DISTANCE,
   );
-  ship.pos.y = clamp(
-    ship.pos.y + ship.vel.y * deltaTime,
-    10,
-    viewport.height - 10,
-  );
-}
-
-function steeringForce(ship: Ship): Vec {
-  if (!ship.target) return { x: 0, y: 0 };
-
-  const vector = {
-    x: ship.target.x - ship.pos.x,
-    y: ship.target.y - ship.pos.y,
-  };
-  const length = Math.hypot(vector.x, vector.y) || 1;
-  return {
-    x: (vector.x / length) * ship.speed,
-    y: (vector.y / length) * ship.speed,
-  };
 }
 
 function hasLineOfSight(

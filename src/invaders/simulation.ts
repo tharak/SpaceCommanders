@@ -1,6 +1,8 @@
 import { FORMATIONS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp, distance, normalize } from "../game/math";
+import { spawnShip } from "../game/ship-factory";
+import { moveShipWithBoids } from "../game/ship-movement";
 import { BodyKind, Formation, ShipRole, Side } from "../game/types";
 import type { Formation as FormationType, Ship, Viewport } from "../game/types";
 import type { InvadersState } from "./types";
@@ -98,7 +100,7 @@ export function updateInvaders(
     34,
   );
   state.enemies.forEach((ship, index) => {
-    moveFleetShip(state.enemies, ship, enemySlots[index], elapsed);
+    moveFleetShip(state.enemies, ship, enemySlots[index], viewport, elapsed);
   });
 
   const slots = formationSlots(
@@ -108,7 +110,7 @@ export function updateInvaders(
     32,
   );
   state.ships.forEach((ship, index) => {
-    moveFleetShip(state.ships, ship, slots[index], elapsed);
+    moveFleetShip(state.ships, ship, slots[index], viewport, elapsed);
     ship.cooldown -= elapsed;
   });
   state.enemies.forEach((ship) => {
@@ -135,24 +137,14 @@ function createFleet(
   role: ShipRole,
   state: InvadersState,
 ): Ship[] {
-  const hp = role === ShipRole.Guard ? 60 : 30;
-  return formationSlots(center, formation, FLEET_SIZE, 34).map((pos) => ({
-    id: state.nextShipId++,
-    side,
-    role,
-    pos,
-    vel: { x: 0, y: 0 },
-    hp,
-    maxHp: hp,
-    attack: 10,
-    defense: 0,
-    speed: 0,
-    sight: 0,
-    moral: 100,
-    supplies: 0,
-    range: 0,
-    cooldown: 0,
-  }));
+  return formationSlots(center, formation, FLEET_SIZE, 34).map((pos) => {
+    const ship = spawnShip(side, role, pos, state.nextShipId++);
+    if (role === ShipRole.Guard) {
+      ship.hp *= 2;
+      ship.maxHp *= 2;
+    }
+    return ship;
+  });
 }
 
 function fireWeapons(state: InvadersState): void {
@@ -241,34 +233,11 @@ function moveFleetShip(
   fleet: Ship[],
   ship: Ship,
   target: { x: number; y: number },
+  viewport: Viewport,
   elapsed: number,
 ): void {
-  const offset = { x: target.x - ship.pos.x, y: target.y - ship.pos.y };
-  const targetDistance = Math.hypot(offset.x, offset.y);
-  if (targetDistance <= 3) {
-    ship.pos = { ...target };
-    ship.vel = { x: 0, y: 0 };
-    return;
-  }
-
-  const direction = normalize(offset);
-  const force = { x: direction.x * 120, y: direction.y * 120 };
-  for (const other of fleet) {
-    if (other === ship) continue;
-    const separation = distance(ship.pos, other.pos);
-    if (separation >= 38 || separation === 0) continue;
-    const repulsion = normalize({
-      x: ship.pos.x - other.pos.x,
-      y: ship.pos.y - other.pos.y,
-    });
-    force.x += repulsion.x * (38 - separation) * 4;
-    force.y += repulsion.y * (38 - separation) * 4;
-  }
-
-  ship.vel.x += (force.x - ship.vel.x) * Math.min(1, elapsed * 4);
-  ship.vel.y += (force.y - ship.vel.y) * Math.min(1, elapsed * 4);
-  ship.pos.x += ship.vel.x * elapsed;
-  ship.pos.y += ship.vel.y * elapsed;
+  ship.target = target;
+  moveShipWithBoids(ship, fleet, [], viewport, elapsed);
 }
 
 function spawnEnemyWave(state: InvadersState, viewport: Viewport): void {
