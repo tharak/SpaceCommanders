@@ -1,5 +1,6 @@
 import { COLORS } from "../game/constants";
 import { Side } from "../game/types";
+import { drawGameBackground } from "../render/backgroundRenderer";
 import { drawFiringRangeCones, drawShips } from "../render/shipRenderer";
 import type { Vec } from "../game/types";
 import type { InvadersRenderContext, InvadersState } from "./types";
@@ -9,9 +10,7 @@ export function renderInvaders(
   renderContext: InvadersRenderContext,
 ): void {
   const { context, viewport, status } = renderContext;
-  context.fillStyle = "#020a06";
-  context.fillRect(0, 0, viewport.width, viewport.height);
-  drawStars(context, viewport);
+  drawGameBackground(context, viewport, [state.base]);
   drawBase(context, state, viewport);
   drawFiringRangeCones(context, [...state.ships, ...state.enemies]);
   drawShips(context, state.ships);
@@ -36,18 +35,6 @@ function drawLaser(
   context.shadowBlur = 8;
   context.fillRect(-7, -1.5, 14, 3);
   context.restore();
-}
-
-function drawStars(
-  context: CanvasRenderingContext2D,
-  viewport: { width: number; height: number },
-): void {
-  context.fillStyle = "#16412c";
-  for (let index = 0; index < 60; index++) {
-    const x = (index * 137) % viewport.width;
-    const y = (index * 83) % viewport.height;
-    context.fillRect(x, y, 1, 1);
-  }
 }
 
 function drawBase(
