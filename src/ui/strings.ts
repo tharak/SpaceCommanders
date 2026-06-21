@@ -25,6 +25,7 @@ export const TEXT = {
       range: "RNG",
       supplyShips: "SUP",
       baseSupplyGeneration: "GEN",
+      baseSupplyCapacity: "CAP",
     },
   },
   launcher: {

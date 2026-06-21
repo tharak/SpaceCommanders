@@ -51,6 +51,7 @@ export function createInvadersState(): InvadersState {
     baseHp: BASE_MAX_HP,
     baseMaxHp: BASE_MAX_HP,
     baseSupplyRate: BASE_SUPPLY_RATE,
+    baseSupplyCapacity: BASE_SUPPLY_CAPACITY,
     wave: 1,
     score: 0,
     upgrades: createUpgradeLevels(),
@@ -87,6 +88,7 @@ export function resetInvaders(
   state.baseHp = BASE_MAX_HP;
   state.baseMaxHp = BASE_MAX_HP;
   state.baseSupplyRate = BASE_SUPPLY_RATE;
+  state.baseSupplyCapacity = BASE_SUPPLY_CAPACITY;
   state.projectiles = [];
   state.wave = 0;
   state.score = 0;
@@ -142,6 +144,7 @@ export function purchaseInvadersUpgrade(
         break;
       case UpgradeType.SupplyShips:
       case UpgradeType.BaseSupplyGeneration:
+      case UpgradeType.BaseSupplyCapacity:
         break;
     }
   }
@@ -152,6 +155,9 @@ export function purchaseInvadersUpgrade(
   }
   if (upgrade === UpgradeType.BaseSupplyGeneration) {
     state.baseSupplyRate += 0.5;
+  }
+  if (upgrade === UpgradeType.BaseSupplyCapacity) {
+    state.baseSupplyCapacity += 5;
   }
   return cost;
 }
@@ -459,7 +465,7 @@ function createSupplyShip(
 
 function replenishBaseSupplies(state: InvadersState, elapsed: number): void {
   state.base.stock = Math.min(
-    BASE_SUPPLY_CAPACITY,
+    state.baseSupplyCapacity,
     (state.base.stock ?? 0) + elapsed * state.baseSupplyRate,
   );
 }
@@ -521,5 +527,6 @@ function createUpgradeLevels(): Record<UpgradeType, number> {
     [UpgradeType.Range]: 0,
     [UpgradeType.SupplyShips]: 0,
     [UpgradeType.BaseSupplyGeneration]: 0,
+    [UpgradeType.BaseSupplyCapacity]: 0,
   };
 }

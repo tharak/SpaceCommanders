@@ -145,6 +145,8 @@ function createUpgradeButtons(
     [UpgradeType.SupplyShips]: TEXT.controls.upgradeLabels.supplyShips,
     [UpgradeType.BaseSupplyGeneration]:
       TEXT.controls.upgradeLabels.baseSupplyGeneration,
+    [UpgradeType.BaseSupplyCapacity]:
+      TEXT.controls.upgradeLabels.baseSupplyCapacity,
   };
   for (const upgrade of Object.values(UpgradeType)) {
     const button = document.createElement("button");
