@@ -9,6 +9,7 @@ import type { Formation as FormationType, Ship, Viewport } from "../game/types";
 import type { InvadersState } from "./types";
 
 const FLEET_SIZE = 10;
+const FLEET_SPACING = 48;
 const PROJECTILE_SPEED = 330;
 const ENEMY_FLEET_Y = 105;
 const BASE_BOTTOM_OFFSET = 130;
@@ -116,7 +117,7 @@ export function updateInvaders(
     state.enemyDestination,
     state.enemyFormation,
     state.enemies.length,
-    34,
+    FLEET_SPACING,
   );
   state.enemies.forEach((ship, index) => {
     moveFleetShip(state.enemies, ship, enemySlots[index], viewport, elapsed, {
@@ -129,7 +130,7 @@ export function updateInvaders(
     playerFleetCenter(viewport),
     state.formation,
     state.ships.length,
-    32,
+    FLEET_SPACING,
   );
   state.ships.forEach((ship, index) => {
     moveFleetShip(
@@ -184,7 +185,7 @@ function createFleet(
     center,
     formation,
     FLEET_SIZE,
-    34,
+    FLEET_SPACING,
     state.nextShipId,
   );
   state.nextShipId += fleet.length;
