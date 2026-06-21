@@ -10,7 +10,7 @@ import {
 } from "./constants";
 import { hasLineOfSight } from "./combat";
 import { formationSlots } from "./formations";
-import { spawnShip } from "./ship-factory";
+import { spawnFleet, spawnShip } from "./ship-factory";
 import { moveShipWithBoids } from "./ship-movement";
 import { clamp, distance, normalize, randomBetween } from "./math";
 import {
@@ -138,19 +138,20 @@ export function resetGame(
   let id = 0;
   for (const side of [Side.Player, Side.Enemy] as const) {
     const base = side === Side.Player ? playerBase : enemyBase;
-    const slots = formationSlots(
-      base,
-      Formation.Circle,
-      config.ships,
-      side === Side.Player
-        ? clamp(80 - state.cohesion * 50, 25, 70)
-        : ENEMY_FORMATION_SPACING,
+    state.ships.push(
+      ...spawnFleet(
+        side,
+        ShipRole.Battleship,
+        base,
+        Formation.Circle,
+        config.ships,
+        side === Side.Player
+          ? clamp(80 - state.cohesion * 50, 25, 70)
+          : ENEMY_FORMATION_SPACING,
+        id,
+      ),
     );
-    for (let index = 0; index < config.ships; index++) {
-      state.ships.push(
-        spawnShip(side, ShipRole.Battleship, slots[index], id++),
-      );
-    }
+    id += config.ships;
     //state.ships.push(
     //  spawnShip(side, ShipRole.Captain, offsetPosition(base, 30), id++),
     //);

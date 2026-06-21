@@ -2,7 +2,7 @@ import { hasLineOfSight } from "../game/combat";
 import { FORMATIONS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp, distance, normalize } from "../game/math";
-import { spawnShip } from "../game/ship-factory";
+import { spawnFleet } from "../game/ship-factory";
 import { moveShipWithBoids } from "../game/ship-movement";
 import { BodyKind, Formation, ShipRole, Side } from "../game/types";
 import type { Formation as FormationType, Ship, Viewport } from "../game/types";
@@ -137,14 +137,23 @@ function createFleet(
   role: ShipRole,
   state: InvadersState,
 ): Ship[] {
-  return formationSlots(center, formation, FLEET_SIZE, 34).map((pos) => {
-    const ship = spawnShip(side, role, pos, state.nextShipId++);
-    if (role === ShipRole.Guard) {
+  const fleet = spawnFleet(
+    side,
+    role,
+    center,
+    formation,
+    FLEET_SIZE,
+    34,
+    state.nextShipId,
+  );
+  state.nextShipId += fleet.length;
+  if (role === ShipRole.Guard) {
+    fleet.forEach((ship) => {
       ship.hp *= 2;
       ship.maxHp *= 2;
-    }
-    return ship;
-  });
+    });
+  }
+  return fleet;
 }
 
 function fireWeapons(state: InvadersState): void {

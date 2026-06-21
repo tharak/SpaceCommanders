@@ -1,5 +1,7 @@
+import { formationSlots } from "./formations";
 import { randomBetween } from "./math";
 import { ShipRole } from "./types";
+import type { Formation } from "./types";
 import type { Ship, Side, Vec } from "./types";
 
 export function spawnShip(
@@ -26,4 +28,18 @@ export function spawnShip(
     range: 135,
     cooldown: 1,
   };
+}
+
+export function spawnFleet(
+  side: Side,
+  role: ShipRole,
+  center: Vec,
+  formation: Formation,
+  count: number,
+  spacing: number,
+  firstId: number,
+): Ship[] {
+  return formationSlots(center, formation, count, spacing).map(
+    (position, index) => spawnShip(side, role, position, firstId + index),
+  );
 }
