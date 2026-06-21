@@ -206,6 +206,7 @@ function spawnProjectile(
   from: Vec,
   to: Vec,
   side: Side,
+  sourceShipId: number,
 ): void {
   const direction = normalize({ x: to.x - from.x, y: to.y - from.y });
   state.projectiles.push({
@@ -215,6 +216,7 @@ function spawnProjectile(
       y: direction.y * PROJECTILE_SPEED,
     },
     side,
+    sourceShipId,
   });
 }
 
@@ -226,7 +228,17 @@ function updateProjectiles(
   state.projectiles = state.projectiles.filter((projectile) => {
     projectile.pos.x += projectile.vel.x * deltaTime;
     projectile.pos.y += projectile.vel.y * deltaTime;
+    const hitShip = state.ships.some(
+      (ship) =>
+        ship.id !== projectile.sourceShipId &&
+        distance(ship.pos, projectile.pos) < 10,
+    );
+    const hitBody = state.bodies.some(
+      (body) => distance(body.pos, projectile.pos) < body.radius,
+    );
     return (
+      !hitShip &&
+      !hitBody &&
       projectile.pos.x >= 0 &&
       projectile.pos.x <= viewport.width &&
       projectile.pos.y >= 0 &&
@@ -634,5 +646,5 @@ function fireWeapons(state: GameState, ship: Ship): void {
   target.moral = clamp(target.moral - 5, 0, 100);
   ship.supplies--;
   ship.cooldown = 0.75;
-  spawnProjectile(state, ship.pos, target.pos, ship.side);
+  spawnProjectile(state, ship.pos, target.pos, ship.side, ship.id);
 }

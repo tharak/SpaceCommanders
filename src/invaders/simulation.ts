@@ -214,6 +214,7 @@ function spawnProjectile(
       y: direction.y * PROJECTILE_SPEED,
     },
     side: ship.side,
+    sourceShipId: ship.id,
   });
 }
 
@@ -225,7 +226,16 @@ function updateProjectiles(
   state.projectiles = state.projectiles.filter((projectile) => {
     projectile.pos.x += projectile.vel.x * elapsed;
     projectile.pos.y += projectile.vel.y * elapsed;
+    const hitShip = [...state.ships, ...state.enemies].some(
+      (ship) =>
+        ship.id !== projectile.sourceShipId &&
+        distance(ship.pos, projectile.pos) < 10,
+    );
+    const hitPlanet =
+      distance(state.planet.pos, projectile.pos) < state.planet.radius;
     return (
+      !hitShip &&
+      !hitPlanet &&
       projectile.pos.x >= 0 &&
       projectile.pos.x <= viewport.width &&
       projectile.pos.y >= 0 &&
