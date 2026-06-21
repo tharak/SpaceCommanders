@@ -316,3 +316,22 @@ input[type="range"] {
   color: #73a4be;
   font-size: 10px;
 }
+.at-will-ship {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: at-will-steer 1.2s ease-in-out infinite;
+}
+@keyframes at-will-steer {
+  0%,
+  100% {
+    transform: rotate(-12deg);
+  }
+  50% {
+    transform: rotate(12deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .at-will-ship {
+    animation: none;
+  }
+}

@@ -194,11 +194,10 @@ function fireModeIcon(mode: FireMode): string {
   if (mode === FireMode.Hold) {
     return `<svg viewBox="0 0 32 30"><path d="M7 19h17l-3-4H11zM12 14l2-5h4l2 5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="22" cy="9" r="7" fill="#081724" stroke="#ff7292" stroke-width="2"/><path d="M17 4l10 10" stroke="#ff7292" stroke-width="2"/></svg>`;
   }
-  const spread =
-    mode === FireMode.Focus
-      ? "M14 7h4M14 12h4M14 17h4"
-      : "M11 7h4M15 12h4M19 17h4";
-  return `<svg viewBox="0 0 32 30"><path d="M6 22h17l-3-5H10zM12 17l2-5h4l2 5" fill="none" stroke="currentColor" stroke-width="2"/><path d="${spread}" stroke="#80efff" stroke-width="2"/></svg>`;
+  if (mode === FireMode.Focus) {
+    return `<svg viewBox="0 0 32 30"><path d="M16 5l7 16-7-3-7 3zM13 14h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
+  }
+  return `<svg viewBox="0 0 32 30"><g class="at-will-ship"><path d="M16 5l7 16-7-3-7 3zM13 14h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></g><path d="M6 8l-2 3 2 3M26 8l2 3-2 3" fill="none" stroke="#80efff" stroke-width="1.5"/></svg>`;
 }
 
 function requiredElement(selector: string): HTMLElement {
