@@ -18,21 +18,7 @@ export function moveShipWithBoids(
     return;
   }
 
-  const targetDirection = normalize({
-    x: ship.target.x - ship.pos.x,
-    y: ship.target.y - ship.pos.y,
-  });
-  const desiredHeading = formationHeading
-    ? normalize({
-        x: targetDirection.x + formationHeading.x * 0.35,
-        y: targetDirection.y + formationHeading.y * 0.35,
-      })
-    : targetDirection;
-  steerHeading(ship, desiredHeading, deltaTime);
-  const force = {
-    x: ship.heading.x * ship.speed,
-    y: ship.heading.y * ship.speed,
-  };
+  const force = steeringForce(ship);
   let alignment = { x: 0, y: 0 };
   let alignmentCount = 0;
   for (const other of ships) {
@@ -54,6 +40,11 @@ export function moveShipWithBoids(
     force.x += direction.x * ship.speed * 0.25;
     force.y += direction.y * ship.speed * 0.25;
   }
+  if (formationHeading) {
+    const direction = normalize(formationHeading);
+    force.x += direction.x * ship.speed * 0.4;
+    force.y += direction.y * ship.speed * 0.4;
+  }
   for (const body of bodies) {
     const separation = distance(ship.pos, body.pos);
     const safeDistance = body.radius + 30;
@@ -68,6 +59,9 @@ export function moveShipWithBoids(
 
   ship.vel.x += (force.x - ship.vel.x) * Math.min(1, deltaTime * 2.2);
   ship.vel.y += (force.y - ship.vel.y) * Math.min(1, deltaTime * 2.2);
+  if (Math.hypot(ship.vel.x, ship.vel.y) > 1) {
+    ship.heading = normalize(ship.vel);
+  }
   ship.pos.x = clamp(
     ship.pos.x + ship.vel.x * deltaTime,
     10,
@@ -78,6 +72,19 @@ export function moveShipWithBoids(
     10,
     viewport.height - 10,
   );
+}
+
+function steeringForce(ship: Ship): Vec {
+  if (!ship.target) return { x: 0, y: 0 };
+  const vector = {
+    x: ship.target.x - ship.pos.x,
+    y: ship.target.y - ship.pos.y,
+  };
+  const length = Math.hypot(vector.x, vector.y) || 1;
+  return {
+    x: (vector.x / length) * ship.speed,
+    y: (vector.y / length) * ship.speed,
+  };
 }
 
 function steerHeading(ship: Ship, targetHeading: Vec, deltaTime: number): void {
