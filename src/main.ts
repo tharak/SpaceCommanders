@@ -28,6 +28,7 @@ import {
   setupControls,
   setCaptainFormation,
   setSelectedFormation,
+  setUpgradeAvailability,
   setUpgradePrices,
   showReadout,
 } from "./ui/controls";
@@ -64,6 +65,7 @@ function reset(): void {
   }
   setCaptainFormation(captainFormationControls, commandState.captainFavorite);
   setUpgradePrices(controls, invadersState.upgrades);
+  setUpgradeAvailability(controls, invadersState.upgrades, invadersState.score);
   showReadout(
     controls,
     activeGame === "command"
@@ -136,6 +138,11 @@ setupControls(
         return;
       }
       setUpgradePrices(controls, invadersState.upgrades);
+      setUpgradeAvailability(
+        controls,
+        invadersState.upgrades,
+        invadersState.score,
+      );
       showReadout(controls, TEXT.readout.upgradePurchased(upgrade, cost));
     },
     onReset: startMatch,
@@ -253,6 +260,11 @@ function animationLoop(now: number): void {
     }
     if (activeGame === "invaders") {
       updateInvaders(invadersState, viewport, deltaTime);
+      setUpgradeAvailability(
+        controls,
+        invadersState.upgrades,
+        invadersState.score,
+      );
       if (invadersState.winner) showGameOver(invadersState.winner);
     }
   }

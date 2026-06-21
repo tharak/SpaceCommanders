@@ -94,6 +94,21 @@ export function setUpgradePrices(
     });
 }
 
+export function setUpgradeAvailability(
+  controls: Controls,
+  levels: Record<UpgradeType, number>,
+  score: number,
+): void {
+  controls.upgradeControls
+    .querySelectorAll<HTMLButtonElement>("button")
+    .forEach((button) => {
+      const upgrade = button.dataset.value as UpgradeType;
+      if (!(upgrade in levels)) return;
+      const cost = 100 * (levels[upgrade] + 1);
+      button.classList.toggle("affordable", score >= cost);
+    });
+}
+
 export function setSelectedFormation(
   controls: Controls,
   formation: Formation,

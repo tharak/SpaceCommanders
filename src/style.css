@@ -353,3 +353,9 @@ input[type="range"] {
   color: #f0cf77;
   font-size: 9px;
 }
+.upgrade-row button.affordable {
+  border-color: #f0cf77;
+  color: #fff0bc;
+  background: #3a3117e8;
+  box-shadow: 0 0 12px #f0cf7755;
+}
