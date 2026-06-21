@@ -314,6 +314,14 @@ function drawShips(context: CanvasRenderingContext2D, state: GameState): void {
     context.beginPath();
     if (ship.role === ShipRole.Supply) {
       context.rect(-5, -5, 10, 10);
+    } else if (ship.role === ShipRole.Guard) {
+      context.moveTo(0, -10);
+      context.lineTo(8, -6);
+      context.lineTo(6, 5);
+      context.lineTo(0, 10);
+      context.lineTo(-6, 5);
+      context.lineTo(-8, -6);
+      context.closePath();
     } else {
       context.moveTo(0, -10);
       context.lineTo(7, 8);

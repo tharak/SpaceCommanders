@@ -1,5 +1,5 @@
 import { COLORS } from "../game/constants";
-import { Side } from "../game/types";
+import { ShipRole, Side } from "../game/types";
 import type { Vec } from "../game/types";
 import type { InvadersRenderContext, InvadersState } from "./types";
 
@@ -82,9 +82,18 @@ function drawShips(
     context.translate(ship.pos.x, ship.pos.y);
     context.fillStyle = COLORS[ship.side];
     context.beginPath();
-    context.moveTo(0, ship.side === Side.Player ? -9 : 9);
-    context.lineTo(7, ship.side === Side.Player ? 8 : -8);
-    context.lineTo(-7, ship.side === Side.Player ? 8 : -8);
+    if (ship.role === ShipRole.Guard) {
+      context.moveTo(0, -10);
+      context.lineTo(8, -6);
+      context.lineTo(6, 5);
+      context.lineTo(0, 10);
+      context.lineTo(-6, 5);
+      context.lineTo(-8, -6);
+    } else {
+      context.moveTo(0, ship.side === Side.Player ? -9 : 9);
+      context.lineTo(7, ship.side === Side.Player ? 8 : -8);
+      context.lineTo(-7, ship.side === Side.Player ? 8 : -8);
+    }
     context.closePath();
     context.fill();
     context.restore();
