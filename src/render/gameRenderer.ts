@@ -1,6 +1,7 @@
 import { COLORS } from "../game/constants";
 import { formationSlots } from "../game/formations";
 import { clamp } from "../game/math";
+import { drawShips } from "./shipRenderer";
 import { BodyKind, ShipRole, Side } from "../game/types";
 import type { Body, GameState, Ship, Vec, Viewport } from "../game/types";
 
@@ -32,7 +33,7 @@ export function renderGame(
   drawBodies(context, state);
   drawFormationPreview(context, state);
   drawProjectiles(context, state);
-  drawShips(context, state);
+  drawShips(context, state.ships);
   updateStatus(renderContext.status, state);
 }
 
@@ -300,78 +301,6 @@ function drawLaser(
   context.shadowBlur = 8;
   context.fillRect(-7, -1.5, 14, 3);
   context.restore();
-}
-
-function drawShips(context: CanvasRenderingContext2D, state: GameState): void {
-  for (const ship of state.ships) {
-    const fillHeight = ship.role === ShipRole.Supply ? 10 : 18;
-    const bottom = ship.role === ShipRole.Supply ? 5 : 8;
-    const health = Math.max(0, Math.min(1, ship.hp / ship.maxHp));
-
-    context.save();
-    context.translate(ship.pos.x, ship.pos.y);
-    context.rotate(Math.atan2(ship.vel.y, ship.vel.x) + Math.PI / 2);
-    context.beginPath();
-    if (ship.role === ShipRole.Supply) {
-      context.rect(-5, -5, 10, 10);
-    } else if (ship.role === ShipRole.Guard) {
-      context.moveTo(0, -10);
-      context.lineTo(8, -6);
-      context.lineTo(6, 5);
-      context.lineTo(0, 10);
-      context.lineTo(-6, 5);
-      context.lineTo(-8, -6);
-      context.closePath();
-    } else {
-      context.moveTo(0, -10);
-      context.lineTo(7, 8);
-      context.lineTo(0, 5);
-      context.lineTo(-7, 8);
-      context.closePath();
-    }
-
-    context.save();
-    context.clip();
-    context.fillStyle = COLORS[ship.side];
-    context.fillRect(
-      -10,
-      bottom - fillHeight * health,
-      20,
-      fillHeight * health,
-    );
-    context.restore();
-
-    context.strokeStyle = COLORS[ship.side];
-    context.lineWidth = 1.5;
-    context.stroke();
-    context.restore();
-
-    drawSupplyMarkers(context, ship);
-  }
-}
-
-function drawSupplyMarkers(
-  context: CanvasRenderingContext2D,
-  ship: Ship,
-): void {
-  const supplyCount = Math.floor(ship.supplies);
-  if (supplyCount <= 0) return;
-
-  const markerRadius = 18;
-  context.strokeStyle = ship.side === Side.Player ? "#9af4ff" : "#ffadc1";
-  context.lineWidth = 1.25;
-  for (let index = 0; index < supplyCount; index++) {
-    const angle = (index / supplyCount) * Math.PI * 2 - Math.PI / 2;
-    context.beginPath();
-    context.arc(
-      ship.pos.x + Math.cos(angle) * markerRadius,
-      ship.pos.y + Math.sin(angle) * markerRadius,
-      2,
-      0,
-      Math.PI * 2,
-    );
-    context.stroke();
-  }
 }
 
 function updateStatus(status: HTMLElement, state: GameState): void {

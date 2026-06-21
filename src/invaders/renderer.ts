@@ -1,5 +1,6 @@
 import { COLORS } from "../game/constants";
-import { ShipRole, Side } from "../game/types";
+import { Side } from "../game/types";
+import { drawShips } from "../render/shipRenderer";
 import type { Vec } from "../game/types";
 import type { InvadersRenderContext, InvadersState } from "./types";
 
@@ -71,31 +72,4 @@ function drawPlanet(
   );
   context.stroke();
   context.restore();
-}
-
-function drawShips(
-  context: CanvasRenderingContext2D,
-  ships: InvadersState["ships"],
-): void {
-  for (const ship of ships) {
-    context.save();
-    context.translate(ship.pos.x, ship.pos.y);
-    context.fillStyle = COLORS[ship.side];
-    context.beginPath();
-    if (ship.role === ShipRole.Guard) {
-      context.moveTo(0, -10);
-      context.lineTo(8, -6);
-      context.lineTo(6, 5);
-      context.lineTo(0, 10);
-      context.lineTo(-6, 5);
-      context.lineTo(-8, -6);
-    } else {
-      context.moveTo(0, ship.side === Side.Player ? -9 : 9);
-      context.lineTo(7, ship.side === Side.Player ? 8 : -8);
-      context.lineTo(-7, ship.side === Side.Player ? 8 : -8);
-    }
-    context.closePath();
-    context.fill();
-    context.restore();
-  }
 }
