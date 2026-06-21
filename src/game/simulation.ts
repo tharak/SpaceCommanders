@@ -25,7 +25,6 @@ import {
   Side,
   BodyKind,
   Formation,
-  FormationStage,
   FireMode,
   Projectile,
   SupplyMission,
@@ -162,29 +161,12 @@ export function resetGame(
 }
 
 export function issueFormationOrder(state: GameState, destination: Vec): void {
-  const battleships = state.ships.filter(
-    (ship) => ship.side === Side.Player && ship.role === ShipRole.Battleship,
-  );
-  if (battleships.length === 0) {
-    state.command = { ...destination };
-    state.destination = null;
-    state.formationStage = null;
-    return;
-  }
-
-  const center = battleships.reduce(
-    (anchor, ship) => ({
-      x: anchor.x + ship.pos.x / battleships.length,
-      y: anchor.y + ship.pos.y / battleships.length,
-    }),
-    { x: 0, y: 0 },
-  );
-  state.command = {
-    x: (center.x + destination.x) / 2,
-    y: (center.y + destination.y) / 2,
-  };
-  state.destination = { ...destination };
-  state.formationStage = FormationStage.MovingToAssemblyPoint;
+  state.formation = state.selectedFormation;
+  state.formationRotation = state.previewRotation;
+  state.cohesion = state.previewCohesion;
+  state.command = { ...destination };
+  state.destination = null;
+  state.formationStage = null;
 }
 
 export function updateGame(
@@ -200,7 +182,6 @@ export function updateGame(
   if (state.winner) return;
   spawnResupplyShips(state);
   assignFormationTargets(state);
-  if (advanceFormationOrder(state)) assignFormationTargets(state);
 
   for (const ship of state.ships) {
     ship.cooldown -= deltaTime;
@@ -495,33 +476,6 @@ function assignFormationTargets(state: GameState): void {
         ship.target = { x: center.x + (index ? 20 : -20), y: center.y + 60 };
       });
   }
-}
-
-function advanceFormationOrder(state: GameState): boolean {
-  if (!state.destination || !state.formationStage) return false;
-
-  const battleships = state.ships.filter(
-    (ship) => ship.side === Side.Player && ship.role === ShipRole.Battleship,
-  );
-  const formationReady = battleships.every(
-    (ship) =>
-      ship.target &&
-      distance(ship.pos, ship.target) <= FORMATION_ARRIVAL_DISTANCE,
-  );
-  if (!formationReady) return false;
-
-  if (state.formationStage === FormationStage.MovingToAssemblyPoint) {
-    state.formation = state.selectedFormation;
-    state.formationRotation = state.previewRotation;
-    state.cohesion = state.previewCohesion;
-    state.formationStage = FormationStage.FormingAtAssemblyPoint;
-    return true;
-  }
-
-  state.command = state.destination;
-  state.destination = null;
-  state.formationStage = null;
-  return true;
 }
 
 function collectPlanetSupplies(state: GameState, ship: Ship): void {
