@@ -285,7 +285,15 @@ function moveFleetShip(
   elapsed: number,
 ): void {
   ship.target = target;
-  moveShipWithBoids(ship, fleet, [], viewport, elapsed);
+  moveShipWithBoids(
+    ship,
+    fleet,
+    [],
+    viewport,
+    elapsed,
+    4,
+    ship.side === Side.Player ? { x: 0, y: -1 } : { x: 0, y: 1 },
+  );
 }
 
 function spawnEnemyWave(state: InvadersState, viewport: Viewport): void {

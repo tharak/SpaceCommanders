@@ -8,11 +8,13 @@ export function moveShipWithBoids(
   viewport: Viewport,
   deltaTime: number,
   arrivalDistance = 4,
+  formationHeading?: Vec,
 ): void {
   if (!ship.target) return;
   if (distance(ship.pos, ship.target) <= arrivalDistance) {
     ship.pos = { ...ship.target };
     ship.vel = { x: 0, y: 0 };
+    if (formationHeading) ship.heading = normalize(formationHeading);
     return;
   }
 
@@ -37,6 +39,11 @@ export function moveShipWithBoids(
     const direction = normalize(alignment);
     force.x += direction.x * ship.speed * 0.25;
     force.y += direction.y * ship.speed * 0.25;
+  }
+  if (formationHeading) {
+    const direction = normalize(formationHeading);
+    force.x += direction.x * ship.speed * 0.4;
+    force.y += direction.y * ship.speed * 0.4;
   }
   for (const body of bodies) {
     const separation = distance(ship.pos, body.pos);

@@ -1,6 +1,6 @@
 import { distanceToSegment } from "./math";
 
-export const FIRING_CONE_ANGLE = (20 * Math.PI) / 180;
+export const FIRING_CONE_ANGLE = (40 * Math.PI) / 180;
 export const FIRING_CONE_HALF_ANGLE = FIRING_CONE_ANGLE / 2;
 import type { Body, Ship, Vec } from "./types";
 

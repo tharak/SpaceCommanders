@@ -495,6 +495,12 @@ function moveShip(
     viewport,
     deltaTime,
     FORMATION_ARRIVAL_DISTANCE,
+    ship.side === Side.Player
+      ? {
+          x: Math.cos(state.formationRotation),
+          y: Math.sin(state.formationRotation),
+        }
+      : undefined,
   );
 }
 
