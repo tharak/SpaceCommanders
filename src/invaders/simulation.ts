@@ -98,8 +98,7 @@ export function updateInvaders(
     34,
   );
   state.enemies.forEach((ship, index) => {
-    ship.pos = { ...enemySlots[index] };
-    ship.vel = { x: 0, y: ENEMY_FLEET_SPEED };
+    moveFleetShip(state.enemies, ship, enemySlots[index], elapsed);
   });
 
   const slots = formationSlots(
@@ -109,7 +108,7 @@ export function updateInvaders(
     32,
   );
   state.ships.forEach((ship, index) => {
-    movePlayerShip(state, ship, slots[index], elapsed);
+    moveFleetShip(state.ships, ship, slots[index], elapsed);
     ship.cooldown -= elapsed;
   });
   state.enemies.forEach((ship) => {
@@ -238,8 +237,8 @@ function updateProjectiles(
   });
 }
 
-function movePlayerShip(
-  state: InvadersState,
+function moveFleetShip(
+  fleet: Ship[],
   ship: Ship,
   target: { x: number; y: number },
   elapsed: number,
@@ -254,7 +253,7 @@ function movePlayerShip(
 
   const direction = normalize(offset);
   const force = { x: direction.x * 120, y: direction.y * 120 };
-  for (const other of state.ships) {
+  for (const other of fleet) {
     if (other === ship) continue;
     const separation = distance(ship.pos, other.pos);
     if (separation >= 38 || separation === 0) continue;
