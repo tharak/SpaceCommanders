@@ -135,9 +135,6 @@ h1 b {
   display: grid;
   gap: 6px;
 }
-.upgrade-title {
-  justify-self: center;
-}
 .upgrade-content {
   display: grid;
   justify-items: center;
