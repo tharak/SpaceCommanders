@@ -29,7 +29,9 @@ export type InvadersState = {
   baseSupplyCapacity: number;
   regenerationRate: number;
   wave: number;
+  enemyDeploymentCountdown: number;
   score: number;
+  money: number;
   upgrades: Record<UpgradeType, number>;
   waveOffset: number;
   waveDirection: number;
@@ -41,5 +43,6 @@ export type InvadersRenderContext = {
   canvas: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
   status: HTMLElement;
+  countdown: HTMLElement;
   viewport: Viewport;
 };

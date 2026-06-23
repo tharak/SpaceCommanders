@@ -27,7 +27,9 @@ import {
   readConfig,
   setupControls,
   setCaptainFormation,
+  animateMoneySpent,
   setSelectedFormation,
+  setMoneyDisplay,
   setUpgradeAvailability,
   setUpgradePrices,
   showReadout,
@@ -40,6 +42,7 @@ applyStaticScreenText();
 const canvas = requiredCanvas("#game");
 const context = requiredContext(canvas);
 const status = requiredElement("#status");
+const countdown = requiredElement("#enemy-countdown");
 const setupTitle = requiredElement("#setup-title");
 const setupMessage = requiredElement("#setup-message");
 const startButton = requiredElement("#reset-game");
@@ -65,7 +68,8 @@ function reset(): void {
   }
   setCaptainFormation(captainFormationControls, commandState.captainFavorite);
   setUpgradePrices(controls, invadersState.upgrades);
-  setUpgradeAvailability(controls, invadersState.upgrades, invadersState.score);
+  setMoneyDisplay(controls, invadersState.money);
+  setUpgradeAvailability(controls, invadersState.upgrades, invadersState.money);
   showReadout(
     controls,
     activeGame === "command"
@@ -138,10 +142,12 @@ setupControls(
         return;
       }
       setUpgradePrices(controls, invadersState.upgrades);
+      setMoneyDisplay(controls, invadersState.money);
+      animateMoneySpent(controls, upgrade, cost);
       setUpgradeAvailability(
         controls,
         invadersState.upgrades,
-        invadersState.score,
+        invadersState.money,
       );
       showReadout(controls, TEXT.readout.upgradePurchased(upgrade, cost));
     },
@@ -260,17 +266,25 @@ function animationLoop(now: number): void {
     }
     if (activeGame === "invaders") {
       updateInvaders(invadersState, viewport, deltaTime);
+      setMoneyDisplay(controls, invadersState.money);
       setUpgradeAvailability(
         controls,
         invadersState.upgrades,
-        invadersState.score,
+        invadersState.money,
       );
       if (invadersState.winner) showGameOver(invadersState.winner);
     }
   }
   if (activeGame === "command")
     renderGame(commandState, { canvas, context, status, viewport });
-  else renderInvaders(invadersState, { canvas, context, status, viewport });
+  else
+    renderInvaders(invadersState, {
+      canvas,
+      context,
+      status,
+      countdown,
+      viewport,
+    });
   requestAnimationFrame(animationLoop);
 }
 function requiredContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {

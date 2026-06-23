@@ -14,10 +14,11 @@ export const TEXT = {
   },
   controls: {
     upgrades: "UPGRADES",
+    money: "₿",
     formation: "FORMATION",
     shootMode: "SHOOT MODE",
     captainFormation: "CAPTAIN FORMATION",
-    upgradePrice: (label: string, cost: number) => label + " " + cost,
+    upgradePrice: (label: string, cost: number) => label + " " + cost + " ₿",
     upgradeLabels: {
       damage: "DMG",
       speed: "SPD",
@@ -60,15 +61,15 @@ export const TEXT = {
     weaponsFree: "WEAPONS FREE — ENGAGING HOSTILES IN RANGE",
     upgradesDefenseOnly: "UPGRADES ARE AVAILABLE IN PLANETARY DEFENSE",
     upgradeNeeded: (cost: number, upgrade: string) =>
-      `NEED ${cost} SCORE FOR ${upgrade.toUpperCase()}`,
+      `NEED ${cost} ₿ FOR ${upgrade.toUpperCase()}`,
     upgradePurchased: (upgrade: string, cost: number) =>
-      `${upgrade.toUpperCase()} UPGRADED — ${cost} SCORE SPENT`,
+      `${upgrade.toUpperCase()} UPGRADED — ${cost} ₿ SPENT`,
   },
   status: {
     commanders: (fleet: number, hostiles: number) =>
       `<span style="color:#5de5ff">◈ ${fleet} FLEET</span><br><span style="color:#ff7898">◇ ${hostiles} HOSTILES</span>`,
-    defense: (score: number, baseHp: number, supply: number, wave: number) =>
-      `<span style="color:#5de5ff">◈ DEFENSE FLEET</span><br><span style="color:#91c9de">SCORE ${score} · BASE ${baseHp}% · SUPPLY ${supply} · WAVE ${wave}</span>`,
+    defense: (score: number) =>
+      `<span style="color:#5de5ff">SCORE ${score}</span>`,
   },
 } as const;
 
@@ -84,6 +85,7 @@ export function applyStaticScreenText(): void {
 
   const labels: Record<string, string> = {
     upgrades: TEXT.controls.upgrades,
+    money: TEXT.controls.money,
     formation: TEXT.controls.formation,
     "shoot-mode": TEXT.controls.shootMode,
     "captain-formation": TEXT.controls.captainFormation,

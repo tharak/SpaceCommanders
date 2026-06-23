@@ -61,14 +61,34 @@ h1 b {
   font-weight: 700;
 }
 #status {
-  margin-left: auto;
-  margin-right: 12px;
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
   font:
-    600 13px/1.25 Barlow Condensed,
+    700 20px/1 Barlow Condensed,
     sans-serif;
-  letter-spacing: 1px;
-  text-align: right;
+  letter-spacing: 1.5px;
+  text-align: center;
   color: #b7d6e7;
+}
+#enemy-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ff7898;
+  font:
+    700 clamp(28px, 7vw, 56px) / 1 Barlow Condensed,
+    sans-serif;
+  letter-spacing: 2px;
+  opacity: 0;
+  text-align: center;
+  text-shadow: 0 0 18px #ff789899;
+  transition: opacity 120ms ease-out;
+}
+#enemy-countdown.active {
+  opacity: 1;
 }
 .icon-button,
 .icon-row button,
@@ -114,6 +134,59 @@ h1 b {
 .command-group {
   display: grid;
   gap: 6px;
+}
+.upgrade-title {
+  justify-self: center;
+}
+.upgrade-content {
+  display: grid;
+  justify-items: center;
+}
+#money-display {
+  position: relative;
+  width: fit-content;
+  color: #f0cf77;
+  font:
+    700 12px/1 Barlow Condensed,
+    sans-serif;
+  letter-spacing: 1.2px;
+}
+#money-display strong {
+  font-size: 15px;
+}
+#money-display > span {
+  margin-left: 5px;
+}
+#money-display.money-spent {
+  animation: money-spend 380ms ease-out;
+}
+.upgrade-item.money-spent::after {
+  content: attr(data-spend);
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: -8px;
+  color: #f0cf77;
+  animation: money-cost 650ms ease-out forwards;
+}
+@keyframes money-spend {
+  35% {
+    color: #fff0bc;
+    transform: translateX(-3px);
+  }
+  70% {
+    transform: translateX(2px);
+  }
+}
+@keyframes money-cost {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -14px);
+  }
 }
 .icon-row {
   display: flex;
@@ -215,7 +288,7 @@ input[type="range"] {
     max-width: 90%;
   }
   #status {
-    font-size: 10px;
+    font-size: 16px;
   }
 }
 
@@ -327,6 +400,20 @@ input[type="range"] {
 .upgrade-row {
   display: flex;
   gap: 4px;
+}
+.upgrade-item {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+.upgrade-level {
+  color: #73a4be;
+  font:
+    600 9px/1 Barlow Condensed,
+    sans-serif;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 .upgrade-row button {
   min-width: 34px;

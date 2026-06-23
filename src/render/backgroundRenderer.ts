@@ -16,7 +16,7 @@ export function drawGameBackground(
     viewport.height * 0.48,
     Math.max(viewport.width, viewport.height) * 0.7,
   );
-  gradient.addColorStop(0, "#0b2a1b");
+  gradient.addColorStop(0, "#07170f");
   gradient.addColorStop(1, "#020a06");
   context.fillStyle = gradient;
   context.fillRect(0, 0, viewport.width, viewport.height);
@@ -31,8 +31,8 @@ function drawGeodesicGrid(
 ): void {
   const gridSpacing = 20;
   const sampleSpacing = 8;
-  context.strokeStyle = "#67f7a166";
-  context.lineWidth = 1.2;
+  context.strokeStyle = "#67f7a126";
+  context.lineWidth = 0.8;
 
   for (
     let x = -gridSpacing;

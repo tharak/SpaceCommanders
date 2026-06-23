@@ -25,6 +25,7 @@ const BASE_MAX_HP = 1000;
 const BASE_SUPPLY_CAPACITY = 20;
 const BASE_SUPPLY_RATE = 1;
 const SUPPLY_SHIP_CAPACITY = 1;
+const ENEMY_DEPLOYMENT_DELAY = 2;
 
 export function createInvadersState(): InvadersState {
   return {
@@ -55,7 +56,9 @@ export function createInvadersState(): InvadersState {
     baseSupplyCapacity: BASE_SUPPLY_CAPACITY,
     regenerationRate: 0,
     wave: 1,
+    enemyDeploymentCountdown: 0,
     score: 0,
+    money: 0,
     upgrades: createUpgradeLevels(),
     waveOffset: 0,
     waveDirection: 1,
@@ -94,7 +97,9 @@ export function resetInvaders(
   state.regenerationRate = 0;
   state.projectiles = [];
   state.wave = 0;
+  state.enemyDeploymentCountdown = 0;
   state.score = 0;
+  state.money = 0;
   state.upgrades = createUpgradeLevels();
   state.waveOffset = 0;
   state.nextShipId = 1;
@@ -127,9 +132,9 @@ export function purchaseInvadersUpgrade(
   upgrade: UpgradeType,
 ): number | null {
   const cost = 100 * (state.upgrades[upgrade] + 1);
-  if (state.score < cost) return null;
+  if (state.money < cost) return null;
 
-  state.score -= cost;
+  state.money -= cost;
   state.upgrades[upgrade]++;
   for (const ship of state.ships) {
     switch (upgrade) {
@@ -190,29 +195,14 @@ export function updateInvaders(
   viewport: Viewport,
   elapsed: number,
 ): void {
-  const enemySlots = formationSlots(
-    state.enemyDestination,
-    state.enemyFormation,
-    ENEMY_WAVE_SIZE,
-    FLEET_SPACING,
-  );
-  const enemyHeadings = formationSlotHeadings(
-    state.enemyFormation,
-    ENEMY_WAVE_SIZE,
-  );
-  for (const [ship, assignment] of assignNearestFormationSlots(
-    state.enemies,
-    enemySlots,
-  )) {
-    ship.targetHeading = enemyHeadings[assignment.slotIndex];
-    moveFleetShip(
-      [...state.enemies, ...state.ships],
-      ship,
-      assignment.position,
-      viewport,
-      elapsed,
-      ship.targetHeading,
+  const enemiesWaiting = state.enemyDeploymentCountdown > 0;
+  if (enemiesWaiting) {
+    state.enemyDeploymentCountdown = Math.max(
+      0,
+      state.enemyDeploymentCountdown - elapsed,
     );
+  } else {
+    updateEnemyFleet(state, viewport, elapsed);
   }
 
   const slots = formationSlots(
@@ -247,19 +237,52 @@ export function updateInvaders(
     );
     ship.cooldown -= elapsed;
   }
-  state.enemies.forEach((ship) => {
-    ship.cooldown -= elapsed;
-  });
+  if (!enemiesWaiting) {
+    state.enemies.forEach((ship) => {
+      ship.cooldown -= elapsed;
+    });
+  }
   regenerateDefenders(state, elapsed);
   replenishBaseSupplies(state, elapsed);
   updateSupplyShips(state, viewport, elapsed);
-  resolveBaseContacts(state);
+  if (!enemiesWaiting) resolveBaseContacts(state);
   if (state.winner) return;
-  fireWeapons(state);
+  fireWeapons(state, !enemiesWaiting);
   updateProjectiles(state, elapsed, viewport);
   state.ships = state.ships.filter((ship) => ship.hp > 0);
   state.enemies = state.enemies.filter((ship) => ship.hp > 0);
   if (state.enemies.length === 0) spawnEnemyWave(state, viewport);
+}
+
+function updateEnemyFleet(
+  state: InvadersState,
+  viewport: Viewport,
+  elapsed: number,
+): void {
+  const enemySlots = formationSlots(
+    state.enemyDestination,
+    state.enemyFormation,
+    ENEMY_WAVE_SIZE,
+    FLEET_SPACING,
+  );
+  const enemyHeadings = formationSlotHeadings(
+    state.enemyFormation,
+    ENEMY_WAVE_SIZE,
+  );
+  for (const [ship, assignment] of assignNearestFormationSlots(
+    state.enemies,
+    enemySlots,
+  )) {
+    ship.targetHeading = enemyHeadings[assignment.slotIndex];
+    moveFleetShip(
+      [...state.enemies, ...state.ships],
+      ship,
+      assignment.position,
+      viewport,
+      elapsed,
+      ship.targetHeading,
+    );
+  }
 }
 
 function playerSteeringHeading(
@@ -311,7 +334,7 @@ function createFleet(
   return fleet;
 }
 
-function fireWeapons(state: InvadersState): void {
+function fireWeapons(state: InvadersState, enemiesCanAct: boolean): void {
   for (const ship of state.ships) {
     if (
       ship.role !== ShipRole.Battleship ||
@@ -344,13 +367,21 @@ function fireWeapons(state: InvadersState): void {
     const dealtDamage = Math.min(target.hp, damage);
     target.hp -= dealtDamage;
     state.score += dealtDamage;
+    state.money += dealtDamage;
     ship.supplies--;
     ship.cooldown = 0.7;
     spawnProjectile(state, ship, target.pos);
   }
 
+  if (!enemiesCanAct) return;
+
   for (const ship of state.enemies) {
-    if (ship.role !== ShipRole.Battleship || ship.cooldown > 0) continue;
+    if (
+      ship.role !== ShipRole.Battleship ||
+      ship.supplies < 1 ||
+      ship.cooldown > 0
+    )
+      continue;
     const targets = state.ships.filter(
       (defender) =>
         isTargetForward(ship, defender.pos) &&
@@ -384,6 +415,7 @@ function fireWeapons(state: InvadersState): void {
     if (!target && !canAttackBase) continue;
     if (target) target.hp -= ship.attack;
     else state.baseHp = clamp(state.baseHp - ship.attack, 0, state.baseMaxHp);
+    ship.supplies--;
     ship.cooldown = 1.15;
     spawnProjectile(state, ship, target?.pos ?? state.base.pos);
   }
@@ -449,6 +481,7 @@ function moveFleetShip(
 
 function spawnEnemyWave(state: InvadersState, viewport: Viewport): void {
   state.wave++;
+  state.enemyDeploymentCountdown = ENEMY_DEPLOYMENT_DELAY;
   state.waveOffset = 0;
   state.enemyDestination = {
     x: viewport.width / 2,

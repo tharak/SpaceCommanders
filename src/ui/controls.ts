@@ -8,6 +8,8 @@ type Controls = {
   formationControls: HTMLElement;
   fireControls: HTMLElement;
   upgradeControls: HTMLElement;
+  moneyDisplay: HTMLElement;
+  moneyAmount: HTMLElement;
 };
 
 type ControlCallbacks = {
@@ -22,6 +24,8 @@ export function getControls(): Controls {
     formationControls: requiredElement("#formation-controls"),
     fireControls: requiredElement("#fire-controls"),
     upgradeControls: requiredElement("#upgrade-controls"),
+    moneyDisplay: requiredElement("#money-display"),
+    moneyAmount: requiredElement("#money-amount"),
   };
 }
 
@@ -91,13 +95,16 @@ export function setUpgradePrices(
       const label = button.dataset.label;
       if (!label || !(upgrade in levels)) return;
       setUpgradeButtonText(button, label, 100 * (levels[upgrade] + 1));
+      const level =
+        button.parentElement?.querySelector<HTMLElement>(".upgrade-level");
+      if (level) level.textContent = `LV ${levels[upgrade]}`;
     });
 }
 
 export function setUpgradeAvailability(
   controls: Controls,
   levels: Record<UpgradeType, number>,
-  score: number,
+  money: number,
 ): void {
   controls.upgradeControls
     .querySelectorAll<HTMLButtonElement>("button")
@@ -105,8 +112,32 @@ export function setUpgradeAvailability(
       const upgrade = button.dataset.value as UpgradeType;
       if (!(upgrade in levels)) return;
       const cost = 100 * (levels[upgrade] + 1);
-      button.classList.toggle("affordable", score >= cost);
+      button.classList.toggle("affordable", money >= cost);
     });
+}
+
+export function setMoneyDisplay(controls: Controls, money: number): void {
+  controls.moneyAmount.textContent = `${Math.floor(money)}`;
+}
+
+export function animateMoneySpent(
+  controls: Controls,
+  upgrade: UpgradeType,
+  cost: number,
+): void {
+  const { moneyDisplay } = controls;
+  moneyDisplay.classList.remove("money-spent");
+  void moneyDisplay.offsetWidth;
+  moneyDisplay.classList.add("money-spent");
+  const button = controls.upgradeControls.querySelector<HTMLButtonElement>(
+    `button[data-value="${upgrade}"]`,
+  );
+  const item = button?.parentElement;
+  if (!item) return;
+  item.dataset.spend = `-${cost} ₿`;
+  item.classList.remove("money-spent");
+  void item.offsetWidth;
+  item.classList.add("money-spent");
 }
 
 export function setSelectedFormation(
@@ -150,13 +181,19 @@ function createUpgradeButtons(
     [UpgradeType.Regeneration]: TEXT.controls.upgradeLabels.regeneration,
   };
   for (const upgrade of Object.values(UpgradeType)) {
+    const item = document.createElement("div");
+    item.className = "upgrade-item";
+    const level = document.createElement("span");
+    level.className = "upgrade-level";
+    level.textContent = "LV 0";
     const button = document.createElement("button");
     button.ariaLabel = TEXT.controls.upgrades;
     button.dataset.value = upgrade;
     button.dataset.label = labels[upgrade];
     setUpgradeButtonText(button, labels[upgrade], 100);
     button.addEventListener("click", () => onUpgrade(upgrade));
-    controls.upgradeControls.append(button);
+    item.append(level, button);
+    controls.upgradeControls.append(item);
   }
 }
 

@@ -10,7 +10,7 @@ export function renderInvaders(
   state: InvadersState,
   renderContext: InvadersRenderContext,
 ): void {
-  const { context, viewport, status } = renderContext;
+  const { context, viewport, status, countdown } = renderContext;
   drawGameBackground(context, viewport, [state.base]);
   drawBase(context, state, viewport);
   drawFiringRangeCones(context, [...state.ships, ...state.enemies]);
@@ -20,12 +20,12 @@ export function renderInvaders(
   for (const projectile of state.projectiles) {
     drawLaser(context, projectile.pos, projectile.vel, COLORS[projectile.side]);
   }
-  status.innerHTML = TEXT.status.defense(
-    Math.floor(state.score),
-    Math.ceil(state.baseHp),
-    Math.floor(state.base.stock ?? 0),
-    state.wave,
-  );
+  status.innerHTML = TEXT.status.defense(Math.floor(state.score));
+  countdown.innerHTML =
+    state.enemyDeploymentCountdown > 0
+      ? `WAVE ${state.wave}<br><span>${Math.ceil(state.enemyDeploymentCountdown)}</span>`
+      : "";
+  countdown.classList.toggle("active", state.enemyDeploymentCountdown > 0);
 }
 
 function drawLaser(
@@ -61,28 +61,44 @@ function drawBase(
   context.strokeRect(-width / 2, -height / 2, width, height);
   context.fillStyle = "#5de5ff66";
   context.fillRect(-width / 2, -4, width, 8);
-  drawBaseSupplies(context, base);
+  drawBaseSupplies(context, state);
   const health = state.baseHp / state.baseMaxHp;
   context.fillStyle = "#031017";
   context.fillRect(-width / 2, -height / 2 - 9, width, 5);
   context.fillStyle = COLORS[Side.Player];
   context.fillRect(-width / 2, -height / 2 - 9, width * health, 5);
+  context.fillStyle = "#dfffff";
+  context.font = "700 12px Barlow Condensed, sans-serif";
+  context.textAlign = "center";
+  context.textBaseline = "top";
+  context.fillText(`${Math.ceil(health * 100)}%`, 0, -height / 2 + 3);
   context.restore();
 }
 
 function drawBaseSupplies(
   context: CanvasRenderingContext2D,
-  base: InvadersState["base"],
+  state: InvadersState,
 ): void {
-  const supplyCount = Math.floor(base.stock ?? 0);
-  if (supplyCount <= 0) return;
-
+  const supplyCapacity = state.baseSupplyCapacity;
+  const supplyCount = Math.min(
+    supplyCapacity,
+    Math.floor(state.base.stock ?? 0),
+  );
+  const markerRadius = 2;
   const markerSpacing = 9;
-  context.fillStyle = "#e4ff91";
-  for (let index = 0; index < supplyCount; index++) {
-    const x = (index - (supplyCount - 1) / 2) * markerSpacing;
+  const firstMarkerX = -((supplyCapacity - 1) * markerSpacing) / 2;
+
+  for (let index = 0; index < supplyCapacity; index++) {
+    const x = firstMarkerX + index * markerSpacing;
     context.beginPath();
-    context.arc(x, 12, 2, 0, Math.PI * 2);
-    context.fill();
+    context.arc(x, 12, markerRadius, 0, Math.PI * 2);
+    if (index < supplyCount) {
+      context.fillStyle = "#e4ff91";
+      context.fill();
+    } else {
+      context.strokeStyle = "#e4ff9166";
+      context.lineWidth = 1;
+      context.stroke();
+    }
   }
 }

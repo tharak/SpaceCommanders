@@ -23,9 +23,16 @@
             ⌘
           </button>
         </header>
+        <div id="enemy-countdown" aria-live="polite"></div>
         <section id="command-deck">
           <div class="command-group">
-            <span data-text="upgrades"></span>
+            <span class="upgrade-title" data-text="upgrades"></span>
+            <div class="upgrade-content">
+              <div id="money-display" aria-live="polite">
+                <strong id="money-amount">0</strong
+                ><span data-text="money"></span>
+              </div>
+            </div>
             <div id="upgrade-controls" class="upgrade-row"></div>
           </div>
           <div class="command-row">
