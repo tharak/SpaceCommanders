@@ -25,6 +25,7 @@ const BASE_MAX_HP = 1000;
 const BASE_SUPPLY_CAPACITY = 20;
 const BASE_SUPPLY_RATE = 1;
 const SUPPLY_SHIP_CAPACITY = 1;
+const INITIAL_SUPPLY_SHIP_COUNT = 5;
 const ENEMY_DEPLOYMENT_DELAY = 2;
 
 export function createInvadersState(): InvadersState {
@@ -112,7 +113,9 @@ export function resetInvaders(
     state,
     PLAYER_FLEET_SIZE,
   );
-  state.supplyShips = [createSupplyShip(state.base.pos, state.nextShipId++)];
+  state.supplyShips = Array.from({ length: INITIAL_SUPPLY_SHIP_COUNT }, () =>
+    createSupplyShip(state.base.pos, state.nextShipId++),
+  );
   spawnEnemyWave(state, viewport);
 }
 
