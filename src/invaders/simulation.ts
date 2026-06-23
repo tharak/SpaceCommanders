@@ -11,22 +11,9 @@ import { spawnFleet, spawnShip } from "../game/ship-factory";
 import { moveShipWithBoids } from "../game/ship-movement";
 import { BodyKind, FireMode, Formation, ShipRole, Side } from "../game/types";
 import type { Formation as FormationType, Ship, Viewport } from "../game/types";
+import { getUpgradeCost, INVADERS_CONFIG, UPGRADE_CONFIG } from "./config";
 import { UpgradeType } from "./upgrade-type";
 import type { InvadersState } from "./types";
-
-const PLAYER_FLEET_SIZE = 10;
-const ENEMY_WAVE_SIZE = 5;
-const FLEET_SPACING = 48;
-const PROJECTILE_SPEED = 330;
-const ENEMY_FLEET_Y = 105;
-const BASE_BOTTOM_OFFSET = 180;
-const PLAYER_FLEET_BOTTOM_OFFSET = 340;
-const BASE_MAX_HP = 1000;
-const BASE_SUPPLY_CAPACITY = 20;
-const BASE_SUPPLY_RATE = 1;
-const SUPPLY_SHIP_CAPACITY = 1;
-const INITIAL_SUPPLY_SHIP_COUNT = 5;
-const ENEMY_DEPLOYMENT_DELAY = 2;
 
 export function createInvadersState(): InvadersState {
   return {
@@ -45,16 +32,16 @@ export function createInvadersState(): InvadersState {
       id: 0,
       kind: BodyKind.Base,
       pos: { x: 0, y: 0 },
-      radius: 40,
+      radius: INVADERS_CONFIG.base.radius,
       base: Side.Player,
       stock: 0,
-      hue: 195,
+      hue: INVADERS_CONFIG.base.hue,
       weight: 0,
     },
-    baseHp: BASE_MAX_HP,
-    baseMaxHp: BASE_MAX_HP,
-    baseSupplyRate: BASE_SUPPLY_RATE,
-    baseSupplyCapacity: BASE_SUPPLY_CAPACITY,
+    baseHp: INVADERS_CONFIG.base.maxHp,
+    baseMaxHp: INVADERS_CONFIG.base.maxHp,
+    baseSupplyRate: INVADERS_CONFIG.base.supplyRate,
+    baseSupplyCapacity: INVADERS_CONFIG.base.supplyCapacity,
     regenerationRate: 0,
     wave: 1,
     enemyDeploymentCountdown: 0,
@@ -83,18 +70,18 @@ export function resetInvaders(
     kind: BodyKind.Base,
     pos: {
       x: viewport.width / 2,
-      y: viewport.height - BASE_BOTTOM_OFFSET,
+      y: viewport.height - INVADERS_CONFIG.base.bottomOffset,
     },
-    radius: 40,
+    radius: INVADERS_CONFIG.base.radius,
     base: Side.Player,
     stock: 0,
-    hue: 195,
-    weight: 2.5,
+    hue: INVADERS_CONFIG.base.hue,
+    weight: INVADERS_CONFIG.base.weight,
   };
-  state.baseHp = BASE_MAX_HP;
-  state.baseMaxHp = BASE_MAX_HP;
-  state.baseSupplyRate = BASE_SUPPLY_RATE;
-  state.baseSupplyCapacity = BASE_SUPPLY_CAPACITY;
+  state.baseHp = INVADERS_CONFIG.base.maxHp;
+  state.baseMaxHp = INVADERS_CONFIG.base.maxHp;
+  state.baseSupplyRate = INVADERS_CONFIG.base.supplyRate;
+  state.baseSupplyCapacity = INVADERS_CONFIG.base.supplyCapacity;
   state.regenerationRate = 0;
   state.projectiles = [];
   state.wave = 0;
@@ -111,10 +98,11 @@ export function resetInvaders(
     state.formation,
     ShipRole.Battleship,
     state,
-    PLAYER_FLEET_SIZE,
+    INVADERS_CONFIG.player.fleetSize,
   );
-  state.supplyShips = Array.from({ length: INITIAL_SUPPLY_SHIP_COUNT }, () =>
-    createSupplyShip(state.base.pos, state.nextShipId++),
+  state.supplyShips = Array.from(
+    { length: INVADERS_CONFIG.supplyShips.initialCount },
+    () => createSupplyShip(state.base.pos, state.nextShipId++),
   );
   spawnEnemyWave(state, viewport);
 }
@@ -134,47 +122,27 @@ export function purchaseInvadersUpgrade(
   state: InvadersState,
   upgrade: UpgradeType,
 ): number | null {
-  const cost = 100 * (state.upgrades[upgrade] + 1);
+  const config = UPGRADE_CONFIG[upgrade];
+  const cost = getUpgradeCost(upgrade, state.upgrades[upgrade]);
   if (state.money < cost) return null;
 
   state.money -= cost;
   state.upgrades[upgrade]++;
   for (const ship of state.ships) {
-    switch (upgrade) {
-      case UpgradeType.Damage:
-        ship.attack += 2;
-        break;
-      case UpgradeType.Speed:
-        ship.speed += 8;
-        break;
-      case UpgradeType.Hull:
-        ship.maxHp += 10;
-        ship.hp += 10;
-        break;
-      case UpgradeType.Range:
-        ship.range += 15;
-        break;
-      case UpgradeType.SupplyShips:
-      case UpgradeType.BaseSupplyGeneration:
-      case UpgradeType.BaseSupplyCapacity:
-      case UpgradeType.Regeneration:
-        break;
-    }
+    ship.attack += config.attack ?? 0;
+    ship.speed += config.speed ?? 0;
+    ship.maxHp += config.hull ?? 0;
+    ship.hp += config.hull ?? 0;
+    ship.range += config.range ?? 0;
   }
-  if (upgrade === UpgradeType.SupplyShips) {
+  for (let index = 0; index < (config.supplyShips ?? 0); index++) {
     state.supplyShips.push(
       createSupplyShip(state.base.pos, state.nextShipId++),
     );
   }
-  if (upgrade === UpgradeType.BaseSupplyGeneration) {
-    state.baseSupplyRate += 0.5;
-  }
-  if (upgrade === UpgradeType.BaseSupplyCapacity) {
-    state.baseSupplyCapacity += 5;
-  }
-  if (upgrade === UpgradeType.Regeneration) {
-    state.regenerationRate += 1;
-  }
+  state.baseSupplyRate += config.baseSupplyRate ?? 0;
+  state.baseSupplyCapacity += config.baseSupplyCapacity ?? 0;
+  state.regenerationRate += config.regenerationRate ?? 0;
   return cost;
 }
 
@@ -211,12 +179,12 @@ export function updateInvaders(
   const slots = formationSlots(
     playerFleetCenter(viewport),
     state.formation,
-    PLAYER_FLEET_SIZE,
-    FLEET_SPACING,
+    INVADERS_CONFIG.player.fleetSize,
+    INVADERS_CONFIG.fleet.spacing,
   );
   const playerHeadings = formationSlotHeadings(
     state.formation,
-    PLAYER_FLEET_SIZE,
+    INVADERS_CONFIG.player.fleetSize,
   );
   applyAtWillSteering(
     state.ships,
@@ -265,12 +233,12 @@ function updateEnemyFleet(
   const enemySlots = formationSlots(
     state.enemyDestination,
     state.enemyFormation,
-    ENEMY_WAVE_SIZE,
-    FLEET_SPACING,
+    INVADERS_CONFIG.enemy.waveSize,
+    INVADERS_CONFIG.fleet.spacing,
   );
   const enemyHeadings = formationSlotHeadings(
     state.enemyFormation,
-    ENEMY_WAVE_SIZE,
+    INVADERS_CONFIG.enemy.waveSize,
   );
   for (const [ship, assignment] of assignNearestFormationSlots(
     state.enemies,
@@ -301,7 +269,13 @@ function playerSteeringHeading(
 
 function resolveBaseContacts(state: InvadersState): void {
   for (const ship of state.enemies) {
-    if (ship.pos.y < state.base.pos.y - state.base.radius / 2 - 8) continue;
+    if (
+      ship.pos.y <
+      state.base.pos.y -
+        state.base.radius / 2 -
+        INVADERS_CONFIG.base.contactMargin
+    )
+      continue;
     state.baseHp = clamp(state.baseHp - ship.hp, 0, state.baseMaxHp);
     ship.hp = 0;
   }
@@ -312,7 +286,7 @@ function resolveBaseContacts(state: InvadersState): void {
 function playerFleetCenter(viewport: Viewport): { x: number; y: number } {
   return {
     x: viewport.width / 2,
-    y: viewport.height - PLAYER_FLEET_BOTTOM_OFFSET,
+    y: viewport.height - INVADERS_CONFIG.player.fleetBottomOffset,
   };
 }
 
@@ -330,7 +304,7 @@ function createFleet(
     center,
     formation,
     count,
-    FLEET_SPACING,
+    INVADERS_CONFIG.fleet.spacing,
     state.nextShipId,
   );
   state.nextShipId += fleet.length;
@@ -366,13 +340,16 @@ function fireWeapons(state: InvadersState, enemiesCanAct: boolean): void {
         : closest,
     );
     const damage =
-      ship.attack * (state.formation === state.captainFavorite ? 1.25 : 1);
+      ship.attack *
+      (state.formation === state.captainFavorite
+        ? INVADERS_CONFIG.player.favoriteFormationDamageMultiplier
+        : 1);
     const dealtDamage = Math.min(target.hp, damage);
     target.hp -= dealtDamage;
     state.score += dealtDamage;
     state.money += dealtDamage;
     ship.supplies--;
-    ship.cooldown = 0.7;
+    ship.cooldown = INVADERS_CONFIG.player.weaponCooldown;
     spawnProjectile(state, ship, target.pos);
   }
 
@@ -419,7 +396,7 @@ function fireWeapons(state: InvadersState, enemiesCanAct: boolean): void {
     if (target) target.hp -= ship.attack;
     else state.baseHp = clamp(state.baseHp - ship.attack, 0, state.baseMaxHp);
     ship.supplies--;
-    ship.cooldown = 1.15;
+    ship.cooldown = INVADERS_CONFIG.enemy.weaponCooldown;
     spawnProjectile(state, ship, target?.pos ?? state.base.pos);
   }
 }
@@ -436,8 +413,8 @@ function spawnProjectile(
   state.projectiles.push({
     pos: { ...ship.pos },
     vel: {
-      x: direction.x * PROJECTILE_SPEED,
-      y: direction.y * PROJECTILE_SPEED,
+      x: direction.x * INVADERS_CONFIG.projectile.speed,
+      y: direction.y * INVADERS_CONFIG.projectile.speed,
     },
     side: ship.side,
     sourceShipId: ship.id,
@@ -455,7 +432,8 @@ function updateProjectiles(
     const hitShip = [...state.ships, ...state.enemies].some(
       (ship) =>
         ship.id !== projectile.sourceShipId &&
-        distance(ship.pos, projectile.pos) < 10,
+        distance(ship.pos, projectile.pos) <
+          INVADERS_CONFIG.projectile.hitRadius,
     );
     const hitBase =
       distance(state.base.pos, projectile.pos) < state.base.radius;
@@ -479,26 +457,34 @@ function moveFleetShip(
   formationHeading: { x: number; y: number },
 ): void {
   ship.target = target;
-  moveShipWithBoids(ship, fleet, [], viewport, elapsed, 4, formationHeading);
+  moveShipWithBoids(
+    ship,
+    fleet,
+    [],
+    viewport,
+    elapsed,
+    INVADERS_CONFIG.fleet.steeringWeight,
+    formationHeading,
+  );
 }
 
 function spawnEnemyWave(state: InvadersState, viewport: Viewport): void {
   state.wave++;
-  state.enemyDeploymentCountdown = ENEMY_DEPLOYMENT_DELAY;
+  state.enemyDeploymentCountdown = INVADERS_CONFIG.enemy.deploymentDelay;
   state.waveOffset = 0;
   state.enemyDestination = {
     x: viewport.width / 2,
-    y: viewport.height + 80,
+    y: viewport.height + INVADERS_CONFIG.enemy.destinationBottomOffset,
   };
   state.enemyFormation =
     FORMATIONS[Math.floor(Math.random() * FORMATIONS.length)];
   state.enemies = createFleet(
     Side.Enemy,
-    { x: viewport.width / 2, y: ENEMY_FLEET_Y },
+    { x: viewport.width / 2, y: INVADERS_CONFIG.enemy.fleetY },
     state.enemyFormation,
     ShipRole.Battleship,
     state,
-    ENEMY_WAVE_SIZE,
+    INVADERS_CONFIG.enemy.waveSize,
   );
 }
 
@@ -507,9 +493,9 @@ function createSupplyShip(
   id: number,
 ): Ship {
   const ship = spawnShip(Side.Player, ShipRole.Supply, position, id);
-  ship.hp = 40;
-  ship.maxHp = 40;
-  ship.speed = 78;
+  ship.hp = INVADERS_CONFIG.supplyShips.hp;
+  ship.maxHp = INVADERS_CONFIG.supplyShips.hp;
+  ship.speed = INVADERS_CONFIG.supplyShips.speed;
   ship.supplies = 0;
   ship.range = 0;
   ship.target = { ...position };
@@ -548,11 +534,14 @@ function updateSupplyShip(
 ): void {
   if (ship.supplies === 0) {
     ship.target = { ...state.base.pos };
-    if (distance(ship.pos, state.base.pos) <= state.base.radius + 12) {
+    if (
+      distance(ship.pos, state.base.pos) <=
+      state.base.radius + INVADERS_CONFIG.supplyShips.baseLoadingDistance
+    ) {
       const available = Math.floor(state.base.stock ?? 0);
-      if (available >= SUPPLY_SHIP_CAPACITY) {
-        state.base.stock = available - SUPPLY_SHIP_CAPACITY;
-        ship.supplies = SUPPLY_SHIP_CAPACITY;
+      if (available >= INVADERS_CONFIG.supplyShips.capacity) {
+        state.base.stock = available - INVADERS_CONFIG.supplyShips.capacity;
+        ship.supplies = INVADERS_CONFIG.supplyShips.capacity;
       }
     }
   } else {
@@ -563,8 +552,14 @@ function updateSupplyShip(
     );
     if (target) {
       ship.target = { ...target.pos };
-      if (distance(ship.pos, target.pos) <= 32) {
-        const transferred = Math.min(ship.supplies, 10 - target.supplies);
+      if (
+        distance(ship.pos, target.pos) <=
+        INVADERS_CONFIG.supplyShips.deliveryDistance
+      ) {
+        const transferred = Math.min(
+          ship.supplies,
+          INVADERS_CONFIG.supplyShips.targetSupplyCapacity - target.supplies,
+        );
         target.supplies += transferred;
         ship.supplies -= transferred;
       }

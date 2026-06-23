@@ -1,4 +1,5 @@
 import { FIRE_MODES, FORMATIONS } from "../game/constants";
+import { getUpgradeCost } from "../invaders/config";
 import { TEXT } from "./strings";
 import { UpgradeType } from "../invaders/upgrade-type";
 import { FireMode, Formation } from "../game/types";
@@ -94,7 +95,11 @@ export function setUpgradePrices(
       const upgrade = button.dataset.value as UpgradeType;
       const label = button.dataset.label;
       if (!label || !(upgrade in levels)) return;
-      setUpgradeButtonText(button, label, 100 * (levels[upgrade] + 1));
+      setUpgradeButtonText(
+        button,
+        label,
+        getUpgradeCost(upgrade, levels[upgrade]),
+      );
       const level =
         button.parentElement?.querySelector<HTMLElement>(".upgrade-level");
       if (level) level.textContent = `LV ${levels[upgrade]}`;
@@ -111,7 +116,7 @@ export function setUpgradeAvailability(
     .forEach((button) => {
       const upgrade = button.dataset.value as UpgradeType;
       if (!(upgrade in levels)) return;
-      const cost = 100 * (levels[upgrade] + 1);
+      const cost = getUpgradeCost(upgrade, levels[upgrade]);
       button.classList.toggle("affordable", money >= cost);
     });
 }
@@ -190,7 +195,7 @@ function createUpgradeButtons(
     button.ariaLabel = TEXT.controls.upgrades;
     button.dataset.value = upgrade;
     button.dataset.label = labels[upgrade];
-    setUpgradeButtonText(button, labels[upgrade], 100);
+    setUpgradeButtonText(button, labels[upgrade], getUpgradeCost(upgrade, 0));
     button.addEventListener("click", () => onUpgrade(upgrade));
     item.append(level, button);
     controls.upgradeControls.append(item);

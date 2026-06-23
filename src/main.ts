@@ -10,6 +10,7 @@ import {
   updateInvaders,
 } from "./invaders/simulation";
 import { renderInvaders } from "./invaders/renderer";
+import { getUpgradeCost } from "./invaders/config";
 import { UpgradeType } from "./invaders/upgrade-type";
 import { applyStaticScreenText, TEXT } from "./ui/strings";
 import {
@@ -137,7 +138,10 @@ setupControls(
       }
       const cost = purchaseInvadersUpgrade(invadersState, upgrade);
       if (cost == null) {
-        const nextCost = 100 * (invadersState.upgrades[upgrade] + 1);
+        const nextCost = getUpgradeCost(
+          upgrade,
+          invadersState.upgrades[upgrade],
+        );
         showReadout(controls, TEXT.readout.upgradeNeeded(nextCost, upgrade));
         return;
       }
