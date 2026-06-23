@@ -129,7 +129,7 @@ h1 b {
 .command-row {
   display: grid;
   grid-template-columns: 5fr 3fr;
-  gap: 4px;
+  gap: 14px;
 }
 .command-group {
   display: grid;
