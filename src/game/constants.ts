@@ -1,5 +1,4 @@
 import { FireMode, Formation, Side } from "./types";
-import type { Config } from "./types";
 
 export const FORMATIONS = [
   Formation.Line,
@@ -16,17 +15,4 @@ export const FIRE_MODES = [
 export const COLORS: Record<Side, string> = {
   [Side.Player]: "#5de5ff",
   [Side.Enemy]: "#ff6d91",
-};
-export const FORMATION_ARRIVAL_DISTANCE = 4;
-export const SUPPLY_TRANSFER_DISTANCE = 32;
-export const SUPPLY_SHIP_CAPACITY = 1;
-export const PLANET_CAPTURE_RANGE = 45;
-export const PLANET_CAPTURE_RATE = 0.12;
-export const ENEMY_FORMATION_SPACING = 45;
-
-export const DEFAULT_CONFIG: Config = {
-  ships: 5,
-  planets: 3,
-  asteroids: 1,
-  speed: 1,
 };

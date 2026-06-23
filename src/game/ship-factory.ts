@@ -1,4 +1,5 @@
 import { formationSlots } from "./formations";
+import { GAME_CONFIG } from "./config";
 import { randomBetween } from "./math";
 import { ShipRole, Side } from "./types";
 import type { Formation } from "./types";
@@ -10,25 +11,37 @@ export function spawnShip(
   position: Vec,
   id: number,
 ): Ship {
-  const hp = 50;
-  const speed = role === ShipRole.Guard ? 28 : 56;
+  const hp = GAME_CONFIG.ship.hp;
+  const speed =
+    role === ShipRole.Guard
+      ? GAME_CONFIG.ship.guardSpeed
+      : GAME_CONFIG.ship.standardSpeed;
   return {
     id,
     side,
     role,
     pos: { ...position },
-    vel: { x: randomBetween(-12, 12), y: randomBetween(-12, 12) },
+    vel: {
+      x: randomBetween(
+        -GAME_CONFIG.ship.initialVelocityRange,
+        GAME_CONFIG.ship.initialVelocityRange,
+      ),
+      y: randomBetween(
+        -GAME_CONFIG.ship.initialVelocityRange,
+        GAME_CONFIG.ship.initialVelocityRange,
+      ),
+    },
     heading: side === Side.Player ? { x: 0, y: -1 } : { x: 0, y: 1 },
     hp,
     maxHp: hp,
-    attack: 10,
-    defense: 3,
+    attack: GAME_CONFIG.ship.attack,
+    defense: GAME_CONFIG.ship.defense,
     speed,
-    sight: 260,
-    moral: 70,
-    supplies: role === ShipRole.Guard ? 0 : 10,
-    range: 135,
-    cooldown: 1,
+    sight: GAME_CONFIG.ship.sight,
+    moral: GAME_CONFIG.ship.morale,
+    supplies: role === ShipRole.Guard ? 0 : GAME_CONFIG.ship.startingSupplies,
+    range: GAME_CONFIG.ship.range,
+    cooldown: GAME_CONFIG.ship.initialCooldown,
   };
 }
 

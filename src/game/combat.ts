@@ -1,7 +1,9 @@
 import { distance, distanceToSegment } from "./math";
+import { GAME_CONFIG } from "./config";
 import { ShipRole } from "./types";
 
-export const FIRING_CONE_ANGLE = (40 * Math.PI) / 180;
+export const FIRING_CONE_ANGLE =
+  (GAME_CONFIG.combat.firingConeDegrees * Math.PI) / 180;
 export const FIRING_CONE_HALF_ANGLE = FIRING_CONE_ANGLE / 2;
 import type { Body, Ship, Vec } from "./types";
 
@@ -18,7 +20,8 @@ export function hasLineOfSight(
       other !== ship &&
       other !== targetShip &&
       other.side === ship.side &&
-      distanceToSegment(other.pos, ship.pos, target) < 10,
+      distanceToSegment(other.pos, ship.pos, target) <
+        GAME_CONFIG.combat.allyLineBlockDistance,
   );
   if (allyBlocksLine) return false;
 

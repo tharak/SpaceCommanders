@@ -1,14 +1,6 @@
-import {
-  DEFAULT_CONFIG,
-  ENEMY_FORMATION_SPACING,
-  FORMATION_ARRIVAL_DISTANCE,
-  FORMATIONS,
-  PLANET_CAPTURE_RANGE,
-  PLANET_CAPTURE_RATE,
-  SUPPLY_TRANSFER_DISTANCE,
-  SUPPLY_SHIP_CAPACITY,
-} from "./constants";
+import { FORMATIONS } from "./constants";
 import { applyAtWillSteering, hasLineOfSight, isTargetForward } from "./combat";
+import { DEFAULT_GAME_CONFIG, GAME_CONFIG } from "./config";
 import { assignNearestFormationSlots } from "./formation-assignment";
 import { formationSlotHeadings, formationSlots } from "./formations";
 import { spawnFleet, spawnShip } from "./ship-factory";
@@ -32,9 +24,9 @@ import {
 
 export function createGameState(): GameState {
   return {
-    config: { ...DEFAULT_CONFIG },
-    formation: Formation.Circle,
-    selectedFormation: Formation.Circle,
+    config: { ...DEFAULT_GAME_CONFIG },
+    formation: GAME_CONFIG.match.initialFormation,
+    selectedFormation: GAME_CONFIG.match.initialFormation,
     fireMode: FireMode.AtWill,
     command: null,
     destination: null,
@@ -42,13 +34,13 @@ export function createGameState(): GameState {
     previewCenter: null,
     previewRotation: 0,
     formationRotation: 0,
-    cohesion: 0.7,
-    previewCohesion: 0.7,
+    cohesion: GAME_CONFIG.match.initialCohesion,
+    previewCohesion: GAME_CONFIG.match.initialCohesion,
     pointer: null,
     bodies: [],
     ships: [],
     projectiles: [],
-    captainFavorite: Formation.Line,
+    captainFavorite: GAME_CONFIG.match.captainFavorite,
     winner: null,
   };
 }
@@ -60,8 +52,8 @@ export function resetGame(
 ): void {
   state.config = config;
   state.winner = null;
-  state.formation = Formation.Circle;
-  state.selectedFormation = Formation.Circle;
+  state.formation = GAME_CONFIG.match.initialFormation;
+  state.selectedFormation = GAME_CONFIG.match.initialFormation;
   state.command = null;
   state.destination = null;
   state.formationStage = null;
@@ -73,14 +65,20 @@ export function resetGame(
   state.ships = [];
   state.bodies = [];
 
-  const margin = 100;
+  const { baseMargin } = GAME_CONFIG.map;
   const playerBase = {
-    x: randomBetween(margin, viewport.width * 0.28),
-    y: randomBetween(margin, viewport.height - margin),
+    x: randomBetween(
+      baseMargin,
+      viewport.width * GAME_CONFIG.map.playerBaseMaxXRatio,
+    ),
+    y: randomBetween(baseMargin, viewport.height - baseMargin),
   };
   const enemyBase = {
-    x: randomBetween(viewport.width * 0.72, viewport.width - margin),
-    y: randomBetween(margin, viewport.height - margin),
+    x: randomBetween(
+      viewport.width * GAME_CONFIG.map.enemyBaseMinXRatio,
+      viewport.width - baseMargin,
+    ),
+    y: randomBetween(baseMargin, viewport.height - baseMargin),
   };
   let bodyId = 0;
 
@@ -89,21 +87,21 @@ export function resetGame(
       id: bodyId++,
       kind: BodyKind.Planet,
       pos: playerBase,
-      radius: 37,
+      radius: GAME_CONFIG.map.basePlanet.radius,
       base: Side.Player,
       stock: 0,
-      hue: 195,
-      weight: 2.5,
+      hue: GAME_CONFIG.map.basePlanet.hue.player,
+      weight: GAME_CONFIG.map.basePlanet.weight,
     },
     {
       id: bodyId++,
       kind: BodyKind.Planet,
       pos: enemyBase,
-      radius: 37,
+      radius: GAME_CONFIG.map.basePlanet.radius,
       base: Side.Enemy,
       stock: 0,
-      hue: 350,
-      weight: 2.5,
+      hue: GAME_CONFIG.map.basePlanet.hue.enemy,
+      weight: GAME_CONFIG.map.basePlanet.weight,
     },
   );
 
@@ -112,13 +110,28 @@ export function resetGame(
       id: bodyId++,
       kind: BodyKind.Planet,
       pos: {
-        x: randomBetween(120, viewport.width - 120),
-        y: randomBetween(100, viewport.height - 100),
+        x: randomBetween(
+          GAME_CONFIG.map.neutralPlanet.horizontalMargin,
+          viewport.width - GAME_CONFIG.map.neutralPlanet.horizontalMargin,
+        ),
+        y: randomBetween(
+          GAME_CONFIG.map.neutralPlanet.verticalMargin,
+          viewport.height - GAME_CONFIG.map.neutralPlanet.verticalMargin,
+        ),
       },
-      radius: randomBetween(20, 34),
+      radius: randomBetween(
+        GAME_CONFIG.map.neutralPlanet.minRadius,
+        GAME_CONFIG.map.neutralPlanet.maxRadius,
+      ),
       stock: 0,
-      hue: randomBetween(25, 290),
-      weight: randomBetween(0.8, 2),
+      hue: randomBetween(
+        GAME_CONFIG.map.neutralPlanet.minHue,
+        GAME_CONFIG.map.neutralPlanet.maxHue,
+      ),
+      weight: randomBetween(
+        GAME_CONFIG.map.neutralPlanet.minWeight,
+        GAME_CONFIG.map.neutralPlanet.maxWeight,
+      ),
     });
   }
 
@@ -127,10 +140,19 @@ export function resetGame(
       id: bodyId++,
       kind: BodyKind.Asteroids,
       pos: {
-        x: randomBetween(100, viewport.width - 100),
-        y: randomBetween(80, viewport.height - 80),
+        x: randomBetween(
+          GAME_CONFIG.map.asteroidField.horizontalMargin,
+          viewport.width - GAME_CONFIG.map.asteroidField.horizontalMargin,
+        ),
+        y: randomBetween(
+          GAME_CONFIG.map.asteroidField.verticalMargin,
+          viewport.height - GAME_CONFIG.map.asteroidField.verticalMargin,
+        ),
       },
-      radius: randomBetween(32, 58),
+      radius: randomBetween(
+        GAME_CONFIG.map.asteroidField.minRadius,
+        GAME_CONFIG.map.asteroidField.maxRadius,
+      ),
       hue: 0,
       weight: 0,
     });
@@ -147,8 +169,14 @@ export function resetGame(
         Formation.Circle,
         config.ships,
         side === Side.Player
-          ? clamp(80 - state.cohesion * 50, 25, 70)
-          : ENEMY_FORMATION_SPACING,
+          ? clamp(
+              GAME_CONFIG.formation.playerSpacingBase -
+                state.cohesion *
+                  GAME_CONFIG.formation.playerCohesionSpacingMultiplier,
+              GAME_CONFIG.formation.playerMinSpacing,
+              GAME_CONFIG.formation.playerMaxSpacing,
+            )
+          : GAME_CONFIG.formation.enemySpacing,
         id,
       ),
     );
@@ -199,8 +227,6 @@ export function updateGame(
   updateProjectiles(state, deltaTime, viewport);
 }
 
-const PROJECTILE_SPEED = 360;
-
 function spawnProjectile(
   state: GameState,
   from: Vec,
@@ -212,8 +238,8 @@ function spawnProjectile(
   state.projectiles.push({
     pos: { ...from },
     vel: {
-      x: direction.x * PROJECTILE_SPEED,
-      y: direction.y * PROJECTILE_SPEED,
+      x: direction.x * GAME_CONFIG.projectile.speed,
+      y: direction.y * GAME_CONFIG.projectile.speed,
     },
     side,
     sourceShipId,
@@ -231,7 +257,7 @@ function updateProjectiles(
     const hitShip = state.ships.some(
       (ship) =>
         ship.id !== projectile.sourceShipId &&
-        distance(ship.pos, projectile.pos) < 10,
+        distance(ship.pos, projectile.pos) < GAME_CONFIG.projectile.hitRadius,
     );
     const hitBody = state.bodies.some(
       (body) => distance(body.pos, projectile.pos) < body.radius,
@@ -250,8 +276,13 @@ function updateProjectiles(
 function replenishPlanets(state: GameState, deltaTime: number): void {
   for (const body of state.bodies) {
     if (body.kind !== BodyKind.Planet) continue;
-    const capacity = Math.floor(body.radius / 2);
-    body.stock = Math.min(capacity, (body.stock ?? 0) + deltaTime * 0.55);
+    const capacity = Math.floor(
+      body.radius / GAME_CONFIG.planet.stockCapacityRadiusDivisor,
+    );
+    body.stock = Math.min(
+      capacity,
+      (body.stock ?? 0) + deltaTime * GAME_CONFIG.planet.supplyGenerationRate,
+    );
   }
 }
 
@@ -263,13 +294,15 @@ function updatePlanetCaptures(state: GameState, deltaTime: number): void {
       (ship) =>
         ship.side === Side.Player &&
         ship.role === ShipRole.Battleship &&
-        distance(ship.pos, planet.pos) < planet.radius + PLANET_CAPTURE_RANGE,
+        distance(ship.pos, planet.pos) <
+          planet.radius + GAME_CONFIG.planet.captureRange,
     ).length;
     const enemyShips = state.ships.filter(
       (ship) =>
         ship.side === Side.Enemy &&
         ship.role === ShipRole.Battleship &&
-        distance(ship.pos, planet.pos) < planet.radius + PLANET_CAPTURE_RANGE,
+        distance(ship.pos, planet.pos) <
+          planet.radius + GAME_CONFIG.planet.captureRange,
     ).length;
     if (playerShips === enemyShips) continue;
 
@@ -281,7 +314,9 @@ function updatePlanetCaptures(state: GameState, deltaTime: number): void {
     }
 
     const captureAmount =
-      deltaTime * PLANET_CAPTURE_RATE * Math.abs(playerShips - enemyShips);
+      deltaTime *
+      GAME_CONFIG.planet.captureRate *
+      Math.abs(playerShips - enemyShips);
     if (
       planet.capturingSide &&
       planet.capturingSide !== capturingSide &&
@@ -304,7 +339,7 @@ function updatePlanetCaptures(state: GameState, deltaTime: number): void {
     planet.base = capturingSide;
     planet.capturingSide = undefined;
     planet.captureProgress = 0;
-    planet.stock = Math.max(planet.stock ?? 0, SUPPLY_SHIP_CAPACITY);
+    planet.stock = Math.max(planet.stock ?? 0, GAME_CONFIG.supply.shipCapacity);
   }
 
   const playerOwnsPlanet = state.bodies.some(
@@ -324,7 +359,7 @@ function spawnResupplyShips(state: GameState): void {
     if (
       planet.kind !== BodyKind.Planet ||
       !planet.base ||
-      (planet.stock ?? 0) < SUPPLY_SHIP_CAPACITY
+      (planet.stock ?? 0) < GAME_CONFIG.supply.shipCapacity
     ) {
       continue;
     }
@@ -335,9 +370,14 @@ function spawnResupplyShips(state: GameState): void {
         ship.hp > 0,
     );
     const target = findLeastSuppliedBattleship(state, planet.base);
-    if (activeMission || !target || target.supplies >= 10) continue;
+    if (
+      activeMission ||
+      !target ||
+      target.supplies >= GAME_CONFIG.supply.targetSupplyCapacity
+    )
+      continue;
 
-    planet.stock = (planet.stock ?? 0) - SUPPLY_SHIP_CAPACITY;
+    planet.stock = (planet.stock ?? 0) - GAME_CONFIG.supply.shipCapacity;
     state.ships.push(
       spawnSupplyShip(planet.base, planet, target, nextShipId++),
     );
@@ -352,10 +392,10 @@ function spawnSupplyShip(
 ): Ship {
   return {
     ...spawnShip(side, ShipRole.Supply, homePlanet.pos, id),
-    hp: 40,
-    maxHp: 40,
-    speed: 78,
-    supplies: SUPPLY_SHIP_CAPACITY,
+    hp: GAME_CONFIG.supply.shipHp,
+    maxHp: GAME_CONFIG.supply.shipHp,
+    speed: GAME_CONFIG.supply.shipSpeed,
+    supplies: GAME_CONFIG.supply.shipCapacity,
     range: 0,
     homeBodyId: homePlanet.id,
     resupplyTargetId: target.id,
@@ -373,7 +413,10 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
 
   if (ship.supplyMission === SupplyMission.Returning) {
     ship.target = { ...homePlanet.pos };
-    if (distance(ship.pos, homePlanet.pos) <= homePlanet.radius + 12) {
+    if (
+      distance(ship.pos, homePlanet.pos) <=
+      homePlanet.radius + GAME_CONFIG.supply.returnDistance
+    ) {
       ship.hp = 0;
     }
     return;
@@ -395,9 +438,13 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
 
   ship.resupplyTargetId = target.id;
   ship.target = { ...target.pos };
-  if (distance(ship.pos, target.pos) > SUPPLY_TRANSFER_DISTANCE) return;
+  if (distance(ship.pos, target.pos) > GAME_CONFIG.supply.transferDistance)
+    return;
 
-  const transferred = Math.min(ship.supplies, 10 - target.supplies);
+  const transferred = Math.min(
+    ship.supplies,
+    GAME_CONFIG.supply.targetSupplyCapacity - target.supplies,
+  );
   target.supplies += transferred;
   ship.supplies -= transferred;
   ship.supplyMission = SupplyMission.Returning;
@@ -445,8 +492,14 @@ function assignFormationTargets(state: GameState): void {
     );
     const spacing =
       side === Side.Player
-        ? clamp(80 - state.cohesion * 50, 25, 70)
-        : ENEMY_FORMATION_SPACING;
+        ? clamp(
+            GAME_CONFIG.formation.playerSpacingBase -
+              state.cohesion *
+                GAME_CONFIG.formation.playerCohesionSpacingMultiplier,
+            GAME_CONFIG.formation.playerMinSpacing,
+            GAME_CONFIG.formation.playerMaxSpacing,
+          )
+        : GAME_CONFIG.formation.enemySpacing;
     const rotation = side === Side.Player ? state.formationRotation : 0;
     const targets = formationSlots(
       center,
@@ -471,7 +524,14 @@ function assignFormationTargets(state: GameState): void {
     fleet
       .filter((ship) => ship.role === ShipRole.Captain)
       .forEach((ship, index) => {
-        ship.target = { x: center.x + (index ? 20 : -20), y: center.y + 60 };
+        ship.target = {
+          x:
+            center.x +
+            (index
+              ? GAME_CONFIG.formation.captainOffsetX
+              : -GAME_CONFIG.formation.captainOffsetX),
+          y: center.y + GAME_CONFIG.formation.captainOffsetY,
+        };
       });
   }
 }
@@ -493,12 +553,16 @@ function collectPlanetSupplies(state: GameState, ship: Ship): void {
   for (const planet of state.bodies) {
     if (
       planet.kind !== BodyKind.Planet ||
-      distance(ship.pos, planet.pos) >= planet.radius + 45
+      distance(ship.pos, planet.pos) >=
+        planet.radius + GAME_CONFIG.supply.collectionRange
     )
       continue;
     if (planet.base !== ship.side) continue;
 
-    const amount = Math.min(planet.stock ?? 0, 10 - ship.supplies);
+    const amount = Math.min(
+      planet.stock ?? 0,
+      GAME_CONFIG.supply.targetSupplyCapacity - ship.supplies,
+    );
     ship.supplies += amount;
     planet.stock = (planet.stock ?? 0) - amount;
   }
@@ -516,7 +580,7 @@ function moveShip(
     state.bodies,
     viewport,
     deltaTime,
-    FORMATION_ARRIVAL_DISTANCE,
+    GAME_CONFIG.formation.arrivalDistance,
     ship.side === Side.Player
       ? {
           x: Math.cos(state.formationRotation),
@@ -529,9 +593,12 @@ function moveShip(
 function attackDamage(state: GameState, ship: Ship, defense = 0): number {
   const bonus =
     ship.side === Side.Player && state.formation === state.captainFavorite
-      ? 1.25
+      ? GAME_CONFIG.combat.favoriteFormationDamageMultiplier
       : 1;
-  return Math.max(1, ship.attack * bonus - defense);
+  return Math.max(
+    GAME_CONFIG.combat.minimumDamage,
+    ship.attack * bonus - defense,
+  );
 }
 
 function fireWeapons(state: GameState, ship: Ship): void {
@@ -569,8 +636,12 @@ function fireWeapons(state: GameState, ship: Ship): void {
   }
 
   target.hp -= attackDamage(state, ship, target.defense);
-  target.moral = clamp(target.moral - 5, 0, 100);
+  target.moral = clamp(
+    target.moral - GAME_CONFIG.combat.moraleDamage,
+    0,
+    GAME_CONFIG.combat.maximumMorale,
+  );
   ship.supplies--;
-  ship.cooldown = 0.75;
+  ship.cooldown = GAME_CONFIG.combat.weaponCooldown;
   spawnProjectile(state, ship.pos, target.pos, ship.side, ship.id);
 }

@@ -1,4 +1,5 @@
 import { clamp, distance, normalize } from "./math";
+import { GAME_CONFIG } from "./config";
 import type { Body, Ship, Vec, Viewport } from "./types";
 
 export function moveShipWithBoids(
@@ -7,7 +8,7 @@ export function moveShipWithBoids(
   bodies: Body[],
   viewport: Viewport,
   deltaTime: number,
-  arrivalDistance = 4,
+  arrivalDistance = GAME_CONFIG.formation.arrivalDistance,
   formationHeading?: Vec,
 ): void {
   if (!ship.target) return;
@@ -27,58 +28,91 @@ export function moveShipWithBoids(
   for (const other of ships) {
     if (other === ship) continue;
     const separation = distance(ship.pos, other.pos);
-    if (separation >= 42) continue;
+    if (separation >= GAME_CONFIG.movement.separationDistance) continue;
     const direction = normalize({
       x: ship.pos.x - other.pos.x,
       y: ship.pos.y - other.pos.y,
     });
-    force.x += direction.x * (42 - separation) * 3;
-    force.y += direction.y * (42 - separation) * 3;
+    force.x +=
+      direction.x *
+      (GAME_CONFIG.movement.separationDistance - separation) *
+      GAME_CONFIG.movement.separationForceMultiplier;
+    force.y +=
+      direction.y *
+      (GAME_CONFIG.movement.separationDistance - separation) *
+      GAME_CONFIG.movement.separationForceMultiplier;
     alignment.x += other.heading.x;
     alignment.y += other.heading.y;
     alignmentCount++;
   }
   if (alignmentCount > 0) {
     const direction = normalize(alignment);
-    force.x += direction.x * ship.speed * 0.25;
-    force.y += direction.y * ship.speed * 0.25;
+    force.x +=
+      direction.x * ship.speed * GAME_CONFIG.movement.alignmentForceMultiplier;
+    force.y +=
+      direction.y * ship.speed * GAME_CONFIG.movement.alignmentForceMultiplier;
   }
   if (desiredHeading) {
     const direction = normalize(desiredHeading);
-    force.x += direction.x * ship.speed * 0.4;
-    force.y += direction.y * ship.speed * 0.4;
+    force.x +=
+      direction.x *
+      ship.speed *
+      GAME_CONFIG.movement.desiredHeadingForceMultiplier;
+    force.y +=
+      direction.y *
+      ship.speed *
+      GAME_CONFIG.movement.desiredHeadingForceMultiplier;
   }
   if (steeringHeading) {
     steerHeading(ship, steeringHeading, deltaTime);
-    force.x += ship.heading.x * ship.speed * 0.65;
-    force.y += ship.heading.y * ship.speed * 0.65;
+    force.x +=
+      ship.heading.x *
+      ship.speed *
+      GAME_CONFIG.movement.steeringHeadingForceMultiplier;
+    force.y +=
+      ship.heading.y *
+      ship.speed *
+      GAME_CONFIG.movement.steeringHeadingForceMultiplier;
   }
   for (const body of bodies) {
     const separation = distance(ship.pos, body.pos);
-    const safeDistance = body.radius + 30;
+    const safeDistance = body.radius + GAME_CONFIG.movement.bodyClearance;
     if (separation >= safeDistance) continue;
     const direction = normalize({
       x: ship.pos.x - body.pos.x,
       y: ship.pos.y - body.pos.y,
     });
-    force.x += direction.x * (safeDistance - separation) * 5;
-    force.y += direction.y * (safeDistance - separation) * 5;
+    force.x +=
+      direction.x *
+      (safeDistance - separation) *
+      GAME_CONFIG.movement.bodyAvoidanceForceMultiplier;
+    force.y +=
+      direction.y *
+      (safeDistance - separation) *
+      GAME_CONFIG.movement.bodyAvoidanceForceMultiplier;
   }
 
-  ship.vel.x += (force.x - ship.vel.x) * Math.min(1, deltaTime * 2.2);
-  ship.vel.y += (force.y - ship.vel.y) * Math.min(1, deltaTime * 2.2);
-  if (Math.hypot(ship.vel.x, ship.vel.y) > 1) {
+  ship.vel.x +=
+    (force.x - ship.vel.x) *
+    Math.min(1, deltaTime * GAME_CONFIG.movement.velocityResponseRate);
+  ship.vel.y +=
+    (force.y - ship.vel.y) *
+    Math.min(1, deltaTime * GAME_CONFIG.movement.velocityResponseRate);
+  if (
+    Math.hypot(ship.vel.x, ship.vel.y) >
+    GAME_CONFIG.movement.headingVelocityThreshold
+  ) {
     ship.heading = normalize(ship.vel);
   }
   ship.pos.x = clamp(
     ship.pos.x + ship.vel.x * deltaTime,
-    10,
-    viewport.width - 10,
+    GAME_CONFIG.movement.viewportPadding,
+    viewport.width - GAME_CONFIG.movement.viewportPadding,
   );
   ship.pos.y = clamp(
     ship.pos.y + ship.vel.y * deltaTime,
-    10,
-    viewport.height - 10,
+    GAME_CONFIG.movement.viewportPadding,
+    viewport.height - GAME_CONFIG.movement.viewportPadding,
   );
 }
 
@@ -96,7 +130,7 @@ function steeringForce(ship: Ship): Vec {
 }
 
 function steerHeading(ship: Ship, targetHeading: Vec, deltaTime: number): void {
-  const turnAmount = Math.min(1, deltaTime * 4);
+  const turnAmount = Math.min(1, deltaTime * GAME_CONFIG.movement.turnRate);
   ship.heading = normalize({
     x: ship.heading.x + (targetHeading.x - ship.heading.x) * turnAmount,
     y: ship.heading.y + (targetHeading.y - ship.heading.y) * turnAmount,
