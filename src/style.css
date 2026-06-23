@@ -127,9 +127,9 @@ h1 b {
   pointer-events: auto;
 }
 .command-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 5fr 3fr;
+  gap: 4px;
 }
 .command-group {
   display: grid;
@@ -188,6 +188,21 @@ h1 b {
 .icon-row {
   display: flex;
   gap: 4px;
+}
+#formation-controls,
+#fire-controls {
+  display: grid;
+  gap: 4px;
+}
+#formation-controls {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+#fire-controls {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+#formation-controls button,
+#fire-controls button {
+  width: 100%;
 }
 .icon-row button {
   position: relative;
