@@ -117,8 +117,8 @@ h1 b {
   position: absolute;
   display: grid;
   gap: 10px;
-  left: 50%;
-  transform: translateX(-50%);
+  width: calc(100% - 28px);
+  left: 14px;
   bottom: max(18px, env(safe-area-inset-bottom));
   padding: 10px 14px;
   border: 1px solid #31576b;
@@ -395,7 +395,8 @@ input[type="range"] {
   }
 }
 .upgrade-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 4px;
 }
 .upgrade-item {
@@ -413,7 +414,8 @@ input[type="range"] {
   white-space: nowrap;
 }
 .upgrade-row button {
-  min-width: 34px;
+  width: 100%;
+  min-width: 0;
   height: 35px;
   padding: 0 5px;
   border: 1px solid #48728a;
