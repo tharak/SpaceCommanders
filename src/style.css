@@ -206,6 +206,10 @@ h1 b {
 #fire-controls {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+#formation-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
 #formation-controls button,
 #fire-controls button {
   width: 100%;
