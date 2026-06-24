@@ -188,7 +188,7 @@ function createUpgradeButtons(
 
   for (const group of groups) {
     const section = document.createElement("section");
-    section.className = `upgrade-group `;
+    section.classList.add("upgrade-group", group.className);
     const heading = document.createElement("span");
     heading.className = "upgrade-group-title";
     heading.textContent = group.label;
