@@ -22,41 +22,43 @@ export function moveShipWithBoids(
     return;
   }
 
-  const force = steeringForce(ship);
+  let speedMultiplier = 1;
   let alignment = { x: 0, y: 0 };
   let alignmentCount = 0;
   for (const other of ships) {
     if (other === ship) continue;
     const separation = distance(ship.pos, other.pos);
     if (separation >= GAME_CONFIG.movement.separationDistance) continue;
-    const direction = normalize({
-      x: ship.pos.x - other.pos.x,
-      y: ship.pos.y - other.pos.y,
-    });
-    force.x +=
-      direction.x *
-      (GAME_CONFIG.movement.separationDistance - separation) *
-      GAME_CONFIG.movement.separationForceMultiplier;
-    force.y +=
-      direction.y *
-      (GAME_CONFIG.movement.separationDistance - separation) *
-      GAME_CONFIG.movement.separationForceMultiplier;
+    const proximity = 1 - separation / GAME_CONFIG.movement.separationDistance;
+    speedMultiplier = Math.min(
+      speedMultiplier,
+      1 -
+        proximity * (1 - GAME_CONFIG.movement.separationMinimumSpeedMultiplier),
+    );
     alignment.x += other.heading.x;
     alignment.y += other.heading.y;
     alignmentCount++;
   }
+  const force = steeringForce(ship, speedMultiplier);
   if (alignmentCount > 0) {
     const direction = normalize(alignment);
     force.x +=
-      direction.x * ship.speed * GAME_CONFIG.movement.alignmentForceMultiplier;
+      direction.x *
+      ship.speed *
+      speedMultiplier *
+      GAME_CONFIG.movement.alignmentForceMultiplier;
     force.y +=
-      direction.y * ship.speed * GAME_CONFIG.movement.alignmentForceMultiplier;
+      direction.y *
+      ship.speed *
+      speedMultiplier *
+      GAME_CONFIG.movement.alignmentForceMultiplier;
   }
   if (desiredHeading) {
     const direction = normalize(desiredHeading);
     force.x +=
       direction.x *
       ship.speed *
+      speedMultiplier *
       GAME_CONFIG.movement.desiredHeadingForceMultiplier;
     force.y +=
       direction.y *
@@ -68,6 +70,7 @@ export function moveShipWithBoids(
     force.x +=
       ship.heading.x *
       ship.speed *
+      speedMultiplier *
       GAME_CONFIG.movement.steeringHeadingForceMultiplier;
     force.y +=
       ship.heading.y *
@@ -116,7 +119,7 @@ export function moveShipWithBoids(
   );
 }
 
-function steeringForce(ship: Ship): Vec {
+function steeringForce(ship: Ship, speedMultiplier: number): Vec {
   if (!ship.target) return { x: 0, y: 0 };
   const vector = {
     x: ship.target.x - ship.pos.x,
@@ -124,8 +127,8 @@ function steeringForce(ship: Ship): Vec {
   };
   const length = Math.hypot(vector.x, vector.y) || 1;
   return {
-    x: (vector.x / length) * ship.speed,
-    y: (vector.y / length) * ship.speed,
+    x: (vector.x / length) * ship.speed * speedMultiplier,
+    y: (vector.y / length) * ship.speed * speedMultiplier,
   };
 }
 

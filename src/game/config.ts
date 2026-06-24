@@ -108,7 +108,7 @@ export const GAME_CONFIG = {
   },
   movement: {
     separationDistance: 56,
-    separationForceMultiplier: 8,
+    separationMinimumSpeedMultiplier: 0.2,
     alignmentForceMultiplier: 0.25,
     desiredHeadingForceMultiplier: 0.4,
     steeringHeadingForceMultiplier: 0.65,
