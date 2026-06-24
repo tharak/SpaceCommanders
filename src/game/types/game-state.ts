@@ -30,6 +30,7 @@ export type GameState = {
   formationMode?: {
     enemyFormation: Formation;
     charging: boolean;
+    formationSelectionEnabled: boolean;
     playerAtTop: boolean;
   };
 };

@@ -153,6 +153,7 @@ export function resetFormations(
   state.formationMode = {
     enemyFormation: formationMode.enemyFormation,
     charging: false,
+    formationSelectionEnabled: true,
     playerAtTop: false,
   };
 }
@@ -163,7 +164,8 @@ export function setFormationModePlayerFormation(
   playerFormation: Formation,
 ): void {
   const mode = state.formationMode;
-  if (!mode || mode.charging) return;
+  if (!mode || !mode.formationSelectionEnabled) return;
+  if (mode.charging) mode.playerAtTop = !mode.playerAtTop;
 
   state.formation = playerFormation;
   state.selectedFormation = playerFormation;
@@ -183,6 +185,7 @@ export function setFormationModePlayerFormation(
   );
   state.ships = [...playerShips, ...enemyShips];
   mode.charging = true;
+  mode.formationSelectionEnabled = false;
 }
 
 export function updateFormations(
@@ -225,10 +228,7 @@ export function updateFormations(
         distance(ship.pos, ship.target) <=
           GAME_CONFIG.formation.arrivalDistance,
     );
-    if (shipReachedSlot) {
-      mode.charging = false;
-      mode.playerAtTop = !mode.playerAtTop;
-    }
+    if (shipReachedSlot) mode.formationSelectionEnabled = true;
   }
 
   const playerShips = state.ships.filter((ship) => ship.side === Side.Player);
