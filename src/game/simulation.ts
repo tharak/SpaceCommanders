@@ -218,18 +218,21 @@ export function updateFormations(
     deltaTime,
   );
 
-  const fleetsHaveArrived = state.ships.every(
-    (ship) =>
-      ship.target &&
-      distance(ship.pos, ship.target) <= GAME_CONFIG.formation.arrivalDistance,
-  );
-  if (fleetsHaveArrived) {
+  const playerShips = state.ships.filter((ship) => ship.side === Side.Player);
+  const enemyShips = state.ships.filter((ship) => ship.side === Side.Enemy);
+  const playerCenterY = fleetCenterY(playerShips);
+  const enemyCenterY = fleetCenterY(enemyShips);
+  const midpoint = viewport.height / 2;
+  const fleetsHaveCrossed =
+    playerShips.length > 0 &&
+    enemyShips.length > 0 &&
+    (mode.playerAtTop
+      ? playerCenterY >= midpoint && enemyCenterY <= midpoint
+      : playerCenterY <= midpoint && enemyCenterY >= midpoint);
+  if (fleetsHaveCrossed) {
     mode.charging = false;
     mode.playerAtTop = !mode.playerAtTop;
   }
-
-  const playerShips = state.ships.filter((ship) => ship.side === Side.Player);
-  const enemyShips = state.ships.filter((ship) => ship.side === Side.Enemy);
   applyGunSteering(playerShips, enemyShips, state.fireMode);
   applyGunSteering(enemyShips, playerShips, FireMode.AtWill);
   for (const ship of state.ships) {
@@ -244,6 +247,10 @@ export function updateFormations(
     state.winner = Side.Player;
   }
   updateProjectiles(state, deltaTime, viewport);
+}
+
+function fleetCenterY(fleet: Ship[]): number {
+  return fleet.reduce((total, ship) => total + ship.pos.y, 0) / fleet.length;
 }
 
 function advanceFormationFleet(
