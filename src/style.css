@@ -321,13 +321,6 @@ input[type="range"] {
   min-width: 0;
   gap: 4px;
 }
-.upgrade-group-title {
-  color: #73a4be;
-  font:
-    600 10px/1 Barlow Condensed,
-    sans-serif;
-  letter-spacing: 1.5px;
-}
 .upgrade-row {
   display: grid;
   gap: 4px;

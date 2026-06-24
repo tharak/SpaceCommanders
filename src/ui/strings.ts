@@ -15,8 +15,6 @@ export const TEXT = {
   },
   controls: {
     upgrades: "UPGRADES",
-    shipUpgrades: "SHIP",
-    baseUpgrades: "BASE",
     money: "₿",
     formation: "FORMATION",
     shootMode: "SHOOT MODE",

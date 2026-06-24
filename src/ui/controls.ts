@@ -166,7 +166,6 @@ function createUpgradeButtons(
   const groups = [
     {
       className: "upgrade-group--ship",
-      label: TEXT.controls.shipUpgrades,
       upgrades: [
         UpgradeType.Damage,
         UpgradeType.Speed,
@@ -177,7 +176,6 @@ function createUpgradeButtons(
     },
     {
       className: "upgrade-group--base",
-      label: TEXT.controls.baseUpgrades,
       upgrades: [
         UpgradeType.BaseSupplyGeneration,
         UpgradeType.BaseSupplyCapacity,
@@ -189,9 +187,6 @@ function createUpgradeButtons(
   for (const group of groups) {
     const section = document.createElement("section");
     section.classList.add("upgrade-group", group.className);
-    const heading = document.createElement("span");
-    heading.className = "upgrade-group-title";
-    heading.textContent = group.label;
     const row = document.createElement("div");
     row.className = "upgrade-row";
 
@@ -210,7 +205,7 @@ function createUpgradeButtons(
       item.append(level, button);
       row.append(item);
     }
-    section.append(heading, row);
+    section.append(row);
     controls.upgradeControls.append(section);
   }
 }
