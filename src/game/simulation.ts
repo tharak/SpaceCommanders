@@ -191,44 +191,48 @@ export function updateFormations(
   deltaTime: number,
 ): void {
   const mode = state.formationMode;
-  if (!mode?.charging) return;
+  if (!mode) return;
 
-  advanceFormationFleet(
-    state,
-    viewport,
-    Side.Player,
-    state.formation,
-    {
-      x: viewport.width / 2,
-      y: viewport.height * (mode.playerAtTop ? 0.8 : 0.2),
-    },
-    mode.playerAtTop ? Math.PI : 0,
-    deltaTime,
-  );
-  advanceFormationFleet(
-    state,
-    viewport,
-    Side.Enemy,
-    mode.enemyFormation,
-    {
-      x: viewport.width / 2,
-      y: viewport.height * (mode.playerAtTop ? 0.2 : 0.8),
-    },
-    mode.playerAtTop ? 0 : Math.PI,
-    deltaTime,
-  );
+  if (mode.charging) {
+    advanceFormationFleet(
+      state,
+      viewport,
+      Side.Player,
+      state.formation,
+      {
+        x: viewport.width / 2,
+        y: viewport.height * (mode.playerAtTop ? 0.8 : 0.2),
+      },
+      mode.playerAtTop ? Math.PI : 0,
+      deltaTime,
+    );
+    advanceFormationFleet(
+      state,
+      viewport,
+      Side.Enemy,
+      mode.enemyFormation,
+      {
+        x: viewport.width / 2,
+        y: viewport.height * (mode.playerAtTop ? 0.2 : 0.8),
+      },
+      mode.playerAtTop ? 0 : Math.PI,
+      deltaTime,
+    );
+
+    const shipReachedSlot = state.ships.some(
+      (ship) =>
+        ship.target &&
+        distance(ship.pos, ship.target) <=
+          GAME_CONFIG.formation.arrivalDistance,
+    );
+    if (shipReachedSlot) {
+      mode.charging = false;
+      mode.playerAtTop = !mode.playerAtTop;
+    }
+  }
 
   const playerShips = state.ships.filter((ship) => ship.side === Side.Player);
   const enemyShips = state.ships.filter((ship) => ship.side === Side.Enemy);
-  const shipReachedSlot = state.ships.some(
-    (ship) =>
-      ship.target &&
-      distance(ship.pos, ship.target) <= GAME_CONFIG.formation.arrivalDistance,
-  );
-  if (shipReachedSlot) {
-    mode.charging = false;
-    mode.playerAtTop = !mode.playerAtTop;
-  }
   applyGunSteering(playerShips, enemyShips, state.fireMode);
   applyGunSteering(enemyShips, playerShips, FireMode.AtWill);
   for (const ship of state.ships) {
