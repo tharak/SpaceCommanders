@@ -235,10 +235,10 @@ export function updateFormations(
       playerShips.length > 0 &&
       enemyShips.length > 0 &&
       (mode.chargingTowardTop
-        ? playerShips.every((ship) => ship.pos.y >= viewport.height / 2) &&
-          enemyShips.every((ship) => ship.pos.y <= viewport.height / 2)
-        : playerShips.every((ship) => ship.pos.y <= viewport.height / 2) &&
-          enemyShips.every((ship) => ship.pos.y >= viewport.height / 2));
+        ? playerShips.every((ship) => ship.pos.y <= viewport.height / 2) &&
+          enemyShips.every((ship) => ship.pos.y >= viewport.height / 2)
+        : playerShips.every((ship) => ship.pos.y >= viewport.height / 2) &&
+          enemyShips.every((ship) => ship.pos.y <= viewport.height / 2));
     if (allAliveShipsPassedMidpoint) {
       mode.playerAtTop = mode.chargingTowardTop;
       mode.formationSelectionEnabled = true;
