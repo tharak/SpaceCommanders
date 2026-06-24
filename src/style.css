@@ -400,9 +400,24 @@ input[type="range"] {
     animation: none;
   }
 }
+#upgrade-controls {
+  display: grid;
+  gap: 8px;
+}
+.upgrade-group {
+  display: grid;
+  gap: 4px;
+}
+.upgrade-group-title {
+  color: #73a4be;
+  font:
+    600 10px/1 Barlow Condensed,
+    sans-serif;
+  letter-spacing: 1.5px;
+}
 .upgrade-row {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
 }
 .upgrade-item {

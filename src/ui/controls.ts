@@ -163,20 +163,53 @@ function createUpgradeButtons(
       TEXT.controls.upgradeLabels.baseSupplyCapacity,
     [UpgradeType.Regeneration]: TEXT.controls.upgradeLabels.regeneration,
   };
-  for (const upgrade of Object.values(UpgradeType)) {
-    const item = document.createElement("div");
-    item.className = "upgrade-item";
-    const level = document.createElement("span");
-    level.className = "upgrade-level";
-    level.textContent = "LV 0";
-    const button = document.createElement("button");
-    button.ariaLabel = TEXT.controls.upgrades;
-    button.dataset.value = upgrade;
-    button.dataset.label = labels[upgrade];
-    setUpgradeButtonText(button, labels[upgrade], getUpgradeCost(upgrade, 0));
-    button.addEventListener("click", () => onUpgrade(upgrade));
-    item.append(level, button);
-    controls.upgradeControls.append(item);
+  const groups = [
+    {
+      label: TEXT.controls.shipUpgrades,
+      upgrades: [
+        UpgradeType.Damage,
+        UpgradeType.Speed,
+        UpgradeType.Hull,
+        UpgradeType.Range,
+        UpgradeType.SupplyShips,
+      ],
+    },
+    {
+      label: TEXT.controls.baseUpgrades,
+      upgrades: [
+        UpgradeType.BaseSupplyGeneration,
+        UpgradeType.BaseSupplyCapacity,
+        UpgradeType.Regeneration,
+      ],
+    },
+  ];
+
+  for (const group of groups) {
+    const section = document.createElement("section");
+    section.className = "upgrade-group";
+    const heading = document.createElement("span");
+    heading.className = "upgrade-group-title";
+    heading.textContent = group.label;
+    const row = document.createElement("div");
+    row.className = "upgrade-row";
+
+    for (const upgrade of group.upgrades) {
+      const item = document.createElement("div");
+      item.className = "upgrade-item";
+      const level = document.createElement("span");
+      level.className = "upgrade-level";
+      level.textContent = "LV 0";
+      const button = document.createElement("button");
+      button.ariaLabel = TEXT.controls.upgrades;
+      button.dataset.value = upgrade;
+      button.dataset.label = labels[upgrade];
+      setUpgradeButtonText(button, labels[upgrade], getUpgradeCost(upgrade, 0));
+      button.addEventListener("click", () => onUpgrade(upgrade));
+      item.append(level, button);
+      row.append(item);
+    }
+    section.append(heading, row);
+    controls.upgradeControls.append(section);
   }
 }
 
