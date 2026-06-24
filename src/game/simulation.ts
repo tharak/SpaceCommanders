@@ -222,13 +222,23 @@ export function updateFormations(
       deltaTime,
     );
 
-    const shipReachedSlot = state.ships.some(
-      (ship) =>
-        ship.target &&
-        distance(ship.pos, ship.target) <=
-          GAME_CONFIG.formation.arrivalDistance,
+    const playerShips = state.ships.filter(
+      (ship) => ship.side === Side.Player && ship.hp > 0,
     );
-    if (shipReachedSlot) mode.formationSelectionEnabled = true;
+    const enemyShips = state.ships.filter(
+      (ship) => ship.side === Side.Enemy && ship.hp > 0,
+    );
+    const allAliveShipsPassedMidpoint =
+      playerShips.length > 0 &&
+      enemyShips.length > 0 &&
+      (mode.playerAtTop
+        ? playerShips.every((ship) => ship.pos.y >= viewport.height / 2) &&
+          enemyShips.every((ship) => ship.pos.y <= viewport.height / 2)
+        : playerShips.every((ship) => ship.pos.y <= viewport.height / 2) &&
+          enemyShips.every((ship) => ship.pos.y >= viewport.height / 2));
+    if (allAliveShipsPassedMidpoint) {
+      mode.formationSelectionEnabled = true;
+    }
   }
 
   const playerShips = state.ships.filter((ship) => ship.side === Side.Player);
