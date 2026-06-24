@@ -63,8 +63,39 @@ export function resetGame(
   state.previewCohesion = state.cohesion;
   state.projectiles = [];
   state.ships = [];
-  state.bodies = [];
+  const { bodies, playerBase, enemyBase } = createMatchMap(config, viewport);
+  state.bodies = bodies;
 
+  let id = 0;
+  for (const side of [Side.Player, Side.Enemy] as const) {
+    const base = side === Side.Player ? playerBase : enemyBase;
+    state.ships.push(
+      ...spawnFleet(
+        side,
+        ShipRole.Battleship,
+        base,
+        GAME_CONFIG.match.initialFormation,
+        config.ships,
+        side === Side.Player
+          ? playerFormationSpacing(state.cohesion)
+          : GAME_CONFIG.formation.enemySpacing,
+        id,
+      ),
+    );
+    id += config.ships;
+    //state.ships.push(
+    //  spawnShip(side, ShipRole.Captain, offsetPosition(base, 30), id++),
+    //);
+  }
+}
+
+type MatchMap = {
+  bodies: Body[];
+  playerBase: Vec;
+  enemyBase: Vec;
+};
+
+function createMatchMap(config: Config, viewport: Viewport): MatchMap {
   const { baseMargin } = GAME_CONFIG.map;
   const playerBase = {
     x: randomBetween(
@@ -80,111 +111,96 @@ export function resetGame(
     ),
     y: randomBetween(baseMargin, viewport.height - baseMargin),
   };
-  let bodyId = 0;
+  const bodies: Body[] = [
+    createBasePlanet(0, playerBase, Side.Player),
+    createBasePlanet(1, enemyBase, Side.Enemy),
+  ];
 
-  state.bodies.push(
-    {
-      id: bodyId++,
-      kind: BodyKind.Planet,
-      pos: playerBase,
-      radius: GAME_CONFIG.map.basePlanet.radius,
-      base: Side.Player,
-      stock: 0,
-      hue: GAME_CONFIG.map.basePlanet.hue.player,
-      weight: GAME_CONFIG.map.basePlanet.weight,
-    },
-    {
-      id: bodyId++,
-      kind: BodyKind.Planet,
-      pos: enemyBase,
-      radius: GAME_CONFIG.map.basePlanet.radius,
-      base: Side.Enemy,
-      stock: 0,
-      hue: GAME_CONFIG.map.basePlanet.hue.enemy,
-      weight: GAME_CONFIG.map.basePlanet.weight,
-    },
-  );
-
-  for (let index = 2; index < config.planets; index++) {
-    state.bodies.push({
-      id: bodyId++,
-      kind: BodyKind.Planet,
-      pos: {
-        x: randomBetween(
-          GAME_CONFIG.map.neutralPlanet.horizontalMargin,
-          viewport.width - GAME_CONFIG.map.neutralPlanet.horizontalMargin,
-        ),
-        y: randomBetween(
-          GAME_CONFIG.map.neutralPlanet.verticalMargin,
-          viewport.height - GAME_CONFIG.map.neutralPlanet.verticalMargin,
-        ),
-      },
-      radius: randomBetween(
-        GAME_CONFIG.map.neutralPlanet.minRadius,
-        GAME_CONFIG.map.neutralPlanet.maxRadius,
-      ),
-      stock: 0,
-      hue: randomBetween(
-        GAME_CONFIG.map.neutralPlanet.minHue,
-        GAME_CONFIG.map.neutralPlanet.maxHue,
-      ),
-      weight: randomBetween(
-        GAME_CONFIG.map.neutralPlanet.minWeight,
-        GAME_CONFIG.map.neutralPlanet.maxWeight,
-      ),
-    });
+  for (let id = 2; id < config.planets; id++) {
+    bodies.push(createNeutralPlanet(id, viewport));
   }
-
   for (let index = 0; index < config.asteroids; index++) {
-    state.bodies.push({
-      id: bodyId++,
-      kind: BodyKind.Asteroids,
-      pos: {
-        x: randomBetween(
-          GAME_CONFIG.map.asteroidField.horizontalMargin,
-          viewport.width - GAME_CONFIG.map.asteroidField.horizontalMargin,
-        ),
-        y: randomBetween(
-          GAME_CONFIG.map.asteroidField.verticalMargin,
-          viewport.height - GAME_CONFIG.map.asteroidField.verticalMargin,
-        ),
-      },
-      radius: randomBetween(
-        GAME_CONFIG.map.asteroidField.minRadius,
-        GAME_CONFIG.map.asteroidField.maxRadius,
-      ),
-      hue: 0,
-      weight: 0,
-    });
+    bodies.push(createAsteroidField(bodies.length, viewport));
   }
+  return { bodies, playerBase, enemyBase };
+}
 
-  let id = 0;
-  for (const side of [Side.Player, Side.Enemy] as const) {
-    const base = side === Side.Player ? playerBase : enemyBase;
-    state.ships.push(
-      ...spawnFleet(
-        side,
-        ShipRole.Battleship,
-        base,
-        Formation.Circle,
-        config.ships,
-        side === Side.Player
-          ? clamp(
-              GAME_CONFIG.formation.playerSpacingBase -
-                state.cohesion *
-                  GAME_CONFIG.formation.playerCohesionSpacingMultiplier,
-              GAME_CONFIG.formation.playerMinSpacing,
-              GAME_CONFIG.formation.playerMaxSpacing,
-            )
-          : GAME_CONFIG.formation.enemySpacing,
-        id,
+function createBasePlanet(id: number, position: Vec, side: Side): Body {
+  return {
+    id,
+    kind: BodyKind.Planet,
+    pos: position,
+    radius: GAME_CONFIG.map.basePlanet.radius,
+    base: side,
+    stock: 0,
+    hue:
+      side === Side.Player
+        ? GAME_CONFIG.map.basePlanet.hue.player
+        : GAME_CONFIG.map.basePlanet.hue.enemy,
+    weight: GAME_CONFIG.map.basePlanet.weight,
+  };
+}
+
+function createNeutralPlanet(id: number, viewport: Viewport): Body {
+  return {
+    id,
+    kind: BodyKind.Planet,
+    pos: {
+      x: randomBetween(
+        GAME_CONFIG.map.neutralPlanet.horizontalMargin,
+        viewport.width - GAME_CONFIG.map.neutralPlanet.horizontalMargin,
       ),
-    );
-    id += config.ships;
-    //state.ships.push(
-    //  spawnShip(side, ShipRole.Captain, offsetPosition(base, 30), id++),
-    //);
-  }
+      y: randomBetween(
+        GAME_CONFIG.map.neutralPlanet.verticalMargin,
+        viewport.height - GAME_CONFIG.map.neutralPlanet.verticalMargin,
+      ),
+    },
+    radius: randomBetween(
+      GAME_CONFIG.map.neutralPlanet.minRadius,
+      GAME_CONFIG.map.neutralPlanet.maxRadius,
+    ),
+    stock: 0,
+    hue: randomBetween(
+      GAME_CONFIG.map.neutralPlanet.minHue,
+      GAME_CONFIG.map.neutralPlanet.maxHue,
+    ),
+    weight: randomBetween(
+      GAME_CONFIG.map.neutralPlanet.minWeight,
+      GAME_CONFIG.map.neutralPlanet.maxWeight,
+    ),
+  };
+}
+
+function createAsteroidField(id: number, viewport: Viewport): Body {
+  return {
+    id,
+    kind: BodyKind.Asteroids,
+    pos: {
+      x: randomBetween(
+        GAME_CONFIG.map.asteroidField.horizontalMargin,
+        viewport.width - GAME_CONFIG.map.asteroidField.horizontalMargin,
+      ),
+      y: randomBetween(
+        GAME_CONFIG.map.asteroidField.verticalMargin,
+        viewport.height - GAME_CONFIG.map.asteroidField.verticalMargin,
+      ),
+    },
+    radius: randomBetween(
+      GAME_CONFIG.map.asteroidField.minRadius,
+      GAME_CONFIG.map.asteroidField.maxRadius,
+    ),
+    hue: 0,
+    weight: 0,
+  };
+}
+
+function playerFormationSpacing(cohesion: number): number {
+  return clamp(
+    GAME_CONFIG.formation.playerSpacingBase -
+      cohesion * GAME_CONFIG.formation.playerCohesionSpacingMultiplier,
+    GAME_CONFIG.formation.playerMinSpacing,
+    GAME_CONFIG.formation.playerMaxSpacing,
+  );
 }
 
 export function issueFormationOrder(state: GameState, destination: Vec): void {
@@ -492,13 +508,7 @@ function assignFormationTargets(state: GameState): void {
     );
     const spacing =
       side === Side.Player
-        ? clamp(
-            GAME_CONFIG.formation.playerSpacingBase -
-              state.cohesion *
-                GAME_CONFIG.formation.playerCohesionSpacingMultiplier,
-            GAME_CONFIG.formation.playerMinSpacing,
-            GAME_CONFIG.formation.playerMaxSpacing,
-          )
+        ? playerFormationSpacing(state.cohesion)
         : GAME_CONFIG.formation.enemySpacing;
     const rotation = side === Side.Player ? state.formationRotation : 0;
     const targets = formationSlots(

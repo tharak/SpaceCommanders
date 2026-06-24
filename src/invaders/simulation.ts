@@ -166,16 +166,37 @@ export function updateInvaders(
   viewport: Viewport,
   elapsed: number,
 ): void {
-  const enemiesWaiting = state.enemyDeploymentCountdown > 0;
-  if (enemiesWaiting) {
-    state.enemyDeploymentCountdown = Math.max(
-      0,
-      state.enemyDeploymentCountdown - elapsed,
-    );
-  } else {
-    updateEnemyFleet(state, viewport, elapsed);
-  }
+  const enemiesCanAct = updateEnemyDeployment(state, elapsed);
+  if (enemiesCanAct) updateEnemyFleet(state, viewport, elapsed);
+  updatePlayerFleet(state, viewport, elapsed);
+  if (enemiesCanAct) decrementCooldowns(state.enemies, elapsed);
 
+  regenerateDefenders(state, elapsed);
+  replenishBaseSupplies(state, elapsed);
+  updateSupplyShips(state, viewport, elapsed);
+  if (enemiesCanAct) resolveBaseContacts(state);
+  if (state.winner) return;
+
+  fireWeapons(state, enemiesCanAct);
+  updateProjectiles(state, elapsed, viewport);
+  removeDestroyedShips(state);
+  if (state.enemies.length === 0) spawnEnemyWave(state, viewport);
+}
+
+function updateEnemyDeployment(state: InvadersState, elapsed: number): boolean {
+  if (state.enemyDeploymentCountdown <= 0) return true;
+  state.enemyDeploymentCountdown = Math.max(
+    0,
+    state.enemyDeploymentCountdown - elapsed,
+  );
+  return false;
+}
+
+function updatePlayerFleet(
+  state: InvadersState,
+  viewport: Viewport,
+  elapsed: number,
+): void {
   const slots = formationSlots(
     playerFleetCenter(viewport),
     state.formation,
@@ -208,21 +229,15 @@ export function updateInvaders(
     );
     ship.cooldown -= elapsed;
   }
-  if (!enemiesWaiting) {
-    state.enemies.forEach((ship) => {
-      ship.cooldown -= elapsed;
-    });
-  }
-  regenerateDefenders(state, elapsed);
-  replenishBaseSupplies(state, elapsed);
-  updateSupplyShips(state, viewport, elapsed);
-  if (!enemiesWaiting) resolveBaseContacts(state);
-  if (state.winner) return;
-  fireWeapons(state, !enemiesWaiting);
-  updateProjectiles(state, elapsed, viewport);
+}
+
+function decrementCooldowns(ships: Ship[], elapsed: number): void {
+  for (const ship of ships) ship.cooldown -= elapsed;
+}
+
+function removeDestroyedShips(state: InvadersState): void {
   state.ships = state.ships.filter((ship) => ship.hp > 0);
   state.enemies = state.enemies.filter((ship) => ship.hp > 0);
-  if (state.enemies.length === 0) spawnEnemyWave(state, viewport);
 }
 
 function updateEnemyFleet(

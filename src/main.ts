@@ -69,8 +69,7 @@ function reset(): void {
   }
   setCaptainFormation(captainFormationControls, commandState.captainFavorite);
   setUpgradePrices(controls, invadersState.upgrades);
-  setMoneyDisplay(controls, invadersState.money);
-  setUpgradeAvailability(controls, invadersState.upgrades, invadersState.money);
+  syncInvadersControls();
   showReadout(
     controls,
     activeGame === "command"
@@ -263,33 +262,45 @@ window.addEventListener("resize", () => {
 function animationLoop(now: number): void {
   const deltaTime = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
-  if (matchActive) {
-    if (activeGame === "command" && commandState.command) {
-      updateGame(commandState, viewport, deltaTime);
-      if (commandState.winner) showGameOver(commandState.winner);
-    }
-    if (activeGame === "invaders") {
-      updateInvaders(invadersState, viewport, deltaTime);
-      setMoneyDisplay(controls, invadersState.money);
-      setUpgradeAvailability(
-        controls,
-        invadersState.upgrades,
-        invadersState.money,
-      );
-      if (invadersState.winner) showGameOver(invadersState.winner);
-    }
-  }
-  if (activeGame === "command")
-    renderGame(commandState, { canvas, context, status, viewport });
-  else
-    renderInvaders(invadersState, {
-      canvas,
-      context,
-      status,
-      countdown,
-      viewport,
-    });
+  if (matchActive) updateActiveGame(deltaTime);
+  renderActiveGame();
   requestAnimationFrame(animationLoop);
+}
+
+function updateActiveGame(deltaTime: number): void {
+  if (activeGame === "command") {
+    if (!commandState.command) return;
+    updateGame(commandState, viewport, deltaTime);
+    if (commandState.winner) showGameOver(commandState.winner);
+    return;
+  }
+
+  updateInvaders(invadersState, viewport, deltaTime);
+  syncInvadersControls();
+  if (invadersState.winner) showGameOver(invadersState.winner);
+}
+
+function syncInvadersControls(): void {
+  setMoneyDisplay(controls, invadersState.money);
+  setUpgradeAvailability(controls, invadersState.upgrades, invadersState.money);
+}
+
+function renderActiveGame(): void {
+  if (activeGame === "command") {
+    if (countdown.classList.contains("active") || countdown.hasChildNodes()) {
+      countdown.classList.remove("active");
+      countdown.replaceChildren();
+    }
+    renderGame(commandState, { canvas, context, status, viewport });
+    return;
+  }
+  renderInvaders(invadersState, {
+    canvas,
+    context,
+    status,
+    countdown,
+    viewport,
+  });
 }
 function requiredContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
   const result = canvas.getContext("2d");
