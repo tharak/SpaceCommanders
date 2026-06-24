@@ -655,16 +655,24 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
       candidate.side === ship.side &&
       candidate.hp > 0,
   );
-  const target =
-    currentTarget ??
-    findClosestLeastSuppliedBattleship(state, ship.side, ship.pos);
-  if (!target) {
-    ship.supplyMission = SupplyMission.Returning;
-    ship.target = { ...homePlanet.pos };
-    return;
+  if (!currentTarget) {
+    const replacementTarget = findClosestLeastSuppliedBattleship(
+      state,
+      ship.side,
+      ship.pos,
+    );
+    if (!replacementTarget) {
+      ship.supplyMission = SupplyMission.Returning;
+      ship.target = { ...homePlanet.pos };
+      return;
+    }
+    ship.resupplyTargetId = replacementTarget.id;
   }
 
-  ship.resupplyTargetId = target.id;
+  const target =
+    currentTarget ??
+    state.ships.find((candidate) => candidate.id === ship.resupplyTargetId);
+  if (!target) return;
   ship.target = { ...target.pos };
   if (distance(ship.pos, target.pos) > GAME_CONFIG.supply.transferDistance)
     return;
