@@ -165,6 +165,7 @@ function createUpgradeButtons(
   };
   const groups = [
     {
+      className: "upgrade-group--ship",
       label: TEXT.controls.shipUpgrades,
       upgrades: [
         UpgradeType.Damage,
@@ -175,6 +176,7 @@ function createUpgradeButtons(
       ],
     },
     {
+      className: "upgrade-group--base",
       label: TEXT.controls.baseUpgrades,
       upgrades: [
         UpgradeType.BaseSupplyGeneration,
@@ -186,7 +188,7 @@ function createUpgradeButtons(
 
   for (const group of groups) {
     const section = document.createElement("section");
-    section.className = "upgrade-group";
+    section.className = `upgrade-group `;
     const heading = document.createElement("span");
     heading.className = "upgrade-group-title";
     heading.textContent = group.label;
@@ -239,26 +241,6 @@ function createFireModeButtons(
       onChange(mode);
     });
     controls.fireControls.append(button);
-  }
-}
-
-function setupDebugReadouts(): void {
-  for (const id of [
-    "ship-count",
-    "planet-count",
-    "asteroid-count",
-    "game-speed",
-  ]) {
-    const input = requiredInput(`#${id}`);
-    const output = input.parentElement?.querySelector("output");
-    if (!(output instanceof HTMLOutputElement))
-      throw new Error(`Missing output for ${id}`);
-    const update = () => {
-      output.textContent =
-        id === "game-speed" ? `${input.value}×` : input.value;
-    };
-    update();
-    input.addEventListener("input", update);
   }
 }
 
@@ -327,12 +309,5 @@ function requiredElement(selector: string): HTMLElement {
   const element = document.querySelector(selector);
   if (!(element instanceof HTMLElement))
     throw new Error(`Missing required element: ${selector}`);
-  return element;
-}
-
-function requiredInput(selector: string): HTMLInputElement {
-  const element = document.querySelector(selector);
-  if (!(element instanceof HTMLInputElement))
-    throw new Error(`Missing required input: ${selector}`);
   return element;
 }

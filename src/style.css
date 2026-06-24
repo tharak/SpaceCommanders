@@ -249,118 +249,6 @@ input[type="range"] {
   display: grid;
   gap: 11px;
 }
-.panel-title {
-  display: flex;
-  justify-content: space-between;
-  color: #64e3ff;
-  letter-spacing: 1.4px;
-  font:
-    700 13px Barlow Condensed,
-    sans-serif;
-}
-.panel-title button {
-  width: 24px;
-  height: 20px;
-}
-.panel-title + label {
-  border-top: 1px solid #29485a;
-  padding-top: 10px;
-}
-#debug-panel label {
-  display: grid;
-  grid-template-columns: 1fr 88px 30px;
-  align-items: center;
-  gap: 5px;
-  color: #a5c7d7;
-  font:
-    600 11px Barlow Condensed,
-    sans-serif;
-  letter-spacing: 1px;
-}
-#debug-panel label input {
-  width: 88px;
-}
-#debug-panel p {
-  margin: 0;
-  color: #66899b;
-  font:
-    11px/1.2 Rajdhani,
-    sans-serif;
-}
-@media (max-width: 650px) {
-  #command-deck {
-    width: calc(100% - 18px);
-    left: 9px;
-    transform: none;
-    justify-content: space-between;
-    gap: 7px;
-    padding: 8px;
-  }
-  .icon-row button {
-    width: 31px;
-    height: 31px;
-  }
-  .icon-row svg {
-    width: 28px;
-  }
-  #order-readout {
-    top: 62px;
-    bottom: auto;
-    font-size: 9px;
-    max-width: 90%;
-  }
-  #status {
-    font-size: 16px;
-  }
-}
-
-.start-button {
-  width: 100%;
-  min-height: 42px;
-  border: 1px solid #5de5ff;
-  color: #e4fbff;
-  background: #0d5368;
-  box-shadow: 0 0 18px #35cfff55;
-  cursor: pointer;
-  font:
-    700 14px Barlow Condensed,
-    sans-serif;
-  letter-spacing: 2px;
-}
-.start-button:hover {
-  background: #16718b;
-  box-shadow: 0 0 24px #35cfff88;
-}
-.setup-open #debug-panel {
-  display: grid;
-  gap: 11px;
-  top: 50%;
-  right: auto;
-  left: 50%;
-  width: min(360px, calc(100vw - 32px));
-  transform: translate(-50%, -50%);
-  padding: 20px;
-}
-.setup-open #debug-panel::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background: #020a06aa;
-  backdrop-filter: blur(2px);
-}
-.setup-open #command-deck,
-.setup-open #status,
-.setup-open #debug-toggle {
-  display: none;
-}
-.captain-selection > span {
-  font:
-    600 11px/1 Barlow Condensed,
-    sans-serif;
-  letter-spacing: 1.7px;
-  color: #73a4be;
-}
 .game-selection {
   display: grid;
   gap: 8px;
@@ -402,10 +290,12 @@ input[type="range"] {
 }
 #upgrade-controls {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 3fr);
+  gap: 12px;
 }
 .upgrade-group {
   display: grid;
+  min-width: 0;
   gap: 4px;
 }
 .upgrade-group-title {
@@ -417,8 +307,13 @@ input[type="range"] {
 }
 .upgrade-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
+}
+.upgrade-group--ship .upgrade-row {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.upgrade-group--base .upgrade-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .upgrade-item {
   position: relative;
