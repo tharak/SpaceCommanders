@@ -41,25 +41,6 @@ input {
   align-items: flex-start;
   text-shadow: 0 0 16px #1b8ebf99;
 }
-.eyebrow,
-.command-group > span {
-  font:
-    600 10px/1 Barlow Condensed,
-    sans-serif;
-  letter-spacing: 2px;
-  color: #73a4be;
-}
-h1 {
-  margin: 3px 0;
-  font:
-    600 clamp(22px, 4vw, 36px) / 0.85 Barlow Condensed,
-    sans-serif;
-  letter-spacing: 2px;
-}
-h1 b {
-  color: #59dcff;
-  font-weight: 700;
-}
 #status {
   position: absolute;
   top: max(14px, env(safe-area-inset-top));

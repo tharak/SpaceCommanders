@@ -1,10 +1,4 @@
 export const TEXT = {
-  app: {
-    canvasLabel: "Space Commanders tactical map",
-    eyebrow: "FLEET COMMAND // 01",
-    title: "SPACE <b>COMMANDERS</b>",
-    debugLabel: "Open simulation tuning",
-  },
   debug: {
     battleships: "BATTLESHIPS",
     planets: "PLANETS",
@@ -73,15 +67,6 @@ export const TEXT = {
 } as const;
 
 export function applyStaticScreenText(): void {
-  const canvas = document.querySelector("#game");
-  if (canvas) canvas.setAttribute("aria-label", TEXT.app.canvasLabel);
-  const eyebrow = document.querySelector(".eyebrow");
-  if (eyebrow) eyebrow.textContent = TEXT.app.eyebrow;
-  const title = document.querySelector("h1");
-  if (title) title.innerHTML = TEXT.app.title;
-  const debug = document.querySelector("#debug-toggle");
-  if (debug) debug.setAttribute("aria-label", TEXT.app.debugLabel);
-
   const labels: Record<string, string> = {
     upgrades: TEXT.controls.upgrades,
     money: TEXT.controls.money,
