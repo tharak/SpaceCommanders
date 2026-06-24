@@ -45,52 +45,11 @@
         </section>
         <div id="order-readout"></div>
         <aside id="debug-panel" aria-label="Simulation tuning">
-          <div id="setup-title" class="panel-title"></div>
-          <p id="setup-message"></p>
           <div id="game-selection" class="game-selection">
             <button type="button" data-game="command"></button>
             <button type="button" data-game="invaders"></button>
+            <button type="button" data-game="formations"></button>
           </div>
-          <div class="captain-selection">
-            <span data-text="captain-formation"></span>
-            <div id="captain-formation-controls" class="icon-row"></div>
-          </div>
-          <label>
-            <span data-text="battleships"></span>
-            <input
-              id="ship-count"
-              type="range"
-              min="3"
-              max="20"
-              value="10" /><output></output></label
-          ><label>
-            <span data-text="planets"></span>
-            <input
-              id="planet-count"
-              type="range"
-              min="2"
-              max="8"
-              value="5" /><output></output></label
-          ><label>
-            <span data-text="asteroids"></span>
-            <input
-              id="asteroid-count"
-              type="range"
-              min="0"
-              max="6"
-              value="3" /><output></output></label
-          ><label>
-            <span data-text="speed"></span>
-            <input
-              id="game-speed"
-              type="range"
-              min="0.5"
-              max="2"
-              step="0.25"
-              value="1" /><output></output
-          ></label>
-          <p data-text="apply-on-start"></p>
-          <button id="reset-game" class="start-button" type="button"></button>
         </aside>
       </div>
     </main>

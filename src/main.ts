@@ -17,17 +17,18 @@ import {
   createGameState,
   issueFormationOrder,
   resetGame,
+  resetFormations,
+  setFormationModePlayerFormation,
+  updateFormations,
   updateGame,
 } from "./game/simulation";
-import { FireMode, Formation, Side } from "./game/types";
+import { FireMode, Formation } from "./game/types";
 import type { Vec, Viewport } from "./game/types";
 import { renderGame, resizeCanvas } from "./render/gameRenderer";
 import {
-  createCaptainFormationPicker,
   getControls,
   readConfig,
   setupControls,
-  setCaptainFormation,
   animateMoneySpent,
   setSelectedFormation,
   setMoneyDisplay,
@@ -36,7 +37,7 @@ import {
   showReadout,
 } from "./ui/controls";
 
-type GameId = "command" | "invaders";
+type GameId = "command" | "invaders" | "formations";
 
 applyStaticScreenText();
 
@@ -44,17 +45,13 @@ const canvas = requiredCanvas("#game");
 const context = requiredContext(canvas);
 const status = requiredElement("#status");
 const countdown = requiredElement("#enemy-countdown");
-const setupTitle = requiredElement("#setup-title");
-const setupMessage = requiredElement("#setup-message");
-const startButton = requiredElement("#reset-game");
 const controls = getControls();
-const captainFormationControls = requiredElement("#captain-formation-controls");
 const gameSelection = requiredElement("#game-selection");
 const commandState = createGameState();
 const invadersState = createInvadersState();
 let selectedGame: GameId = "command";
 let activeGame: GameId = "command";
-let viewport: Viewport;
+let viewport!: Viewport;
 let lastFrame = performance.now();
 let dragStartCohesion = commandState.cohesion;
 let matchActive = false;
@@ -63,18 +60,22 @@ function reset(): void {
   if (activeGame === "command") {
     resetGame(commandState, readConfig(), viewport);
     setSelectedFormation(controls, commandState.selectedFormation);
+  } else if (activeGame === "formations") {
+    resetFormations(commandState, viewport, commandState.selectedFormation);
+    setSelectedFormation(controls, commandState.selectedFormation);
   } else {
     resetInvaders(invadersState, viewport, commandState.captainFavorite);
     setSelectedFormation(controls, invadersState.selectedFormation);
   }
-  setCaptainFormation(captainFormationControls, commandState.captainFavorite);
   setUpgradePrices(controls, invadersState.upgrades);
   syncInvadersControls();
   showReadout(
     controls,
     activeGame === "command"
       ? TEXT.readout.commandOrder
-      : TEXT.readout.defenseFormation,
+      : activeGame === "formations"
+        ? TEXT.readout.formations
+        : TEXT.readout.defenseFormation,
   );
 }
 
@@ -83,24 +84,13 @@ function startMatch(): void {
   reset();
   matchActive = true;
   document.body.classList.remove("setup-open", "debug-open");
+  document.body.classList.toggle("base-defense", activeGame === "invaders");
 }
 
-function showSetup(title: string, message: string, buttonLabel: string): void {
+function showSetup(): void {
   matchActive = false;
-  setupTitle.textContent = title;
-  setupMessage.textContent = message;
-  startButton.textContent = buttonLabel;
   document.body.classList.remove("debug-open");
   document.body.classList.add("setup-open");
-}
-
-function showGameOver(winner: Side): void {
-  const playerWon = winner === Side.Player;
-  showSetup(
-    playerWon ? TEXT.match.victory : TEXT.match.defeat,
-    playerWon ? TEXT.match.victoryMessage : TEXT.match.defeatMessage,
-    TEXT.match.replay,
-  );
 }
 
 setupControls(
@@ -114,6 +104,11 @@ setupControls(
         return;
       }
       commandState.selectedFormation = formation;
+      if (activeGame === "formations") {
+        setFormationModePlayerFormation(commandState, viewport, formation);
+        setSelectedFormation(controls, formation);
+        return;
+      }
       showReadout(controls, TEXT.readout.formationSelected(formation));
     },
     onFireModeChange: (mode) => {
@@ -154,19 +149,9 @@ setupControls(
       );
       showReadout(controls, TEXT.readout.upgradePurchased(upgrade, cost));
     },
-    onReset: startMatch,
   },
   commandState.selectedFormation,
   commandState.fireMode,
-);
-
-createCaptainFormationPicker(
-  captainFormationControls,
-  (formation) => {
-    commandState.captainFavorite = formation;
-    invadersState.captainFavorite = formation;
-  },
-  commandState.captainFavorite,
 );
 
 gameSelection
@@ -174,16 +159,17 @@ gameSelection
   .forEach((button) => {
     button.addEventListener("click", () => {
       selectedGame =
-        button.dataset.game === "invaders" ? "invaders" : "command";
+        button.dataset.game === "invaders"
+          ? "invaders"
+          : button.dataset.game === "formations"
+            ? "formations"
+            : "command";
       gameSelection
         .querySelectorAll("button")
         .forEach((candidate) =>
           candidate.classList.toggle("active", candidate === button),
         );
-      startButton.textContent =
-        selectedGame === "command"
-          ? TEXT.launcher.startCommanders
-          : TEXT.launcher.startDefense;
+      startMatch();
     });
   });
 gameSelection
@@ -271,13 +257,18 @@ function updateActiveGame(deltaTime: number): void {
   if (activeGame === "command") {
     if (!commandState.command) return;
     updateGame(commandState, viewport, deltaTime);
-    if (commandState.winner) showGameOver(commandState.winner);
+    if (commandState.winner) showSetup();
+    return;
+  }
+  if (activeGame === "formations") {
+    updateFormations(commandState, viewport, deltaTime);
+    if (commandState.winner) showSetup();
     return;
   }
 
   updateInvaders(invadersState, viewport, deltaTime);
   syncInvadersControls();
-  if (invadersState.winner) showGameOver(invadersState.winner);
+  if (invadersState.winner) showSetup();
 }
 
 function syncInvadersControls(): void {
@@ -286,7 +277,7 @@ function syncInvadersControls(): void {
 }
 
 function renderActiveGame(): void {
-  if (activeGame === "command") {
+  if (activeGame === "command" || activeGame === "formations") {
     if (countdown.classList.contains("active") || countdown.hasChildNodes()) {
       countdown.classList.remove("active");
       countdown.replaceChildren();
@@ -321,10 +312,6 @@ function requiredElement(selector: string): HTMLElement {
 }
 
 updateViewport();
-reset();
-showSetup(
-  TEXT.launcher.title,
-  TEXT.launcher.message,
-  TEXT.launcher.startCommanders,
-);
+resetGame(commandState, { ...readConfig(), debugFormationMap: true }, viewport);
+showSetup();
 requestAnimationFrame(animationLoop);

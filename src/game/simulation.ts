@@ -53,6 +53,7 @@ export function resetGame(
 ): void {
   state.config = config;
   state.winner = null;
+  state.formationMode = undefined;
   state.formation = GAME_CONFIG.match.initialFormation;
   state.selectedFormation = GAME_CONFIG.match.initialFormation;
   state.command = null;
@@ -64,6 +65,10 @@ export function resetGame(
   state.previewCohesion = state.cohesion;
   state.projectiles = [];
   state.ships = [];
+  if (config.debugFormationMap) {
+    createFormationDebugMap(state, viewport);
+    return;
+  }
   const { bodies, playerBase, enemyBase } = createMatchMap(config, viewport);
   state.bodies = bodies;
 
@@ -88,6 +93,209 @@ export function resetGame(
     //  spawnShip(side, ShipRole.Captain, offsetPosition(base, 30), id++),
     //);
   }
+}
+
+function createFormationDebugMap(state: GameState, viewport: Viewport): void {
+  state.bodies = [
+    createBasePlanet(0, { x: 48, y: viewport.height / 2 }, Side.Player),
+    createBasePlanet(
+      1,
+      { x: viewport.width - 48, y: viewport.height / 2 },
+      Side.Enemy,
+    ),
+  ];
+
+  const centers = [
+    { x: viewport.width * 0.2, y: viewport.height * 0.28 },
+    { x: viewport.width * 0.5, y: viewport.height * 0.28 },
+    { x: viewport.width * 0.8, y: viewport.height * 0.28 },
+    { x: viewport.width * 0.33, y: viewport.height * 0.72 },
+    { x: viewport.width * 0.67, y: viewport.height * 0.72 },
+  ];
+  const { formationMapShipsPerFormation: count, formationMapSpacing: spacing } =
+    GAME_CONFIG.debug;
+
+  let firstId = 0;
+  for (const [index, formation] of FORMATIONS.entries()) {
+    const ships = spawnFleet(
+      Side.Player,
+      ShipRole.Battleship,
+      centers[index],
+      formation,
+      count,
+      spacing,
+      firstId,
+    );
+    const headings = formationSlotHeadings(formation, count);
+    ships.forEach((ship, shipIndex) => {
+      ship.heading = headings[shipIndex];
+    });
+    state.ships.push(...ships);
+    firstId += ships.length;
+  }
+}
+
+export function resetFormations(
+  state: GameState,
+  viewport: Viewport,
+  playerFormation: Formation,
+): void {
+  resetGame(
+    state,
+    { ...DEFAULT_GAME_CONFIG, ships: 10, planets: 2, asteroids: 0 },
+    viewport,
+  );
+  state.bodies = [];
+  state.formation = playerFormation;
+  state.selectedFormation = playerFormation;
+  const formationMode = createFormationModeFleets(viewport, playerFormation);
+  state.ships = formationMode.ships;
+  state.formationMode = {
+    enemyFormation: formationMode.enemyFormation,
+    charging: false,
+    playerAtTop: false,
+  };
+}
+
+export function setFormationModePlayerFormation(
+  state: GameState,
+  viewport: Viewport,
+  playerFormation: Formation,
+): void {
+  const mode = state.formationMode;
+  if (!mode || mode.charging) return;
+
+  state.formation = playerFormation;
+  state.selectedFormation = playerFormation;
+  const enemyShips = state.ships.filter((ship) => ship.side === Side.Enemy);
+  const playerCenter = {
+    x: viewport.width / 2,
+    y: viewport.height * (mode.playerAtTop ? 0.2 : 0.8),
+  };
+  const playerShips = spawnFleet(
+    Side.Player,
+    ShipRole.Battleship,
+    playerCenter,
+    playerFormation,
+    10,
+    GAME_CONFIG.formation.enemySpacing,
+    0,
+  );
+  state.ships = [...playerShips, ...enemyShips];
+  mode.charging = true;
+}
+
+export function updateFormations(
+  state: GameState,
+  viewport: Viewport,
+  deltaTime: number,
+): void {
+  const mode = state.formationMode;
+  if (!mode?.charging) return;
+
+  advanceFormationFleet(
+    state,
+    viewport,
+    Side.Player,
+    state.formation,
+    {
+      x: viewport.width / 2,
+      y: viewport.height * (mode.playerAtTop ? 0.8 : 0.2),
+    },
+    mode.playerAtTop ? Math.PI : 0,
+    deltaTime,
+  );
+  advanceFormationFleet(
+    state,
+    viewport,
+    Side.Enemy,
+    mode.enemyFormation,
+    {
+      x: viewport.width / 2,
+      y: viewport.height * (mode.playerAtTop ? 0.2 : 0.8),
+    },
+    mode.playerAtTop ? 0 : Math.PI,
+    deltaTime,
+  );
+
+  const fleetsHaveArrived = state.ships.every(
+    (ship) =>
+      ship.target &&
+      distance(ship.pos, ship.target) <= GAME_CONFIG.formation.arrivalDistance,
+  );
+  if (fleetsHaveArrived) {
+    mode.charging = false;
+    mode.playerAtTop = !mode.playerAtTop;
+  }
+
+  const playerShips = state.ships.filter((ship) => ship.side === Side.Player);
+  const enemyShips = state.ships.filter((ship) => ship.side === Side.Enemy);
+  applyGunSteering(playerShips, enemyShips, state.fireMode);
+  applyGunSteering(enemyShips, playerShips, FireMode.AtWill);
+  for (const ship of state.ships) {
+    if (!(ship instanceof Battleship)) continue;
+    ship.gun.update(deltaTime);
+    ship.gun.fire(state, ship);
+  }
+  state.ships = state.ships.filter((ship) => ship.hp > 0);
+  if (!state.ships.some((ship) => ship.side === Side.Player)) {
+    state.winner = Side.Enemy;
+  } else if (!state.ships.some((ship) => ship.side === Side.Enemy)) {
+    state.winner = Side.Player;
+  }
+  updateProjectiles(state, deltaTime, viewport);
+}
+
+function advanceFormationFleet(
+  state: GameState,
+  viewport: Viewport,
+  side: Side,
+  formation: Formation,
+  center: Vec,
+  rotation: number,
+  deltaTime: number,
+): void {
+  const fleet = state.ships.filter((ship) => ship.side === side);
+  const slots = formationSlots(
+    center,
+    formation,
+    fleet.length,
+    GAME_CONFIG.formation.enemySpacing,
+    rotation,
+  );
+  const headings = formationSlotHeadings(formation, fleet.length, rotation);
+  for (const [ship, assignment] of assignNearestFormationSlots(fleet, slots)) {
+    ship.target = assignment.position;
+    ship.targetHeading = headings[assignment.slotIndex];
+  }
+  for (const ship of fleet) moveShip(state, ship, viewport, deltaTime);
+}
+
+function createFormationModeFleets(
+  viewport: Viewport,
+  playerFormation: Formation,
+): { ships: Ship[]; enemyFormation: Formation } {
+  const enemyFormation =
+    FORMATIONS[Math.floor(Math.random() * FORMATIONS.length)];
+  const playerShips = spawnFleet(
+    Side.Player,
+    ShipRole.Battleship,
+    { x: viewport.width / 2, y: viewport.height * 0.8 },
+    playerFormation,
+    10,
+    GAME_CONFIG.formation.enemySpacing,
+    0,
+  );
+  const enemyShips = spawnFleet(
+    Side.Enemy,
+    ShipRole.Battleship,
+    { x: viewport.width / 2, y: viewport.height * 0.2 },
+    enemyFormation,
+    10,
+    GAME_CONFIG.formation.enemySpacing,
+    playerShips.length,
+  );
+  return { ships: [...playerShips, ...enemyShips], enemyFormation };
 }
 
 type MatchMap = {
@@ -219,6 +427,7 @@ export function updateGame(
   elapsed: number,
 ): void {
   if (state.winner) return;
+  if (state.config.debugFormationMap) return;
 
   const deltaTime = elapsed * state.config.speed;
   replenishPlanets(state, deltaTime);
@@ -367,7 +576,11 @@ function spawnResupplyShips(state: GameState): void {
         ship.homeBodyId === planet.id &&
         ship.hp > 0,
     );
-    const target = findLeastSuppliedBattleship(state, planet.base);
+    const target = findClosestLeastSuppliedBattleship(
+      state,
+      planet.base,
+      planet.pos,
+    );
     if (
       activeMission ||
       !target ||
@@ -425,7 +638,9 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
       candidate.side === ship.side &&
       candidate.hp > 0,
   );
-  const target = currentTarget ?? findLeastSuppliedBattleship(state, ship.side);
+  const target =
+    currentTarget ??
+    findClosestLeastSuppliedBattleship(state, ship.side, ship.pos);
   if (!target) {
     ship.supplyMission = SupplyMission.Returning;
     ship.target = { ...homePlanet.pos };
@@ -447,18 +662,23 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
   ship.target = { ...homePlanet.pos };
 }
 
-function findLeastSuppliedBattleship(
+function findClosestLeastSuppliedBattleship(
   state: GameState,
   side: Side,
+  origin: Vec,
 ): Ship | undefined {
   return state.ships
     .filter(
       (ship) =>
         ship.side === side && ship.role === ShipRole.Battleship && ship.hp > 0,
     )
-    .reduce<
-      Ship | undefined
-    >((lowest, ship) => (!lowest || ship.supplies < lowest.supplies ? ship : lowest), undefined);
+    .reduce<Ship | undefined>((best, ship) => {
+      if (!best || ship.supplies < best.supplies) return ship;
+      if (ship.supplies > best.supplies) return best;
+      return distance(ship.pos, origin) < distance(best.pos, origin)
+        ? ship
+        : best;
+    }, undefined);
 }
 
 function assignFormationTargets(state: GameState): void {

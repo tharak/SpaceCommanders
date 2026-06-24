@@ -4,6 +4,7 @@ import { TEXT } from "./strings";
 import { UpgradeType } from "../invaders/upgrade-type";
 import { FireMode, Formation } from "../game/types";
 import type { Config } from "../game/types";
+import { DEFAULT_GAME_CONFIG } from "../game/config";
 
 type Controls = {
   formationControls: HTMLElement;
@@ -17,7 +18,6 @@ type ControlCallbacks = {
   onFormationChange: (formation: Formation) => void;
   onFireModeChange: (mode: FireMode) => void;
   onUpgrade: (upgrade: UpgradeType) => void;
-  onReset: () => void;
 };
 
 export function getControls(): Controls {
@@ -44,46 +44,13 @@ export function setupControls(
   requiredElement("#debug-toggle").addEventListener("click", () =>
     document.body.classList.toggle("debug-open"),
   );
-  requiredElement("#reset-game").addEventListener("click", callbacks.onReset);
-  setupDebugReadouts();
 }
 
 export function readConfig(): Config {
-  return {
-    ships: Number(requiredInput("#ship-count").value),
-    planets: Number(requiredInput("#planet-count").value),
-    asteroids: Number(requiredInput("#asteroid-count").value),
-    speed: Number(requiredInput("#game-speed").value),
-  };
+  return { ...DEFAULT_GAME_CONFIG };
 }
 
 export function showReadout(_controls: Controls, _message: string): void {}
-
-export function createCaptainFormationPicker(
-  root: HTMLElement,
-  onChange: (formation: Formation) => void,
-  initialFormation: Formation,
-): void {
-  for (const formation of FORMATIONS) {
-    const button = document.createElement("button");
-    button.ariaLabel = TEXT.controls.captainFormation;
-    button.dataset.value = formation;
-    button.innerHTML = formationIcon(formation);
-    button.addEventListener("click", () => {
-      selectActive(root, formation);
-      onChange(formation);
-    });
-    root.append(button);
-  }
-  selectActive(root, initialFormation);
-}
-
-export function setCaptainFormation(
-  root: HTMLElement,
-  formation: Formation,
-): void {
-  selectActive(root, formation);
-}
 
 export function setUpgradePrices(
   controls: Controls,

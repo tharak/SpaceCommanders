@@ -10,6 +10,7 @@ export const TEXT = {
     planets: "PLANETS",
     asteroids: "ASTEROID FIELDS",
     speed: "GAME SPEED",
+    formationMap: "FORMATION MAP",
     applyOnStart: "Changes apply when a new match starts.",
   },
   controls: {
@@ -31,12 +32,9 @@ export const TEXT = {
     },
   },
   launcher: {
-    title: "CHOOSE YOUR COMMAND",
-    message: "Select a game, choose a captain formation, and begin.",
-    commanders: "COMMANDERS",
-    commandersDescription: "TACTICAL CONQUEST",
-    defense: "PLANETARY DEFENSE",
-    defenseDescription: "WAVE DEFENSE",
+    commanders: "BASE CONQUEST",
+    defense: "WAVE DEFENSE",
+    formations: "FORMATION DRILL",
     startCommanders: "START COMMANDERS",
     startDefense: "START PLANETARY DEFENSE",
   },
@@ -52,6 +50,7 @@ export const TEXT = {
   readout: {
     commandOrder: "SELECT A FORMATION, THEN TAP THE MAP TO ISSUE AN ORDER",
     defenseFormation: "SELECT A FORMATION TO REORGANIZE YOUR DEFENSIVE FLEET",
+    formations: "SELECT A FORMATION TO POSITION YOUR FLEET",
     formationSelected: (formation: string) =>
       `${formation.toUpperCase()} SELECTED — TAP MAP TO SET FLEET POSITION`,
     defenseFormationActive: (formation: string) =>
@@ -59,7 +58,7 @@ export const TEXT = {
     weaponsHold: "WEAPONS HOLD",
     focusFire: "FOCUS FIRE — TAP AN ENEMY TO DESIGNATE",
     weaponsFree: "WEAPONS FREE — ENGAGING HOSTILES IN RANGE",
-    upgradesDefenseOnly: "UPGRADES ARE AVAILABLE IN PLANETARY DEFENSE",
+    upgradesDefenseOnly: "UPGRADES ARE AVAILABLE IN BASE DEFENSE",
     upgradeNeeded: (cost: number, upgrade: string) =>
       `NEED ${cost} ₿ FOR ${upgrade.toUpperCase()}`,
     upgradePurchased: (upgrade: string, cost: number) =>
@@ -94,6 +93,7 @@ export function applyStaticScreenText(): void {
     asteroids: TEXT.debug.asteroids,
     speed: TEXT.debug.speed,
     "apply-on-start": TEXT.debug.applyOnStart,
+    "formation-map": TEXT.debug.formationMap,
   };
   document.querySelectorAll<HTMLElement>("[data-text]").forEach((element) => {
     const value = labels[element.dataset.text ?? ""];
@@ -103,13 +103,13 @@ export function applyStaticScreenText(): void {
   const commanders = document.querySelector<HTMLButtonElement>(
     "[data-game='command']",
   );
-  if (commanders) {
-    commanders.innerHTML = `${TEXT.launcher.commanders} <small>${TEXT.launcher.commandersDescription}</small>`;
-  }
+  if (commanders) commanders.textContent = TEXT.launcher.commanders;
   const defense = document.querySelector<HTMLButtonElement>(
     "[data-game='invaders']",
   );
-  if (defense) {
-    defense.innerHTML = `${TEXT.launcher.defense} <small>${TEXT.launcher.defenseDescription}</small>`;
-  }
+  if (defense) defense.textContent = TEXT.launcher.defense;
+  const formations = document.querySelector<HTMLButtonElement>(
+    "[data-game='formations']",
+  );
+  if (formations) formations.textContent = TEXT.launcher.formations;
 }

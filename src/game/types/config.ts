@@ -3,4 +3,5 @@ export type Config = {
   planets: number;
   asteroids: number;
   speed: number;
+  debugFormationMap: boolean;
 };

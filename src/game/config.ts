@@ -6,6 +6,7 @@ export const DEFAULT_GAME_CONFIG = {
   planets: 3,
   asteroids: 1,
   speed: 1,
+  debugFormationMap: false,
 } satisfies Config;
 
 export const GAME_CONFIG = {
@@ -53,6 +54,10 @@ export const GAME_CONFIG = {
     captainOffsetX: 20,
     captainOffsetY: 60,
   },
+  debug: {
+    formationMapShipsPerFormation: 6,
+    formationMapSpacing: 28,
+  },
   ship: {
     hp: 50,
     initialVelocityRange: 12,
@@ -61,23 +66,23 @@ export const GAME_CONFIG = {
     morale: 70,
   },
   battleship: {
-    speed: 56,
+    speed: 45,
     startingSupplies: 10,
     gun: {
       attack: 10,
-      range: 135,
+      range: 67.5,
       initialCooldown: 1,
       cooldown: 0.75,
     },
   },
   guardShip: {
-    speed: 28,
+    speed: 22,
     startingSupplies: 0,
   },
   supply: {
     shipCapacity: 1,
     shipHp: 40,
-    shipSpeed: 78,
+    shipSpeed: 62,
     targetSupplyCapacity: 10,
     transferDistance: 32,
     returnDistance: 12,

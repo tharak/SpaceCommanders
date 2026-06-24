@@ -27,4 +27,9 @@ export type GameState = {
   projectiles: Projectile[];
   captainFavorite: Formation;
   winner: Side | null;
+  formationMode?: {
+    enemyFormation: Formation;
+    charging: boolean;
+    playerAtTop: boolean;
+  };
 };
