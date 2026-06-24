@@ -37,7 +37,7 @@ input {
 }
 .topbar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-start;
   text-shadow: 0 0 16px #1b8ebf99;
 }
