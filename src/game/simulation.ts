@@ -156,6 +156,7 @@ export function resetFormations(
     formationSelectionEnabled: true,
     hasSelectedFormation: false,
     playerAtTop: false,
+    chargingTowardTop: true,
   };
 }
 
@@ -166,7 +167,7 @@ export function setFormationModePlayerFormation(
 ): void {
   const mode = state.formationMode;
   if (!mode || !mode.formationSelectionEnabled) return;
-  if (mode.charging) mode.playerAtTop = !mode.playerAtTop;
+  mode.chargingTowardTop = !mode.playerAtTop;
 
   state.formation = playerFormation;
   state.selectedFormation = playerFormation;
@@ -206,9 +207,9 @@ export function updateFormations(
       state.formation,
       {
         x: viewport.width / 2,
-        y: viewport.height * (mode.playerAtTop ? 0.8 : 0.2),
+        y: viewport.height * (mode.chargingTowardTop ? 0.2 : 0.8),
       },
-      mode.playerAtTop ? Math.PI : 0,
+      mode.chargingTowardTop ? 0 : Math.PI,
       deltaTime,
     );
     advanceFormationFleet(
@@ -218,9 +219,9 @@ export function updateFormations(
       mode.enemyFormation,
       {
         x: viewport.width / 2,
-        y: viewport.height * (mode.playerAtTop ? 0.2 : 0.8),
+        y: viewport.height * (mode.chargingTowardTop ? 0.8 : 0.2),
       },
-      mode.playerAtTop ? 0 : Math.PI,
+      mode.chargingTowardTop ? Math.PI : 0,
       deltaTime,
     );
 
@@ -233,12 +234,13 @@ export function updateFormations(
     const allAliveShipsPassedMidpoint =
       playerShips.length > 0 &&
       enemyShips.length > 0 &&
-      (mode.playerAtTop
+      (mode.chargingTowardTop
         ? playerShips.every((ship) => ship.pos.y >= viewport.height / 2) &&
           enemyShips.every((ship) => ship.pos.y <= viewport.height / 2)
         : playerShips.every((ship) => ship.pos.y <= viewport.height / 2) &&
           enemyShips.every((ship) => ship.pos.y >= viewport.height / 2));
     if (allAliveShipsPassedMidpoint) {
+      mode.playerAtTop = mode.chargingTowardTop;
       mode.formationSelectionEnabled = true;
     }
   }

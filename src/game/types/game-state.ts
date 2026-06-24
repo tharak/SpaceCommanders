@@ -33,5 +33,6 @@ export type GameState = {
     formationSelectionEnabled: boolean;
     hasSelectedFormation: boolean;
     playerAtTop: boolean;
+    chargingTowardTop: boolean;
   };
 };
