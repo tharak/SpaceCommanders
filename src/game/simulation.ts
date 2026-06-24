@@ -160,7 +160,6 @@ export function resetFormations(
 
 export function setFormationModePlayerFormation(
   state: GameState,
-  viewport: Viewport,
   playerFormation: Formation,
 ): void {
   const mode = state.formationMode;
@@ -169,21 +168,6 @@ export function setFormationModePlayerFormation(
 
   state.formation = playerFormation;
   state.selectedFormation = playerFormation;
-  const enemyShips = state.ships.filter((ship) => ship.side === Side.Enemy);
-  const playerCenter = {
-    x: viewport.width / 2,
-    y: viewport.height * (mode.playerAtTop ? 0.2 : 0.8),
-  };
-  const playerShips = spawnFleet(
-    Side.Player,
-    ShipRole.Battleship,
-    playerCenter,
-    playerFormation,
-    10,
-    GAME_CONFIG.formation.enemySpacing,
-    0,
-  );
-  state.ships = [...playerShips, ...enemyShips];
   mode.charging = true;
   mode.formationSelectionEnabled = false;
 }
