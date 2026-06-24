@@ -201,10 +201,10 @@ h1 b {
   gap: 4px;
 }
 #formation-controls {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(5, 40px);
 }
 #fire-controls {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 40px);
 }
 #formation-controls button:disabled {
   cursor: not-allowed;
@@ -313,7 +313,8 @@ input[type="range"] {
 }
 #upgrade-controls {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 3fr);
+  grid-template-columns: max-content max-content;
+  justify-content: center;
   gap: 12px;
 }
 .upgrade-group {
@@ -346,9 +347,8 @@ input[type="range"] {
   white-space: nowrap;
 }
 .upgrade-row button {
-  width: 100%;
-  min-width: 0;
-  height: 35px;
+  width: 40px;
+  height: 40px;
   padding: 0 5px;
   border: 1px solid #48728a;
   color: #b8ddeb;
