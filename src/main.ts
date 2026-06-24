@@ -111,7 +111,7 @@ setupControls(
       }
       commandState.selectedFormation = formation;
       if (activeGame === "formations") {
-        setFormationModePlayerFormation(commandState, formation);
+        setFormationModePlayerFormation(commandState, viewport, formation);
         setSelectedFormation(controls, formation);
         setFormationSelectionEnabled(controls, false);
         return;

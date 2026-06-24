@@ -31,6 +31,7 @@ export type GameState = {
     enemyFormation: Formation;
     charging: boolean;
     formationSelectionEnabled: boolean;
+    hasSelectedFormation: boolean;
     playerAtTop: boolean;
   };
 };

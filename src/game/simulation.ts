@@ -154,12 +154,14 @@ export function resetFormations(
     enemyFormation: formationMode.enemyFormation,
     charging: false,
     formationSelectionEnabled: true,
+    hasSelectedFormation: false,
     playerAtTop: false,
   };
 }
 
 export function setFormationModePlayerFormation(
   state: GameState,
+  viewport: Viewport,
   playerFormation: Formation,
 ): void {
   const mode = state.formationMode;
@@ -168,6 +170,22 @@ export function setFormationModePlayerFormation(
 
   state.formation = playerFormation;
   state.selectedFormation = playerFormation;
+  if (!mode.hasSelectedFormation) {
+    const playerShips = state.ships.filter((ship) => ship.side === Side.Player);
+    const slots = formationSlots(
+      { x: viewport.width / 2, y: viewport.height * 0.8 },
+      playerFormation,
+      playerShips.length,
+      GAME_CONFIG.formation.enemySpacing,
+    );
+    const headings = formationSlotHeadings(playerFormation, playerShips.length);
+    playerShips.forEach((ship, index) => {
+      ship.pos = { ...slots[index] };
+      ship.vel = { x: 0, y: 0 };
+      ship.heading = headings[index];
+    });
+    mode.hasSelectedFormation = true;
+  }
   mode.charging = true;
   mode.formationSelectionEnabled = false;
 }
