@@ -55,16 +55,24 @@ export const GAME_CONFIG = {
   },
   ship: {
     hp: 50,
-    guardSpeed: 28,
-    standardSpeed: 56,
     initialVelocityRange: 12,
-    attack: 10,
     defense: 3,
     sight: 260,
     morale: 70,
+  },
+  battleship: {
+    speed: 56,
     startingSupplies: 10,
-    range: 135,
-    initialCooldown: 1,
+    gun: {
+      attack: 10,
+      range: 135,
+      initialCooldown: 1,
+      cooldown: 0.75,
+    },
+  },
+  guardShip: {
+    speed: 28,
+    startingSupplies: 0,
   },
   supply: {
     shipCapacity: 1,
@@ -92,7 +100,6 @@ export const GAME_CONFIG = {
     minimumDamage: 1,
     moraleDamage: 5,
     maximumMorale: 100,
-    weaponCooldown: 0.75,
   },
   movement: {
     separationDistance: 42,

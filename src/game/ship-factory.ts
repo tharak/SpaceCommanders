@@ -1,7 +1,15 @@
 import { formationSlots } from "./formations";
 import { GAME_CONFIG } from "./config";
+import { Gun } from "./gun";
 import { randomBetween } from "./math";
-import { ShipRole, Side } from "./types";
+import {
+  BaseShip,
+  Battleship,
+  GuardShip,
+  ShipRole,
+  Side,
+  SupplyShip,
+} from "./types";
 import type { Formation } from "./types";
 import type { Ship, Vec } from "./types";
 
@@ -11,12 +19,7 @@ export function spawnShip(
   position: Vec,
   id: number,
 ): Ship {
-  const hp = GAME_CONFIG.ship.hp;
-  const speed =
-    role === ShipRole.Guard
-      ? GAME_CONFIG.ship.guardSpeed
-      : GAME_CONFIG.ship.standardSpeed;
-  return {
+  const initial = {
     id,
     side,
     role,
@@ -32,17 +35,32 @@ export function spawnShip(
       ),
     },
     heading: side === Side.Player ? { x: 0, y: -1 } : { x: 0, y: 1 },
-    hp,
-    maxHp: hp,
-    attack: GAME_CONFIG.ship.attack,
+    hp: GAME_CONFIG.ship.hp,
+    maxHp: GAME_CONFIG.ship.hp,
     defense: GAME_CONFIG.ship.defense,
-    speed,
+    speed: GAME_CONFIG.battleship.speed,
     sight: GAME_CONFIG.ship.sight,
     moral: GAME_CONFIG.ship.morale,
-    supplies: role === ShipRole.Guard ? 0 : GAME_CONFIG.ship.startingSupplies,
-    range: GAME_CONFIG.ship.range,
-    cooldown: GAME_CONFIG.ship.initialCooldown,
+    supplies: GAME_CONFIG.battleship.startingSupplies,
   };
+  switch (role) {
+    case ShipRole.Battleship:
+      return new Battleship(initial, new Gun(GAME_CONFIG.battleship.gun));
+    case ShipRole.Guard:
+      return new GuardShip({
+        ...initial,
+        speed: GAME_CONFIG.guardShip.speed,
+        supplies: GAME_CONFIG.guardShip.startingSupplies,
+      });
+    case ShipRole.Supply:
+      return new SupplyShip({
+        ...initial,
+        speed: GAME_CONFIG.supply.shipSpeed,
+        supplies: GAME_CONFIG.supply.shipCapacity,
+      });
+    case ShipRole.Captain:
+      return new BaseShip(initial, ShipRole.Captain);
+  }
 }
 
 export function spawnFleet(

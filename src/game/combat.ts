@@ -1,6 +1,6 @@
 import { distance, distanceToSegment } from "./math";
 import { GAME_CONFIG } from "./config";
-import { ShipRole } from "./types";
+import { Battleship, FireMode } from "./types";
 
 export const FIRING_CONE_ANGLE =
   (GAME_CONFIG.combat.firingConeDegrees * Math.PI) / 180;
@@ -32,37 +32,34 @@ export function hasLineOfSight(
   );
 }
 
-export function isTargetForward(ship: Ship, target: Vec): boolean {
+export function isTargetForward(
+  source: Pick<Ship, "pos" | "heading">,
+  target: Vec,
+): boolean {
   const targetDirection = {
-    x: target.x - ship.pos.x,
-    y: target.y - ship.pos.y,
+    x: target.x - source.pos.x,
+    y: target.y - source.pos.y,
   };
   const targetLength = Math.hypot(targetDirection.x, targetDirection.y) || 1;
-  const headingLength = Math.hypot(ship.heading.x, ship.heading.y) || 1;
+  const headingLength = Math.hypot(source.heading.x, source.heading.y) || 1;
   const dot =
-    (ship.heading.x / headingLength) * (targetDirection.x / targetLength) +
-    (ship.heading.y / headingLength) * (targetDirection.y / targetLength);
+    (source.heading.x / headingLength) * (targetDirection.x / targetLength) +
+    (source.heading.y / headingLength) * (targetDirection.y / targetLength);
   return dot >= Math.cos(FIRING_CONE_HALF_ANGLE);
 }
 
-export function applyAtWillSteering(
+export function applyGunSteering(
   ships: Ship[],
   enemies: Ship[],
-  enabled: boolean,
+  fireMode: FireMode,
 ): void {
   for (const ship of ships) {
-    ship.steeringHeading = undefined;
-    if (!enabled || ship.role !== ShipRole.Battleship) continue;
+    if (!(ship instanceof Battleship) || fireMode !== FireMode.AtWill) continue;
     const target = enemies
-      .filter((enemy) => distance(enemy.pos, ship.pos) < ship.range)
+      .filter((enemy) => distance(enemy.pos, ship.pos) < ship.gun.range)
       .reduce<
         Ship | undefined
-      >((closest, enemy) => (!closest || distance(enemy.pos, ship.pos) < distance(closest.pos, ship.pos) ? enemy : closest), undefined);
-    if (target) {
-      ship.steeringHeading = {
-        x: target.pos.x - ship.pos.x,
-        y: target.pos.y - ship.pos.y,
-      };
-    }
+      >((closest, enemy) => (!closest || distance(enemy.pos, ship.pos) < distance(closest.pos, ship.pos) ? enemy : closest), undefined)?.pos;
+    if (target) ship.gun.aimAt(ship.pos, ship.heading, target);
   }
 }

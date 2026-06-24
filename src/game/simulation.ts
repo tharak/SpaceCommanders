@@ -1,13 +1,14 @@
 import { FORMATIONS } from "./constants";
-import { applyAtWillSteering, hasLineOfSight, isTargetForward } from "./combat";
+import { applyGunSteering } from "./combat";
 import { DEFAULT_GAME_CONFIG, GAME_CONFIG } from "./config";
 import { assignNearestFormationSlots } from "./formation-assignment";
 import { formationSlotHeadings, formationSlots } from "./formations";
 import { spawnFleet, spawnShip } from "./ship-factory";
 import { moveShipWithBoids } from "./ship-movement";
-import { clamp, distance, normalize, randomBetween } from "./math";
+import { clamp, distance, randomBetween } from "./math";
 import {
   Body,
+  Battleship,
   Config,
   GameState,
   Ship,
@@ -228,7 +229,7 @@ export function updateGame(
   applyFireModeSteering(state);
 
   for (const ship of state.ships) {
-    ship.cooldown -= deltaTime;
+    if (ship instanceof Battleship) ship.gun.update(deltaTime);
     if (ship.role === ShipRole.Supply) {
       updateSupplyMission(state, ship);
       if (ship.hp <= 0) continue;
@@ -236,30 +237,11 @@ export function updateGame(
       collectPlanetSupplies(state, ship);
     }
     moveShip(state, ship, viewport, deltaTime);
-    fireWeapons(state, ship);
+    if (ship instanceof Battleship) ship.gun.fire(state, ship);
   }
 
   state.ships = state.ships.filter((ship) => ship.hp > 0);
   updateProjectiles(state, deltaTime, viewport);
-}
-
-function spawnProjectile(
-  state: GameState,
-  from: Vec,
-  to: Vec,
-  side: Side,
-  sourceShipId: number,
-): void {
-  const direction = normalize({ x: to.x - from.x, y: to.y - from.y });
-  state.projectiles.push({
-    pos: { ...from },
-    vel: {
-      x: direction.x * GAME_CONFIG.projectile.speed,
-      y: direction.y * GAME_CONFIG.projectile.speed,
-    },
-    side,
-    sourceShipId,
-  });
 }
 
 function updateProjectiles(
@@ -406,18 +388,16 @@ function spawnSupplyShip(
   target: Ship,
   id: number,
 ): Ship {
-  return {
-    ...spawnShip(side, ShipRole.Supply, homePlanet.pos, id),
-    hp: GAME_CONFIG.supply.shipHp,
-    maxHp: GAME_CONFIG.supply.shipHp,
-    speed: GAME_CONFIG.supply.shipSpeed,
-    supplies: GAME_CONFIG.supply.shipCapacity,
-    range: 0,
-    homeBodyId: homePlanet.id,
-    resupplyTargetId: target.id,
-    supplyMission: SupplyMission.Delivering,
-    target: { ...target.pos },
-  };
+  const ship = spawnShip(side, ShipRole.Supply, homePlanet.pos, id);
+  ship.hp = GAME_CONFIG.supply.shipHp;
+  ship.maxHp = GAME_CONFIG.supply.shipHp;
+  ship.speed = GAME_CONFIG.supply.shipSpeed;
+  ship.supplies = GAME_CONFIG.supply.shipCapacity;
+  ship.homeBodyId = homePlanet.id;
+  ship.resupplyTargetId = target.id;
+  ship.supplyMission = SupplyMission.Delivering;
+  ship.target = { ...target.pos };
+  return ship;
 }
 
 function updateSupplyMission(state: GameState, ship: Ship): void {
@@ -547,12 +527,17 @@ function assignFormationTargets(state: GameState): void {
 }
 
 function applyFireModeSteering(state: GameState): void {
-  applyAtWillSteering(
+  applyGunSteering(
     state.ships.filter(
       (ship) => ship.side === Side.Player && ship.role === ShipRole.Battleship,
     ),
     state.ships.filter((ship) => ship.side === Side.Enemy),
-    state.fireMode === FireMode.AtWill,
+    state.fireMode,
+  );
+  applyGunSteering(
+    state.ships.filter((ship) => ship.side === Side.Enemy),
+    state.ships.filter((ship) => ship.side === Side.Player),
+    FireMode.AtWill,
   );
 }
 
@@ -598,60 +583,4 @@ function moveShip(
         }
       : undefined,
   );
-}
-
-function attackDamage(state: GameState, ship: Ship, defense = 0): number {
-  const bonus =
-    ship.side === Side.Player && state.formation === state.captainFavorite
-      ? GAME_CONFIG.combat.favoriteFormationDamageMultiplier
-      : 1;
-  return Math.max(
-    GAME_CONFIG.combat.minimumDamage,
-    ship.attack * bonus - defense,
-  );
-}
-
-function fireWeapons(state: GameState, ship: Ship): void {
-  const targets = state.ships.filter(
-    (candidate) =>
-      candidate.side !== ship.side &&
-      isTargetForward(ship, candidate.pos) &&
-      distance(candidate.pos, ship.pos) < ship.range &&
-      hasLineOfSight(ship, candidate.pos, state.ships, state.bodies, candidate),
-  );
-  const canFire =
-    ship.role === ShipRole.Battleship &&
-    ship.supplies >= 1 &&
-    ship.cooldown <= 0 &&
-    targets.length > 0 &&
-    (ship.side === Side.Enemy || state.fireMode !== FireMode.Hold);
-  if (!canFire) return;
-
-  let target = targets.reduce((closest, candidate) =>
-    distance(candidate.pos, ship.pos) < distance(closest.pos, ship.pos)
-      ? candidate
-      : closest,
-  );
-  if (
-    ship.side === Side.Player &&
-    state.fireMode === FireMode.Focus &&
-    state.pointer
-  ) {
-    target = targets.reduce((closest, candidate) =>
-      distance(candidate.pos, state.pointer!) <
-      distance(closest.pos, state.pointer!)
-        ? candidate
-        : closest,
-    );
-  }
-
-  target.hp -= attackDamage(state, ship, target.defense);
-  target.moral = clamp(
-    target.moral - GAME_CONFIG.combat.moraleDamage,
-    0,
-    GAME_CONFIG.combat.maximumMorale,
-  );
-  ship.supplies--;
-  ship.cooldown = GAME_CONFIG.combat.weaponCooldown;
-  spawnProjectile(state, ship.pos, target.pos, ship.side, ship.id);
 }

@@ -1,5 +1,5 @@
 import {
-  applyAtWillSteering,
+  applyGunSteering,
   hasLineOfSight,
   isTargetForward,
 } from "../game/combat";
@@ -9,7 +9,14 @@ import { formationSlotHeadings, formationSlots } from "../game/formations";
 import { clamp, distance, normalize } from "../game/math";
 import { spawnFleet, spawnShip } from "../game/ship-factory";
 import { moveShipWithBoids } from "../game/ship-movement";
-import { BodyKind, FireMode, Formation, ShipRole, Side } from "../game/types";
+import {
+  Battleship,
+  BodyKind,
+  FireMode,
+  Formation,
+  ShipRole,
+  Side,
+} from "../game/types";
 import type { Formation as FormationType, Ship, Viewport } from "../game/types";
 import { getUpgradeCost, INVADERS_CONFIG, UPGRADE_CONFIG } from "./config";
 import { UpgradeType } from "./upgrade-type";
@@ -129,11 +136,13 @@ export function purchaseInvadersUpgrade(
   state.money -= cost;
   state.upgrades[upgrade]++;
   for (const ship of state.ships) {
-    ship.attack += config.attack ?? 0;
+    if (ship instanceof Battleship) {
+      ship.gun.attack += config.attack ?? 0;
+      ship.gun.range += config.range ?? 0;
+    }
     ship.speed += config.speed ?? 0;
     ship.maxHp += config.hull ?? 0;
     ship.hp += config.hull ?? 0;
-    ship.range += config.range ?? 0;
   }
   for (let index = 0; index < (config.supplyShips ?? 0); index++) {
     state.supplyShips.push(
@@ -207,11 +216,7 @@ function updatePlayerFleet(
     state.formation,
     INVADERS_CONFIG.player.fleetSize,
   );
-  applyAtWillSteering(
-    state.ships,
-    state.enemies,
-    state.fireMode === FireMode.AtWill,
-  );
+  applyGunSteering(state.ships, state.enemies, state.fireMode);
   for (const [ship, assignment] of assignNearestFormationSlots(
     state.ships,
     slots,
@@ -227,12 +232,14 @@ function updatePlayerFleet(
       elapsed,
       ship.targetHeading,
     );
-    ship.cooldown -= elapsed;
+    if (ship instanceof Battleship) ship.gun.update(elapsed);
   }
 }
 
 function decrementCooldowns(ships: Ship[], elapsed: number): void {
-  for (const ship of ships) ship.cooldown -= elapsed;
+  for (const ship of ships) {
+    if (ship instanceof Battleship) ship.gun.update(elapsed);
+  }
 }
 
 function removeDestroyedShips(state: InvadersState): void {
@@ -245,6 +252,7 @@ function updateEnemyFleet(
   viewport: Viewport,
   elapsed: number,
 ): void {
+  applyGunSteering(state.enemies, state.ships, FireMode.AtWill);
   const enemySlots = formationSlots(
     state.enemyDestination,
     state.enemyFormation,
@@ -322,6 +330,14 @@ function createFleet(
     INVADERS_CONFIG.fleet.spacing,
     state.nextShipId,
   );
+  for (const ship of fleet) {
+    if (ship instanceof Battleship) {
+      ship.gun.cooldownDuration =
+        side === Side.Player
+          ? INVADERS_CONFIG.player.weaponCooldown
+          : INVADERS_CONFIG.enemy.weaponCooldown;
+    }
+  }
   state.nextShipId += fleet.length;
   return fleet;
 }
@@ -329,17 +345,20 @@ function createFleet(
 function fireWeapons(state: InvadersState, enemiesCanAct: boolean): void {
   for (const ship of state.ships) {
     if (
-      ship.role !== ShipRole.Battleship ||
+      !(ship instanceof Battleship) ||
       state.fireMode === FireMode.Hold ||
       ship.supplies < 1 ||
-      ship.cooldown > 0 ||
+      ship.gun.cooldown > 0 ||
       state.enemies.length === 0
     )
       continue;
     const targets = state.enemies.filter(
       (enemy) =>
-        isTargetForward(ship, enemy.pos) &&
-        distance(enemy.pos, ship.pos) < ship.range &&
+        isTargetForward(
+          { pos: ship.pos, heading: ship.gun.heading(ship.heading) },
+          enemy.pos,
+        ) &&
+        distance(enemy.pos, ship.pos) < ship.gun.range &&
         hasLineOfSight(
           ship,
           enemy.pos,
@@ -355,7 +374,7 @@ function fireWeapons(state: InvadersState, enemiesCanAct: boolean): void {
         : closest,
     );
     const damage =
-      ship.attack *
+      ship.gun.attack *
       (state.formation === state.captainFavorite
         ? INVADERS_CONFIG.player.favoriteFormationDamageMultiplier
         : 1);
@@ -364,7 +383,7 @@ function fireWeapons(state: InvadersState, enemiesCanAct: boolean): void {
     state.score += dealtDamage;
     state.money += dealtDamage;
     ship.supplies--;
-    ship.cooldown = INVADERS_CONFIG.player.weaponCooldown;
+    ship.gun.cooldown = ship.gun.cooldownDuration;
     spawnProjectile(state, ship, target.pos);
   }
 
@@ -372,15 +391,18 @@ function fireWeapons(state: InvadersState, enemiesCanAct: boolean): void {
 
   for (const ship of state.enemies) {
     if (
-      ship.role !== ShipRole.Battleship ||
+      !(ship instanceof Battleship) ||
       ship.supplies < 1 ||
-      ship.cooldown > 0
+      ship.gun.cooldown > 0
     )
       continue;
     const targets = state.ships.filter(
       (defender) =>
-        isTargetForward(ship, defender.pos) &&
-        distance(defender.pos, ship.pos) < ship.range &&
+        isTargetForward(
+          { pos: ship.pos, heading: ship.gun.heading(ship.heading) },
+          defender.pos,
+        ) &&
+        distance(defender.pos, ship.pos) < ship.gun.range &&
         hasLineOfSight(
           ship,
           defender.pos,
@@ -398,7 +420,7 @@ function fireWeapons(state: InvadersState, enemiesCanAct: boolean): void {
       undefined,
     );
     const canAttackBase =
-      distance(state.base.pos, ship.pos) < ship.range &&
+      distance(state.base.pos, ship.pos) < ship.gun.range &&
       hasLineOfSight(
         ship,
         state.base.pos,
@@ -408,10 +430,12 @@ function fireWeapons(state: InvadersState, enemiesCanAct: boolean): void {
         state.base,
       );
     if (!target && !canAttackBase) continue;
-    if (target) target.hp -= ship.attack;
-    else state.baseHp = clamp(state.baseHp - ship.attack, 0, state.baseMaxHp);
+    if (target) target.hp -= ship.gun.attack;
+    else {
+      state.baseHp = clamp(state.baseHp - ship.gun.attack, 0, state.baseMaxHp);
+    }
     ship.supplies--;
-    ship.cooldown = INVADERS_CONFIG.enemy.weaponCooldown;
+    ship.gun.cooldown = ship.gun.cooldownDuration;
     spawnProjectile(state, ship, target?.pos ?? state.base.pos);
   }
 }
@@ -512,7 +536,6 @@ function createSupplyShip(
   ship.maxHp = INVADERS_CONFIG.supplyShips.hp;
   ship.speed = INVADERS_CONFIG.supplyShips.speed;
   ship.supplies = 0;
-  ship.range = 0;
   ship.target = { ...position };
   return ship;
 }
