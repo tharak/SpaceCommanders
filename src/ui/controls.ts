@@ -119,6 +119,17 @@ export function setSelectedFormation(
   selectActive(controls.formationControls, formation);
 }
 
+export function setFormationSelectionEnabled(
+  controls: Controls,
+  enabled: boolean,
+): void {
+  controls.formationControls
+    .querySelectorAll<HTMLButtonElement>("button")
+    .forEach((button) => {
+      button.disabled = !enabled;
+    });
+}
+
 function createFormationButtons(
   controls: Controls,
   onChange: (formation: Formation) => void,

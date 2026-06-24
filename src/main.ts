@@ -31,6 +31,7 @@ import {
   setupControls,
   animateMoneySpent,
   setSelectedFormation,
+  setFormationSelectionEnabled,
   setMoneyDisplay,
   setUpgradeAvailability,
   setUpgradePrices,
@@ -67,6 +68,11 @@ function reset(): void {
     resetInvaders(invadersState, viewport, commandState.captainFavorite);
     setSelectedFormation(controls, invadersState.selectedFormation);
   }
+  setFormationSelectionEnabled(
+    controls,
+    activeGame !== "formations" ||
+      (commandState.formationMode?.formationSelectionEnabled ?? true),
+  );
   setUpgradePrices(controls, invadersState.upgrades);
   syncInvadersControls();
   showReadout(
@@ -107,6 +113,7 @@ setupControls(
       if (activeGame === "formations") {
         setFormationModePlayerFormation(commandState, viewport, formation);
         setSelectedFormation(controls, formation);
+        setFormationSelectionEnabled(controls, false);
         return;
       }
       showReadout(controls, TEXT.readout.formationSelected(formation));
@@ -262,6 +269,10 @@ function updateActiveGame(deltaTime: number): void {
   }
   if (activeGame === "formations") {
     updateFormations(commandState, viewport, deltaTime);
+    setFormationSelectionEnabled(
+      controls,
+      commandState.formationMode?.formationSelectionEnabled ?? false,
+    );
     if (commandState.winner) showSetup();
     return;
   }
