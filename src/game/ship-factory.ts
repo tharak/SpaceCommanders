@@ -38,10 +38,10 @@ export function spawnShip(
     hp: GAME_CONFIG.ship.hp,
     maxHp: GAME_CONFIG.ship.hp,
     defense: GAME_CONFIG.ship.defense,
-    speed: GAME_CONFIG.battleship.speed,
+    speed: GAME_CONFIG.ship.speed,
     sight: GAME_CONFIG.ship.sight,
     moral: GAME_CONFIG.ship.morale,
-    supplies: GAME_CONFIG.battleship.startingSupplies,
+    supplies: GAME_CONFIG.ship.startingSupplies,
   };
   switch (role) {
     case ShipRole.Battleship:
@@ -49,7 +49,7 @@ export function spawnShip(
     case ShipRole.Guard:
       return new GuardShip({
         ...initial,
-        speed: GAME_CONFIG.guardShip.speed,
+        speed: GAME_CONFIG.ship.speed,
         supplies: GAME_CONFIG.guardShip.startingSupplies,
       });
     case ShipRole.Supply:

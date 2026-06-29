@@ -38,7 +38,7 @@ export const INVADERS_CONFIG = {
     hp: 40,
     speed: 78,
     baseLoadingDistance: 12,
-    deliveryDistance: 32,
+    deliveryDistance: 72,
     targetSupplyCapacity: 10,
   },
 } as const;

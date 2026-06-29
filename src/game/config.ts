@@ -2,7 +2,7 @@ import { Formation } from "./types";
 import type { Config } from "./types";
 
 export const DEFAULT_GAME_CONFIG = {
-  ships: 5,
+  ships: 6,
   planets: 3,
   asteroids: 1,
   speed: 1,
@@ -46,11 +46,7 @@ export const GAME_CONFIG = {
   },
   formation: {
     arrivalDistance: 4,
-    enemySpacing: 45,
-    playerSpacingBase: 80,
-    playerCohesionSpacingMultiplier: 50,
-    playerMinSpacing: 25,
-    playerMaxSpacing: 70,
+    spacing: 45,
     captainOffsetX: 20,
     captainOffsetY: 60,
   },
@@ -62,12 +58,24 @@ export const GAME_CONFIG = {
     hp: 50,
     initialVelocityRange: 12,
     defense: 3,
+    speed: 45,
     sight: 260,
     morale: 70,
+    startingSupplies: 10,
+    render: {
+      fillHeight: 18,
+      bottom: 8,
+      noseY: -10,
+      wingX: 7,
+      tailY: 8,
+      tailNotchY: 5,
+      guardWingX: 8,
+      guardInnerWingX: 6,
+      guardShoulderY: -6,
+      healthBarWidth: 20,
+    },
   },
   battleship: {
-    speed: 45,
-    startingSupplies: 10,
     gun: {
       attack: 10,
       range: 67.5,
@@ -76,7 +84,6 @@ export const GAME_CONFIG = {
     },
   },
   guardShip: {
-    speed: 22,
     startingSupplies: 0,
   },
   supply: {
@@ -84,9 +91,15 @@ export const GAME_CONFIG = {
     shipHp: 40,
     shipSpeed: 62,
     targetSupplyCapacity: 10,
-    transferDistance: 32,
-    returnDistance: 12,
+    transferDistance: 72,
+    returnDistance: 36,
     collectionRange: 45,
+    render: {
+      size: 10,
+      fillHeight: 10,
+      bottom: 5,
+      healthBarWidth: 20,
+    },
   },
   planet: {
     stockCapacityRadiusDivisor: 2,

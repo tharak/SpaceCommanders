@@ -571,6 +571,7 @@ function updateSupplyShip(
   elapsed: number,
 ): void {
   if (ship.supplies === 0) {
+    ship.resupplyTargetId = undefined;
     ship.target = { ...state.base.pos };
     if (
       distance(ship.pos, state.base.pos) <=
@@ -583,11 +584,29 @@ function updateSupplyShip(
       }
     }
   } else {
-    const target = state.ships.reduce<Ship | undefined>(
-      (lowest, defender) =>
-        !lowest || defender.supplies < lowest.supplies ? defender : lowest,
-      undefined,
+    let target = state.ships.find(
+      (defender) => defender.id === ship.resupplyTargetId && defender.hp > 0,
     );
+    if (
+      !target ||
+      target.supplies >= INVADERS_CONFIG.supplyShips.targetSupplyCapacity
+    ) {
+      target = state.ships.reduce<Ship | undefined>(
+        (lowest, defender) => {
+          if (
+            defender.supplies >=
+            INVADERS_CONFIG.supplyShips.targetSupplyCapacity
+          )
+            return lowest;
+          return !lowest || defender.supplies < lowest.supplies
+            ? defender
+            : lowest;
+        },
+        undefined,
+      );
+      ship.resupplyTargetId = target?.id;
+    }
+
     if (target) {
       ship.target = { ...target.pos };
       if (
@@ -598,9 +617,14 @@ function updateSupplyShip(
           ship.supplies,
           INVADERS_CONFIG.supplyShips.targetSupplyCapacity - target.supplies,
         );
-        target.supplies += transferred;
-        ship.supplies -= transferred;
+        if (transferred > 0) {
+          target.supplies += transferred;
+          ship.supplies -= transferred;
+          if (ship.supplies <= 0) ship.resupplyTargetId = undefined;
+        }
       }
+    } else {
+      ship.target = { ...state.base.pos };
     }
   }
   moveShipWithBoids(

@@ -1,4 +1,5 @@
 import { FIRING_CONE_HALF_ANGLE } from "../game/combat";
+import { GAME_CONFIG } from "../game/config";
 import { COLORS } from "../game/constants";
 import { Battleship, ShipRole, Side } from "../game/types";
 import type { Ship } from "../game/types";
@@ -9,8 +10,12 @@ export function drawShips(
 ): void {
   const scale = mobileShipScale();
   for (const ship of ships) {
-    const fillHeight = ship.role === ShipRole.Supply ? 10 : 18;
-    const bottom = ship.role === ShipRole.Supply ? 5 : 8;
+    const render =
+      ship.role === ShipRole.Supply
+        ? GAME_CONFIG.supply.render
+        : GAME_CONFIG.ship.render;
+    const fillHeight = render.fillHeight;
+    const bottom = render.bottom;
     const health = Math.max(0, Math.min(1, ship.hp / ship.maxHp));
 
     context.save();
@@ -19,20 +24,35 @@ export function drawShips(
     context.rotate(Math.atan2(ship.heading.y, ship.heading.x) + Math.PI / 2);
     context.beginPath();
     if (ship.role === ShipRole.Supply) {
-      context.rect(-5, -5, 10, 10);
+      const halfSize = GAME_CONFIG.supply.render.size / 2;
+      context.rect(
+        -halfSize,
+        -halfSize,
+        GAME_CONFIG.supply.render.size,
+        GAME_CONFIG.supply.render.size,
+      );
     } else if (ship.role === ShipRole.Guard) {
-      context.moveTo(0, -10);
-      context.lineTo(8, -6);
-      context.lineTo(6, 5);
-      context.lineTo(0, 10);
-      context.lineTo(-6, 5);
-      context.lineTo(-8, -6);
+      const {
+        noseY,
+        tailY,
+        tailNotchY,
+        guardWingX,
+        guardInnerWingX,
+        guardShoulderY,
+      } = GAME_CONFIG.ship.render;
+      context.moveTo(0, noseY);
+      context.lineTo(guardWingX, guardShoulderY);
+      context.lineTo(guardInnerWingX, tailNotchY);
+      context.lineTo(0, tailY);
+      context.lineTo(-guardInnerWingX, tailNotchY);
+      context.lineTo(-guardWingX, guardShoulderY);
       context.closePath();
     } else {
-      context.moveTo(0, -10);
-      context.lineTo(7, 8);
-      context.lineTo(0, 5);
-      context.lineTo(-7, 8);
+      const { noseY, wingX, tailY, tailNotchY } = GAME_CONFIG.ship.render;
+      context.moveTo(0, noseY);
+      context.lineTo(wingX, tailY);
+      context.lineTo(0, tailNotchY);
+      context.lineTo(-wingX, tailY);
       context.closePath();
     }
 
@@ -40,9 +60,9 @@ export function drawShips(
     context.clip();
     context.fillStyle = COLORS[ship.side];
     context.fillRect(
-      -10,
+      -render.healthBarWidth / 2,
       bottom - fillHeight * health,
-      20,
+      render.healthBarWidth,
       fillHeight * health,
     );
     context.restore();

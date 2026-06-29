@@ -5,7 +5,7 @@ import { assignNearestFormationSlots } from "./formation-assignment";
 import { formationSlotHeadings, formationSlots } from "./formations";
 import { spawnFleet, spawnShip } from "./ship-factory";
 import { moveShipWithBoids } from "./ship-movement";
-import { clamp, distance, randomBetween } from "./math";
+import { distance, randomBetween } from "./math";
 import {
   Body,
   Battleship,
@@ -82,9 +82,7 @@ export function resetGame(
         base,
         GAME_CONFIG.match.initialFormation,
         config.ships,
-        side === Side.Player
-          ? playerFormationSpacing(state.cohesion)
-          : GAME_CONFIG.formation.enemySpacing,
+        GAME_CONFIG.formation.spacing,
         id,
       ),
     );
@@ -177,7 +175,7 @@ export function setFormationModePlayerFormation(
       { x: viewport.width / 2, y: viewport.height * 0.8 },
       playerFormation,
       playerShips.length,
-      GAME_CONFIG.formation.enemySpacing,
+      GAME_CONFIG.formation.spacing,
     );
     const headings = formationSlotHeadings(playerFormation, playerShips.length);
     playerShips.forEach((ship, index) => {
@@ -277,7 +275,7 @@ function advanceFormationFleet(
     center,
     formation,
     fleet.length,
-    GAME_CONFIG.formation.enemySpacing,
+    GAME_CONFIG.formation.spacing,
     rotation,
   );
   const headings = formationSlotHeadings(formation, fleet.length, rotation);
@@ -300,7 +298,7 @@ function createFormationModeFleets(
     { x: viewport.width / 2, y: viewport.height * 0.8 },
     playerFormation,
     10,
-    GAME_CONFIG.formation.enemySpacing,
+    GAME_CONFIG.formation.spacing,
     0,
   );
   const enemyShips = spawnFleet(
@@ -309,7 +307,7 @@ function createFormationModeFleets(
     { x: viewport.width / 2, y: viewport.height * 0.2 },
     enemyFormation,
     10,
-    GAME_CONFIG.formation.enemySpacing,
+    GAME_CONFIG.formation.spacing,
     playerShips.length,
   );
   return { ships: [...playerShips, ...enemyShips], enemyFormation };
@@ -420,14 +418,6 @@ function createAsteroidField(id: number, viewport: Viewport): Body {
   };
 }
 
-function playerFormationSpacing(cohesion: number): number {
-  return clamp(
-    GAME_CONFIG.formation.playerSpacingBase -
-      cohesion * GAME_CONFIG.formation.playerCohesionSpacingMultiplier,
-    GAME_CONFIG.formation.playerMinSpacing,
-    GAME_CONFIG.formation.playerMaxSpacing,
-  );
-}
 
 export function issueFormationOrder(state: GameState, destination: Vec): void {
   state.formation = state.selectedFormation;
@@ -648,6 +638,12 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
     return;
   }
 
+  if (ship.supplies <= 0) {
+    ship.supplyMission = SupplyMission.Returning;
+    ship.target = { ...homePlanet.pos };
+    return;
+  }
+
   const currentTarget = state.ships.find(
     (candidate) =>
       candidate.id === ship.resupplyTargetId &&
@@ -661,7 +657,10 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
       ship.side,
       ship.pos,
     );
-    if (!replacementTarget) {
+    if (
+      !replacementTarget ||
+      replacementTarget.supplies >= GAME_CONFIG.supply.targetSupplyCapacity
+    ) {
       ship.supplyMission = SupplyMission.Returning;
       ship.target = { ...homePlanet.pos };
       return;
@@ -673,6 +672,26 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
     currentTarget ??
     state.ships.find((candidate) => candidate.id === ship.resupplyTargetId);
   if (!target) return;
+  if (target.supplies >= GAME_CONFIG.supply.targetSupplyCapacity) {
+    const replacementTarget = findClosestLeastSuppliedBattleship(
+      state,
+      ship.side,
+      ship.pos,
+    );
+    if (
+      replacementTarget &&
+      replacementTarget.id !== target.id &&
+      replacementTarget.supplies < GAME_CONFIG.supply.targetSupplyCapacity
+    ) {
+      ship.resupplyTargetId = replacementTarget.id;
+      ship.target = { ...replacementTarget.pos };
+      return;
+    }
+    ship.supplyMission = SupplyMission.Returning;
+    ship.target = { ...homePlanet.pos };
+    return;
+  }
+
   ship.target = { ...target.pos };
   if (distance(ship.pos, target.pos) > GAME_CONFIG.supply.transferDistance)
     return;
@@ -681,6 +700,11 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
     ship.supplies,
     GAME_CONFIG.supply.targetSupplyCapacity - target.supplies,
   );
+  if (transferred <= 0) {
+    ship.supplyMission = SupplyMission.Returning;
+    ship.target = { ...homePlanet.pos };
+    return;
+  }
   target.supplies += transferred;
   ship.supplies -= transferred;
   ship.supplyMission = SupplyMission.Returning;
@@ -731,10 +755,7 @@ function assignFormationTargets(state: GameState): void {
     const battleships = fleet.filter(
       (ship) => ship.role === ShipRole.Battleship,
     );
-    const spacing =
-      side === Side.Player
-        ? playerFormationSpacing(state.cohesion)
-        : GAME_CONFIG.formation.enemySpacing;
+    const spacing = GAME_CONFIG.formation.spacing;
     const rotation = side === Side.Player ? state.formationRotation : 0;
     const targets = formationSlots(
       center,
@@ -787,9 +808,6 @@ function applyFireModeSteering(state: GameState): void {
 }
 
 function collectPlanetSupplies(state: GameState, ship: Ship): void {
-  if (ship.supplyMission == null) {
-    return;
-  }
   for (const planet of state.bodies) {
     if (
       planet.kind !== BodyKind.Planet ||
@@ -803,6 +821,7 @@ function collectPlanetSupplies(state: GameState, ship: Ship): void {
       planet.stock ?? 0,
       GAME_CONFIG.supply.targetSupplyCapacity - ship.supplies,
     );
+    if (amount <= 0) continue;
     ship.supplies += amount;
     planet.stock = (planet.stock ?? 0) - amount;
   }
