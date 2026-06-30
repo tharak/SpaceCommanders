@@ -176,11 +176,15 @@ input {
   display: flex;
   gap: 4px;
 }
+#fleet-controls,
 #formation-controls,
 #fire-controls,
 #speed-controls {
   display: grid;
   gap: 4px;
+}
+#fleet-controls {
+  grid-template-columns: repeat(3, 58px);
 }
 #formation-controls {
   grid-template-columns: repeat(5, 40px);
@@ -193,6 +197,7 @@ input {
   cursor: not-allowed;
   opacity: 0.35;
 }
+#fleet-controls button,
 #formation-controls button,
 #fire-controls button,
 #speed-controls button {
@@ -209,9 +214,18 @@ input {
   width: 33px;
   height: 27px;
 }
-#speed-controls button {
+#speed-controls button,
+#fleet-controls button {
   font: 700 11px/1 Barlow Condensed, sans-serif;
   letter-spacing: 0.8px;
+}
+#fleet-controls button {
+  border-color: color-mix(in srgb, var(--fleet-color) 72%, #31576b);
+  color: var(--fleet-color);
+}
+#fleet-controls button.active {
+  background: color-mix(in srgb, var(--fleet-color) 18%, #081724);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--fleet-color) 45%, transparent);
 }
 output {
   color: #74eaff;
@@ -269,6 +283,10 @@ input[type="range"] {
   .command-row {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+  #fleet-controls,
+  #formation-controls {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   #formation-controls {
     grid-template-columns: repeat(5, minmax(0, 1fr));

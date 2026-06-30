@@ -7,7 +7,14 @@ import type { ShipSpeedMode } from "../game/types";
 import type { Config } from "../game/types";
 import { DEFAULT_GAME_CONFIG } from "../game/config";
 
+export type FleetControlOption = {
+  id: string;
+  name: string;
+  color: string;
+};
+
 type Controls = {
+  fleetControls: HTMLElement;
   formationControls: HTMLElement;
   fireControls: HTMLElement;
   speedControls: HTMLElement;
@@ -17,6 +24,7 @@ type Controls = {
 };
 
 type ControlCallbacks = {
+  onFleetChange: (fleetId: string) => void;
   onFormationChange: (formation: Formation) => void;
   onFireModeChange: (mode: FireMode) => void;
   onShipSpeedModeChange: (mode: ShipSpeedMode) => void;
@@ -25,6 +33,7 @@ type ControlCallbacks = {
 
 export function getControls(): Controls {
   return {
+    fleetControls: requiredElement("#fleet-controls"),
     formationControls: requiredElement("#formation-controls"),
     fireControls: requiredElement("#fire-controls"),
     speedControls: requiredElement("#speed-controls"),
@@ -37,10 +46,13 @@ export function getControls(): Controls {
 export function setupControls(
   controls: Controls,
   callbacks: ControlCallbacks,
+  initialFleetOptions: FleetControlOption[],
+  initialFleetId: string,
   initialFormation: Formation,
   initialFireMode: FireMode,
   initialShipSpeedMode: ShipSpeedMode,
 ): void {
+  setFleetOptions(controls, initialFleetOptions, initialFleetId, callbacks.onFleetChange);
   createFormationButtons(controls, callbacks.onFormationChange);
   createFireModeButtons(controls, callbacks.onFireModeChange);
   createShipSpeedModeButtons(controls, callbacks.onShipSpeedModeChange);
@@ -58,6 +70,35 @@ export function readConfig(): Config {
 }
 
 export function showReadout(_controls: Controls, _message: string): void {}
+
+export function setFleetOptions(
+  controls: Controls,
+  fleets: FleetControlOption[],
+  selectedFleetId: string,
+  onChange?: (fleetId: string) => void,
+): void {
+  controls.fleetControls.replaceChildren();
+  for (const fleet of fleets) {
+    const button = document.createElement("button");
+    button.ariaLabel = fleet.name + " fleet";
+    button.dataset.value = fleet.id;
+    button.style.setProperty("--fleet-color", fleet.color);
+    button.textContent = fleet.name.slice(0, 3).toUpperCase();
+    button.classList.toggle("active", fleet.id === selectedFleetId);
+    button.addEventListener("click", () => {
+      selectActive(controls.fleetControls, fleet.id);
+      onChange?.(fleet.id);
+    });
+    controls.fleetControls.append(button);
+  }
+}
+
+export function setSelectedFleet(
+  controls: Controls,
+  fleetId: string,
+): void {
+  selectActive(controls.fleetControls, fleetId);
+}
 
 export function setUpgradePrices(
   controls: Controls,
@@ -124,6 +165,13 @@ export function setSelectedFormation(
   formation: Formation,
 ): void {
   selectActive(controls.formationControls, formation);
+}
+
+export function setSelectedShipSpeedMode(
+  controls: Controls,
+  mode: ShipSpeedMode,
+): void {
+  selectActive(controls.speedControls, mode);
 }
 
 export function setFormationSelectionEnabled(

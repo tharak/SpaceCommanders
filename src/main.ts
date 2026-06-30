@@ -4,9 +4,12 @@ import {
   purchaseInvadersUpgrade,
   resetInvaders,
   applyInvadersFormation,
+  invadersFleetCommands,
   selectInvadersFormation,
+  selectInvadersFleet,
   setInvadersAlignment,
   setInvadersFireMode,
+  setInvadersFleetSpeedMode,
   updateInvaders,
 } from "./invaders/simulation";
 import { renderInvaders } from "./invaders/renderer";
@@ -15,10 +18,13 @@ import { UpgradeType } from "./invaders/upgrade-type";
 import { applyStaticScreenText, TEXT } from "./ui/strings";
 import {
   createGameState,
+  playerFleetCommands,
   issueFormationOrder,
   resetGame,
   resetFormations,
+  selectPlayerFleet,
   setFormationModePlayerFormation,
+  setSelectedFleetFormation,
   setFleetSpeedMode,
   updateFormations,
   updateGame,
@@ -33,8 +39,11 @@ import {
   setupControls,
   animateMoneySpent,
   setSelectedFormation,
+  setFleetOptions,
   setFormationSelectionEnabled,
   setMoneyDisplay,
+  setSelectedFleet,
+  setSelectedShipSpeedMode,
   setUpgradeAvailability,
   setUpgradePrices,
   showReadout,
@@ -59,6 +68,41 @@ let lastFrame = performance.now();
 let dragStartCohesion = commandState.cohesion;
 let matchActive = false;
 
+function activeFleetOptions() {
+  return (activeGame === "invaders"
+    ? invadersFleetCommands(invadersState)
+    : playerFleetCommands(commandState)
+  ).map((fleet) => ({
+    id: fleet.id,
+    name: fleet.name,
+    color: fleet.color,
+  }));
+}
+
+function activeSelectedFleetId(): string {
+  return activeGame === "invaders"
+    ? invadersState.selectedFleetId
+    : commandState.selectedFleetId;
+}
+
+function syncFleetControls(): void {
+  setFleetOptions(controls, activeFleetOptions(), activeSelectedFleetId(), selectActiveFleet);
+}
+
+function selectActiveFleet(fleetId: string): void {
+  if (activeGame === "invaders") {
+    selectInvadersFleet(invadersState, fleetId);
+    setSelectedFormation(controls, invadersState.selectedFormation);
+    setSelectedFleet(controls, invadersState.selectedFleetId);
+    setSelectedShipSpeedMode(controls, selectedFleetSpeedMode());
+  } else {
+    selectPlayerFleet(commandState, fleetId);
+    setSelectedFormation(controls, commandState.selectedFormation);
+    setSelectedFleet(controls, commandState.selectedFleetId);
+    setSelectedShipSpeedMode(controls, selectedFleetSpeedMode());
+  }
+}
+
 function reset(): void {
   if (activeGame === "command") {
     resetGame(commandState, readConfig(), viewport);
@@ -70,6 +114,8 @@ function reset(): void {
     resetInvaders(invadersState, viewport, commandState.captainFavorite);
     setSelectedFormation(controls, invadersState.selectedFormation);
   }
+  syncFleetControls();
+  setSelectedShipSpeedMode(controls, selectedFleetSpeedMode());
   setFormationSelectionEnabled(
     controls,
     activeGame !== "formations" ||
@@ -104,6 +150,9 @@ function showSetup(): void {
 setupControls(
   controls,
   {
+    onFleetChange: (fleetId) => {
+      selectActiveFleet(fleetId);
+    },
     onFormationChange: (formation) => {
       if (activeGame === "invaders") {
         selectInvadersFormation(invadersState, formation);
@@ -111,7 +160,7 @@ setupControls(
         showReadout(controls, TEXT.readout.defenseFormationActive(formation));
         return;
       }
-      commandState.selectedFormation = formation;
+      setSelectedFleetFormation(commandState, formation);
       if (activeGame === "formations") {
         setFormationModePlayerFormation(commandState, viewport, formation);
         setSelectedFormation(controls, formation);
@@ -121,7 +170,11 @@ setupControls(
       showReadout(controls, TEXT.readout.formationSelected(formation));
     },
     onShipSpeedModeChange: (mode: ShipSpeedMode) => {
-      setFleetSpeedMode(commandState, commandState.selectedFleetId, mode);
+      if (activeGame === "invaders") {
+        setInvadersFleetSpeedMode(invadersState, invadersState.selectedFleetId, mode);
+      } else {
+        setFleetSpeedMode(commandState, commandState.selectedFleetId, mode);
+      }
       const message =
         mode === "hold"
           ? TEXT.readout.shipsHold
@@ -169,6 +222,8 @@ setupControls(
       showReadout(controls, TEXT.readout.upgradePurchased(upgrade, cost));
     },
   },
+  activeFleetOptions(),
+  commandState.selectedFleetId,
   commandState.selectedFormation,
   commandState.fireMode,
   selectedFleetSpeedMode(),
@@ -302,6 +357,9 @@ function syncInvadersControls(): void {
 }
 
 function selectedFleetSpeedMode(): ShipSpeedMode {
+  if (activeGame === "invaders") {
+    return invadersState.fleets[invadersState.selectedFleetId]?.speedMode ?? "normal";
+  }
   return commandState.fleets[commandState.selectedFleetId]?.speedMode ?? "normal";
 }
 

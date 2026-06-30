@@ -3,7 +3,7 @@ import {
   hasLineOfSight,
   isTargetForward,
 } from "../game/combat";
-import { FORMATIONS } from "../game/constants";
+import { FORMATIONS, PLAYER_FLEET_COLORS, PLAYER_FLEET_IDS, PLAYER_FLEET_NAMES } from "../game/constants";
 import { assignNearestFormationSlots } from "../game/formation-assignment";
 import { formationSlotHeadings, formationSlots } from "../game/formations";
 import { clamp, distance, normalize } from "../game/math";
@@ -26,6 +26,8 @@ export function createInvadersState(): InvadersState {
   return {
     formation: Formation.Line,
     selectedFormation: Formation.Line,
+    selectedFleetId: PLAYER_FLEET_IDS[0],
+    fleets: createInvadersFleetCommands(),
     enemyFormation: Formation.Line,
     enemyDestination: { x: 0, y: 0 },
     playerSteeringTarget: null,
@@ -62,6 +64,39 @@ export function createInvadersState(): InvadersState {
   };
 }
 
+function createInvadersFleetCommands(): InvadersState["fleets"] {
+  const fleets: InvadersState["fleets"] = {};
+  for (const id of PLAYER_FLEET_IDS) {
+    fleets[id] = {
+      id,
+      side: Side.Player,
+      name: PLAYER_FLEET_NAMES[id],
+      color: PLAYER_FLEET_COLORS[id],
+      formation: Formation.Line,
+      selectedFormation: Formation.Line,
+      command: null,
+      destination: null,
+      formationRotation: 0,
+      cohesion: 1,
+      speedMode: "normal",
+    };
+  }
+  return fleets;
+}
+
+export function invadersFleetCommands(state: InvadersState): InvadersState["fleets"][string][] {
+  return Object.values(state.fleets);
+}
+
+export function selectInvadersFleet(state: InvadersState, fleetId: string): void {
+  const fleet = state.fleets[fleetId];
+  if (!fleet) return;
+  state.selectedFleetId = fleetId;
+  state.formation = fleet.formation;
+  state.selectedFormation = fleet.selectedFormation;
+  state.playerSteeringTarget = fleet.command;
+}
+
 export function resetInvaders(
   state: InvadersState,
   viewport: Viewport,
@@ -69,6 +104,8 @@ export function resetInvaders(
 ): void {
   state.formation = Formation.Line;
   state.selectedFormation = Formation.Line;
+  state.selectedFleetId = PLAYER_FLEET_IDS[0];
+  state.fleets = createInvadersFleetCommands();
   state.captainFavorite = captain;
   state.fireMode = FireMode.AtWill;
   state.playerSteeringTarget = null;
@@ -99,13 +136,16 @@ export function resetInvaders(
   state.waveOffset = 0;
   state.nextShipId = 1;
   state.winner = null;
-  state.ships = createFleet(
-    Side.Player,
-    playerFleetCenter(viewport),
-    state.formation,
-    ShipRole.Battleship,
-    state,
-    INVADERS_CONFIG.player.fleetSize,
+  state.ships = PLAYER_FLEET_IDS.flatMap((fleetId, fleetIndex) =>
+    createFleet(
+      Side.Player,
+      playerFleetCenter(viewport, fleetIndex),
+      state.fleets[fleetId].formation,
+      ShipRole.Battleship,
+      state,
+      INVADERS_CONFIG.player.fleetSize,
+      fleetId,
+    ),
   );
   state.supplyShips = Array.from(
     { length: INVADERS_CONFIG.supplyShips.initialCount },
@@ -118,11 +158,17 @@ export function selectInvadersFormation(
   state: InvadersState,
   formation: Formation,
 ): void {
+  const fleet = state.fleets[state.selectedFleetId];
+  if (!fleet) return;
+  fleet.selectedFormation = formation;
   state.selectedFormation = formation;
 }
 
 export function applyInvadersFormation(state: InvadersState): void {
-  state.formation = state.selectedFormation;
+  const fleet = state.fleets[state.selectedFleetId];
+  if (!fleet) return;
+  fleet.formation = fleet.selectedFormation;
+  state.formation = fleet.formation;
 }
 
 export function purchaseInvadersUpgrade(
@@ -162,12 +208,25 @@ export function setInvadersFireMode(
   state.fireMode = fireMode;
 }
 
+export function setInvadersFleetSpeedMode(
+  state: InvadersState,
+  fleetId: string,
+  speedMode: InvadersState["fleets"][string]["speedMode"],
+): void {
+  const fleet = state.fleets[fleetId];
+  if (!fleet) return;
+  fleet.speedMode = speedMode;
+}
+
 export function setInvadersAlignment(
   state: InvadersState,
   point: { x: number; y: number },
   viewport: Viewport,
 ): void {
-  state.playerSteeringTarget = { ...point };
+  const fleet = state.fleets[state.selectedFleetId];
+  if (!fleet) return;
+  fleet.command = { ...point };
+  state.playerSteeringTarget = fleet.command;
 }
 
 export function updateInvaders(
@@ -206,34 +265,44 @@ function updatePlayerFleet(
   viewport: Viewport,
   elapsed: number,
 ): void {
-  const slots = formationSlots(
-    playerFleetCenter(viewport),
-    state.formation,
-    INVADERS_CONFIG.player.fleetSize,
-    INVADERS_CONFIG.fleet.spacing,
-  );
-  const playerHeadings = formationSlotHeadings(
-    state.formation,
-    INVADERS_CONFIG.player.fleetSize,
-  );
   applyGunSteering(state.ships, state.enemies, state.fireMode);
-  for (const [ship, assignment] of assignNearestFormationSlots(
-    state.ships,
-    slots,
-  )) {
-    ship.targetHeading = state.playerSteeringTarget
-      ? playerSteeringHeading(state, ship)
-      : playerHeadings[assignment.slotIndex];
-    moveFleetShip(
-      [...state.ships, ...state.enemies],
-      ship,
-      assignment.position,
-      viewport,
-      elapsed,
-      ship.targetHeading,
+  for (const [fleetIndex, fleetCommand] of invadersFleetCommands(state).entries()) {
+    const fleetShips = state.ships.filter(
+      (ship) => ship.fleetId === fleetCommand.id,
     );
-    if (ship instanceof Battleship) ship.gun.update(elapsed);
+    const slots = formationSlots(
+      playerFleetCenter(viewport, fleetIndex),
+      fleetCommand.formation,
+      fleetShips.length,
+      INVADERS_CONFIG.fleet.spacing,
+    );
+    const playerHeadings = formationSlotHeadings(
+      fleetCommand.formation,
+      fleetShips.length,
+    );
+    for (const [ship, assignment] of assignNearestFormationSlots(
+      fleetShips,
+      slots,
+    )) {
+      ship.targetHeading = fleetCommand.command
+        ? playerSteeringHeading(fleetCommand.command, ship)
+        : playerHeadings[assignment.slotIndex];
+      moveFleetShip(
+        [...state.ships, ...state.enemies],
+        ship,
+        assignment.position,
+        viewport,
+        elapsed * shipSpeedMultiplier(state, ship),
+        ship.targetHeading,
+      );
+      if (ship instanceof Battleship) ship.gun.update(elapsed);
+    }
   }
+}
+function shipSpeedMultiplier(state: InvadersState, ship: Ship): number {
+  const mode = state.fleets[ship.fleetId]?.speedMode ?? "normal";
+  if (mode === "hold") return 0;
+  return mode === "full" ? 2 : 1;
 }
 
 function decrementCooldowns(ships: Ship[], elapsed: number): void {
@@ -280,13 +349,12 @@ function updateEnemyFleet(
 }
 
 function playerSteeringHeading(
-  state: InvadersState,
+  target: { x: number; y: number },
   ship: Ship,
 ): { x: number; y: number } {
-  if (!state.playerSteeringTarget) return { x: 0, y: -1 };
   return normalize({
-    x: state.playerSteeringTarget.x - ship.pos.x,
-    y: state.playerSteeringTarget.y - ship.pos.y,
+    x: target.x - ship.pos.x,
+    y: target.y - ship.pos.y,
   });
 }
 
@@ -306,9 +374,16 @@ function resolveBaseContacts(state: InvadersState): void {
   if (state.baseHp <= 0) state.winner = Side.Enemy;
 }
 
-function playerFleetCenter(viewport: Viewport): { x: number; y: number } {
+function playerFleetCenter(
+  viewport: Viewport,
+  fleetIndex = 0,
+): { x: number; y: number } {
+  const offset =
+    (fleetIndex - (PLAYER_FLEET_IDS.length - 1) / 2) *
+    INVADERS_CONFIG.fleet.spacing *
+    5;
   return {
-    x: viewport.width / 2,
+    x: viewport.width / 2 + offset,
     y: viewport.height - INVADERS_CONFIG.player.fleetBottomOffset,
   };
 }
@@ -320,6 +395,7 @@ function createFleet(
   role: ShipRole,
   state: InvadersState,
   count: number,
+  fleetId = side + "-main",
 ): Ship[] {
   const fleet = spawnFleet(
     side,
@@ -329,6 +405,7 @@ function createFleet(
     count,
     INVADERS_CONFIG.fleet.spacing,
     state.nextShipId,
+    fleetId,
   );
   for (const ship of fleet) {
     if (ship instanceof Battleship) {

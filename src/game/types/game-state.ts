@@ -13,6 +13,14 @@ export type ShipSpeedMode = "hold" | "normal" | "full";
 export type FleetCommand = {
   id: string;
   side: Side;
+  name: string;
+  color: string;
+  formation: Formation;
+  selectedFormation: Formation;
+  command: Vec | null;
+  destination: Vec | null;
+  formationRotation: number;
+  cohesion: number;
   speedMode: ShipSpeedMode;
 };
 

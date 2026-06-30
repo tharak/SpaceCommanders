@@ -13,10 +13,11 @@ export function renderInvaders(
   const { context, viewport, status, countdown } = renderContext;
   drawGameBackground(context, viewport, [state.base]);
   drawBase(context, state, viewport);
-  drawFiringRangeCones(context, [...state.ships, ...state.enemies]);
-  drawShips(context, state.ships);
-  drawShips(context, state.supplyShips);
-  drawShips(context, state.enemies);
+  const fleetColors = fleetColorMap(state);
+  drawFiringRangeCones(context, [...state.ships, ...state.enemies], fleetColors);
+  drawShips(context, state.ships, fleetColors);
+  drawShips(context, state.supplyShips, fleetColors);
+  drawShips(context, state.enemies, fleetColors);
   for (const projectile of state.projectiles) {
     drawLaser(context, projectile.pos, projectile.vel, COLORS[projectile.side]);
   }
@@ -26,6 +27,12 @@ export function renderInvaders(
       ? `WAVE ${state.wave}<br><span>${Math.ceil(state.enemyDeploymentCountdown)}</span>`
       : "";
   countdown.classList.toggle("active", state.enemyDeploymentCountdown > 0);
+}
+
+function fleetColorMap(state: InvadersState): Record<string, string> {
+  return Object.fromEntries(
+    Object.values(state.fleets).map((fleet) => [fleet.id, fleet.color]),
+  );
 }
 
 function drawLaser(

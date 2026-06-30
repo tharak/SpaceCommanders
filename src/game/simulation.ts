@@ -1,4 +1,4 @@
-import { FORMATIONS } from "./constants";
+import { FORMATIONS, PLAYER_FLEET_COLORS, PLAYER_FLEET_IDS, PLAYER_FLEET_NAMES } from "./constants";
 import { applyGunSteering } from "./combat";
 import { DEFAULT_GAME_CONFIG, GAME_CONFIG } from "./config";
 import { assignNearestFormationSlots } from "./formation-assignment";
@@ -23,7 +23,7 @@ import {
   Viewport,
 } from "./types";
 
-export const PLAYER_MAIN_FLEET_ID = "player-main";
+export const PLAYER_MAIN_FLEET_ID = PLAYER_FLEET_IDS[0];
 export const ENEMY_MAIN_FLEET_ID = "enemy-main";
 
 export function createGameState(): GameState {
@@ -52,18 +52,71 @@ export function createGameState(): GameState {
 }
 
 function createDefaultFleetCommands(): GameState["fleets"] {
+  const fleets: GameState["fleets"] = {};
+  for (const id of PLAYER_FLEET_IDS) {
+    fleets[id] = createFleetCommand(
+      id,
+      Side.Player,
+      PLAYER_FLEET_NAMES[id],
+      PLAYER_FLEET_COLORS[id],
+    );
+  }
+  fleets[ENEMY_MAIN_FLEET_ID] = createFleetCommand(
+    ENEMY_MAIN_FLEET_ID,
+    Side.Enemy,
+    "Enemy",
+    "#ff6d91",
+  );
+  return fleets;
+}
+
+function createFleetCommand(
+  id: string,
+  side: Side,
+  name: string,
+  color: string,
+): GameState["fleets"][string] {
   return {
-    [PLAYER_MAIN_FLEET_ID]: {
-      id: PLAYER_MAIN_FLEET_ID,
-      side: Side.Player,
-      speedMode: "normal",
-    },
-    [ENEMY_MAIN_FLEET_ID]: {
-      id: ENEMY_MAIN_FLEET_ID,
-      side: Side.Enemy,
-      speedMode: "normal",
-    },
+    id,
+    side,
+    name,
+    color,
+    formation: GAME_CONFIG.match.initialFormation,
+    selectedFormation: GAME_CONFIG.match.initialFormation,
+    command: null,
+    destination: null,
+    formationRotation: 0,
+    cohesion: GAME_CONFIG.match.initialCohesion,
+    speedMode: "normal",
   };
+}
+
+export function playerFleetCommands(state: GameState): GameState["fleets"][string][] {
+  return Object.values(state.fleets).filter((fleet) => fleet.side === Side.Player);
+}
+
+export function selectedFleetCommand(state: GameState): GameState["fleets"][string] | undefined {
+  return state.fleets[state.selectedFleetId];
+}
+
+export function selectPlayerFleet(state: GameState, fleetId: string): void {
+  const fleet = state.fleets[fleetId];
+  if (!fleet || fleet.side !== Side.Player) return;
+  state.selectedFleetId = fleetId;
+  state.formation = fleet.formation;
+  state.selectedFormation = fleet.selectedFormation;
+  state.command = fleet.command;
+  state.destination = fleet.destination;
+  state.formationRotation = fleet.formationRotation;
+  state.cohesion = fleet.cohesion;
+  state.previewCohesion = fleet.cohesion;
+}
+
+export function setSelectedFleetFormation(state: GameState, formation: Formation): void {
+  const fleet = selectedFleetCommand(state);
+  if (!fleet) return;
+  fleet.selectedFormation = formation;
+  state.selectedFormation = formation;
 }
 
 export function setFleetSpeedMode(
@@ -84,6 +137,8 @@ export function resetGame(
   state.config = config;
   state.winner = null;
   state.formationMode = undefined;
+  state.fleets = createDefaultFleetCommands();
+  state.selectedFleetId = PLAYER_MAIN_FLEET_ID;
   state.formation = GAME_CONFIG.match.initialFormation;
   state.selectedFormation = GAME_CONFIG.match.initialFormation;
   state.command = null;
@@ -103,24 +158,37 @@ export function resetGame(
   state.bodies = bodies;
 
   let id = 0;
-  for (const side of [Side.Player, Side.Enemy] as const) {
-    const base = side === Side.Player ? playerBase : enemyBase;
+  for (const [fleetIndex, fleetId] of PLAYER_FLEET_IDS.entries()) {
+    const offset =
+      (fleetIndex - (PLAYER_FLEET_IDS.length - 1) / 2) *
+      GAME_CONFIG.formation.spacing *
+      3;
     state.ships.push(
       ...spawnFleet(
-        side,
+        Side.Player,
         ShipRole.Battleship,
-        base,
-        GAME_CONFIG.match.initialFormation,
+        { x: playerBase.x + offset, y: playerBase.y },
+        state.fleets[fleetId].formation,
         config.ships,
         GAME_CONFIG.formation.spacing,
         id,
+        fleetId,
       ),
     );
     id += config.ships;
-    //state.ships.push(
-    //  spawnShip(side, ShipRole.Captain, offsetPosition(base, 30), id++),
-    //);
   }
+  state.ships.push(
+    ...spawnFleet(
+      Side.Enemy,
+      ShipRole.Battleship,
+      enemyBase,
+      GAME_CONFIG.match.initialFormation,
+      config.ships,
+      GAME_CONFIG.formation.spacing,
+      id,
+      ENEMY_MAIN_FLEET_ID,
+    ),
+  );
 }
 
 function createFormationDebugMap(state: GameState, viewport: Viewport): void {
@@ -176,6 +244,10 @@ export function resetFormations(
   state.bodies = [];
   state.formation = playerFormation;
   state.selectedFormation = playerFormation;
+  for (const fleet of playerFleetCommands(state)) {
+    fleet.formation = playerFormation;
+    fleet.selectedFormation = playerFormation;
+  }
   const formationMode = createFormationModeFleets(viewport, playerFormation);
   state.ships = formationMode.ships;
   state.formationMode = {
@@ -197,12 +269,21 @@ export function setFormationModePlayerFormation(
   if (!mode || !mode.formationSelectionEnabled) return;
   mode.chargingTowardTop = !mode.playerAtTop;
 
+  setSelectedFleetFormation(state, playerFormation);
+  const selectedFleet = selectedFleetCommand(state);
+  if (!selectedFleet) return;
+  selectedFleet.formation = playerFormation;
   state.formation = playerFormation;
   state.selectedFormation = playerFormation;
   if (!mode.hasSelectedFormation) {
-    const playerShips = state.ships.filter((ship) => ship.side === Side.Player);
+    const playerShips = state.ships.filter(
+      (ship) => ship.fleetId === state.selectedFleetId,
+    );
+    const fleetIndex = PLAYER_FLEET_IDS.indexOf(
+      state.selectedFleetId as (typeof PLAYER_FLEET_IDS)[number],
+    );
     const slots = formationSlots(
-      { x: viewport.width / 2, y: viewport.height * 0.8 },
+      formationModePlayerCenter(viewport, Math.max(0, fleetIndex), false),
       playerFormation,
       playerShips.length,
       GAME_CONFIG.formation.spacing,
@@ -228,18 +309,17 @@ export function updateFormations(
   if (!mode) return;
 
   if (mode.charging) {
-    advanceFormationFleet(
-      state,
-      viewport,
-      Side.Player,
-      state.formation,
-      {
-        x: viewport.width / 2,
-        y: viewport.height * (mode.chargingTowardTop ? 0.2 : 0.8),
-      },
-      mode.chargingTowardTop ? 0 : Math.PI,
-      deltaTime,
-    );
+    for (const [fleetIndex, fleetCommand] of playerFleetCommands(state).entries()) {
+      advanceFormationFleet(
+        state,
+        viewport,
+        fleetCommand.id,
+        fleetCommand.formation,
+        formationModePlayerCenter(viewport, fleetIndex, mode.chargingTowardTop),
+        mode.chargingTowardTop ? 0 : Math.PI,
+        deltaTime,
+      );
+    }
     advanceFormationFleet(
       state,
       viewport,
@@ -294,13 +374,15 @@ export function updateFormations(
 function advanceFormationFleet(
   state: GameState,
   viewport: Viewport,
-  side: Side,
+  fleetKey: string,
   formation: Formation,
   center: Vec,
   rotation: number,
   deltaTime: number,
 ): void {
-  const fleet = state.ships.filter((ship) => ship.side === side);
+  const fleet = state.ships.filter(
+    (ship) => ship.fleetId === fleetKey || ship.side === fleetKey,
+  );
   const slots = formationSlots(
     center,
     formation,
@@ -322,15 +404,21 @@ function createFormationModeFleets(
 ): { ships: Ship[]; enemyFormation: Formation } {
   const enemyFormation =
     FORMATIONS[Math.floor(Math.random() * FORMATIONS.length)];
-  const playerShips = spawnFleet(
-    Side.Player,
-    ShipRole.Battleship,
-    { x: viewport.width / 2, y: viewport.height * 0.8 },
-    playerFormation,
-    10,
-    GAME_CONFIG.formation.spacing,
-    0,
-  );
+  let firstId = 0;
+  const playerShips = PLAYER_FLEET_IDS.flatMap((fleetId, fleetIndex) => {
+    const ships = spawnFleet(
+      Side.Player,
+      ShipRole.Battleship,
+      formationModePlayerCenter(viewport, fleetIndex, false),
+      playerFormation,
+      10,
+      GAME_CONFIG.formation.spacing,
+      firstId,
+      fleetId,
+    );
+    firstId += ships.length;
+    return ships;
+  });
   const enemyShips = spawnFleet(
     Side.Enemy,
     ShipRole.Battleship,
@@ -338,11 +426,26 @@ function createFormationModeFleets(
     enemyFormation,
     10,
     GAME_CONFIG.formation.spacing,
-    playerShips.length,
+    firstId,
+    ENEMY_MAIN_FLEET_ID,
   );
   return { ships: [...playerShips, ...enemyShips], enemyFormation };
 }
 
+function formationModePlayerCenter(
+  viewport: Viewport,
+  fleetIndex: number,
+  atTop: boolean,
+): Vec {
+  const offset =
+    (fleetIndex - (PLAYER_FLEET_IDS.length - 1) / 2) *
+    GAME_CONFIG.formation.spacing *
+    5;
+  return {
+    x: viewport.width / 2 + offset,
+    y: viewport.height * (atTop ? 0.2 : 0.8),
+  };
+}
 type MatchMap = {
   bodies: Body[];
   playerBase: Vec;
@@ -453,11 +556,19 @@ function createAsteroidField(id: number, viewport: Viewport): Body {
 
 
 export function issueFormationOrder(state: GameState, destination: Vec): void {
-  state.formation = state.selectedFormation;
-  state.formationRotation = state.previewRotation;
-  state.cohesion = state.previewCohesion;
-  state.command = { ...destination };
-  state.destination = null;
+  const fleet = selectedFleetCommand(state);
+  if (!fleet) return;
+  fleet.formation = fleet.selectedFormation;
+  fleet.formationRotation = state.previewRotation;
+  fleet.cohesion = state.previewCohesion;
+  fleet.command = { ...destination };
+  fleet.destination = null;
+  state.formation = fleet.formation;
+  state.selectedFormation = fleet.selectedFormation;
+  state.formationRotation = fleet.formationRotation;
+  state.cohesion = fleet.cohesion;
+  state.command = fleet.command;
+  state.destination = fleet.destination;
   state.formationStage = null;
 }
 
@@ -776,28 +887,29 @@ function assignFormationTargets(state: GameState): void {
       (ship) => ship.role === ShipRole.Battleship,
     );
     const enemyAdvancing =
-      side === Side.Enemy && state.command !== null && playerBase;
+      side === Side.Enemy &&
+      playerFleetCommands(state).some((playerFleet) => playerFleet.command) &&
+      playerBase;
     const center =
       side === Side.Player
         ? speedMode === "hold"
           ? fleetCenter(battleships) ?? homeBase.pos
-          : (state.command ?? homeBase.pos)
+          : (fleetCommand.command ?? fleetCenter(battleships) ?? homeBase.pos)
         : enemyAdvancing
           ? playerBase.pos
           : homeBase.pos;
     const formation =
       side === Side.Player
-        ? state.formation
+        ? fleetCommand.formation
         : enemyAdvancing
           ? Formation.Arrow
           : Formation.Circle;
-    const spacing = GAME_CONFIG.formation.spacing;
-    const rotation = side === Side.Player ? state.formationRotation : 0;
+    const rotation = side === Side.Player ? fleetCommand.formationRotation : 0;
     const targets = formationSlots(
       center,
       formation,
       battleships.length,
-      spacing,
+      GAME_CONFIG.formation.spacing,
       rotation,
     );
     const headings = formationSlotHeadings(
@@ -827,7 +939,6 @@ function assignFormationTargets(state: GameState): void {
       });
   }
 }
-
 function fleetCenter(ships: Ship[]): Vec | undefined {
   if (ships.length === 0) return undefined;
   const total = ships.reduce(
@@ -879,6 +990,11 @@ function collectPlanetSupplies(state: GameState, ship: Ship): void {
   }
 }
 
+function fleetHeading(state: GameState, fleetId: string): Vec {
+  const rotation = state.fleets[fleetId]?.formationRotation ?? 0;
+  return { x: Math.cos(rotation), y: Math.sin(rotation) };
+}
+
 function moveShip(
   state: GameState,
   ship: Ship,
@@ -893,10 +1009,7 @@ function moveShip(
     deltaTime,
     GAME_CONFIG.formation.arrivalDistance,
     ship.side === Side.Player
-      ? {
-          x: Math.cos(state.formationRotation),
-          y: Math.sin(state.formationRotation),
-        }
+      ? fleetHeading(state, ship.fleetId)
       : undefined,
   );
 }

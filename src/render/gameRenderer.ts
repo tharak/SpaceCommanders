@@ -35,9 +35,16 @@ export function renderGame(
   drawBodies(context, state);
   drawFormationPreview(context, state);
   drawProjectiles(context, state);
-  drawFiringRangeCones(context, state.ships);
-  drawShips(context, state.ships);
+  const fleetColors = fleetColorMap(state);
+  drawFiringRangeCones(context, state.ships, fleetColors);
+  drawShips(context, state.ships, fleetColors);
   updateStatus(renderContext.status, state);
+}
+
+function fleetColorMap(state: GameState): Record<string, string> {
+  return Object.fromEntries(
+    Object.values(state.fleets).map((fleet) => [fleet.id, fleet.color]),
+  );
 }
 
 function drawBodies(context: CanvasRenderingContext2D, state: GameState): void {
@@ -148,19 +155,24 @@ function drawFormationPreview(
   const rotation = state.previewCenter
     ? state.previewRotation
     : state.formationRotation;
+  const selectedFleetSize = Math.max(
+    1,
+    state.ships.filter((ship) => ship.fleetId === state.selectedFleetId).length,
+  );
   const slots = formationSlots(
     center,
     state.selectedFormation,
-    state.config.ships,
+    selectedFleetSize,
     GAME_CONFIG.formation.spacing,
     rotation,
   );
   const headings = formationSlotHeadings(
     state.selectedFormation,
-    state.config.ships,
+    selectedFleetSize,
     rotation,
   );
-  context.strokeStyle = "#62e8ff66";
+  const selectedColor = state.fleets[state.selectedFleetId]?.color ?? "#62e8ff";
+  context.strokeStyle = selectedColor + "66";
   context.setLineDash([5, 5]);
   context.beginPath();
   context.arc(center.x, center.y, 10, 0, 7);
@@ -170,7 +182,7 @@ function drawFormationPreview(
     context.save();
     context.translate(slot.x, slot.y);
     context.rotate(Math.atan2(headings[index].y, headings[index].x));
-    context.fillStyle = "#62e8ff99";
+    context.fillStyle = selectedColor + "99";
     context.beginPath();
     context.moveTo(7, 0);
     context.lineTo(-5, -4);

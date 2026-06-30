@@ -1,12 +1,15 @@
 import { FIRING_CONE_HALF_ANGLE } from "../game/combat";
 import { GAME_CONFIG } from "../game/config";
 import { COLORS } from "../game/constants";
-import { Battleship, ShipRole, Side } from "../game/types";
+import { Battleship, ShipRole } from "../game/types";
 import type { Ship } from "../game/types";
+
+type FleetColorMap = Record<string, string>;
 
 export function drawShips(
   context: CanvasRenderingContext2D,
   ships: Ship[],
+  fleetColors: FleetColorMap = {},
 ): void {
   const scale = mobileShipScale();
   for (const ship of ships) {
@@ -58,7 +61,7 @@ export function drawShips(
 
     context.save();
     context.clip();
-    context.fillStyle = COLORS[ship.side];
+    context.fillStyle = shipColor(ship, fleetColors);
     context.fillRect(
       -render.healthBarWidth / 2,
       bottom - fillHeight * health,
@@ -67,12 +70,12 @@ export function drawShips(
     );
     context.restore();
 
-    context.strokeStyle = COLORS[ship.side];
+    context.strokeStyle = shipColor(ship, fleetColors);
     context.lineWidth = 1.5;
     context.stroke();
     context.restore();
 
-    drawSupplyMarkers(context, ship, scale);
+    drawSupplyMarkers(context, ship, scale, fleetColors);
   }
 }
 
@@ -80,6 +83,7 @@ function drawSupplyMarkers(
   context: CanvasRenderingContext2D,
   ship: Ship,
   scale: number,
+  fleetColors: FleetColorMap,
 ): void {
   const supplyCount = Math.floor(ship.supplies);
   if (supplyCount <= 0) return;
@@ -92,7 +96,7 @@ function drawSupplyMarkers(
   const rowGap = 3 * scale;
   const columns = Math.min(5, supplyCount);
 
-  context.fillStyle = ship.side === Side.Player ? "#9af4ff" : "#ffadc1";
+  context.fillStyle = shipColor(ship, fleetColors);
 
   for (let index = 0; index < supplyCount; index++) {
     const column = index % columns;
@@ -112,9 +116,14 @@ function drawSupplyMarkers(
   }
 }
 
+function shipColor(ship: Ship, fleetColors: FleetColorMap): string {
+  return fleetColors[ship.fleetId] ?? COLORS[ship.side];
+}
+
 export function drawFiringRangeCones(
   context: CanvasRenderingContext2D,
   ships: Ship[],
+  fleetColors: FleetColorMap = {},
 ): void {
   for (const ship of ships) {
     if (!(ship instanceof Battleship)) continue;
@@ -122,8 +131,8 @@ export function drawFiringRangeCones(
     const angle = Math.atan2(gunHeading.y, gunHeading.x);
     context.save();
     context.translate(ship.pos.x, ship.pos.y);
-    context.fillStyle = `${COLORS[ship.side]}18`;
-    context.strokeStyle = `${COLORS[ship.side]}66`;
+    context.fillStyle = `${shipColor(ship, fleetColors)}18`;
+    context.strokeStyle = `${shipColor(ship, fleetColors)}66`;
     context.lineWidth = 1;
     context.beginPath();
     context.moveTo(0, 0);

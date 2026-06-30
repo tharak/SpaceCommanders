@@ -1,6 +1,7 @@
 import { UpgradeType } from "./upgrade-type";
 import type {
   Body,
+  FleetCommand,
   FireMode,
   Formation,
   Projectile,
@@ -13,6 +14,8 @@ import type {
 export type InvadersState = {
   formation: Formation;
   selectedFormation: Formation;
+  selectedFleetId: string;
+  fleets: Record<string, FleetCommand>;
   enemyFormation: Formation;
   enemyDestination: Vec;
   playerSteeringTarget: Vec | null;
