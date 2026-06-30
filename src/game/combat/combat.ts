@@ -1,11 +1,11 @@
-import { distance, distanceToSegment } from "./math";
-import { GAME_CONFIG } from "./config";
-import { Battleship, FireMode } from "./types";
+import { distance, distanceToSegment } from "../utils";
+import { GAME_CONFIG } from "../config";
+import { Battleship, FireMode } from "../types";
 
 export const FIRING_CONE_ANGLE =
   (GAME_CONFIG.combat.firingConeDegrees * Math.PI) / 180;
 export const FIRING_CONE_HALF_ANGLE = FIRING_CONE_ANGLE / 2;
-import type { Body, Ship, Vec } from "./types";
+import type { Body, Ship, Vec } from "../types";
 
 export function hasLineOfSight(
   ship: Ship,

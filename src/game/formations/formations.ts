@@ -1,6 +1,6 @@
-import { GAME_CONFIG } from "./config";
-import { Formation } from "./types";
-import type { Vec } from "./types";
+import { GAME_CONFIG } from "../config";
+import { Formation } from "../types";
+import type { Vec } from "../types";
 
 export function formationSpacing(cohesion = 1): number {
   return Math.max(

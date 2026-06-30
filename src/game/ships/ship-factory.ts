@@ -1,7 +1,7 @@
-import { formationSlots } from "./formations";
-import { GAME_CONFIG } from "./config";
-import { Gun } from "./gun";
-import { randomBetween } from "./math";
+import { formationSlots } from "../formations";
+import { GAME_CONFIG } from "../config";
+import { Gun } from "../combat";
+import { randomBetween } from "../utils";
 import {
   BaseShip,
   Battleship,
@@ -9,9 +9,9 @@ import {
   ShipRole,
   Side,
   SupplyShip,
-} from "./types";
-import type { Formation } from "./types";
-import type { Ship, Vec } from "./types";
+} from "../types";
+import type { Formation } from "../types";
+import type { Ship, Vec } from "../types";
 
 export function spawnShip(
   side: Side,

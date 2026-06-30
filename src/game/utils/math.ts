@@ -1,4 +1,4 @@
-import type { Vec } from "./types";
+import type { Vec } from "../types";
 
 export const randomBetween = (minimum: number, maximum: number) =>
   minimum + Math.random() * (maximum - minimum);

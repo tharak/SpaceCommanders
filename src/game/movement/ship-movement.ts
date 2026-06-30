@@ -1,6 +1,6 @@
-import { GAME_CONFIG } from "./config";
+import { GAME_CONFIG } from "../config";
 import { BoidsSimulationManager } from "./boids-simulation";
-import type { Body, Ship, Vec, Viewport } from "./types";
+import type { Body, Ship, Vec, Viewport } from "../types";
 
 export type ShipBoidsWeights = {
   desiredPosition?: number;

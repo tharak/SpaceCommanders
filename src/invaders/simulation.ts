@@ -4,11 +4,14 @@ import {
   isTargetForward,
 } from "../game/combat";
 import { FORMATIONS, PLAYER_FLEET_COLORS, PLAYER_FLEET_IDS, PLAYER_FLEET_NAMES } from "../game/constants";
-import { assignNearestFormationSlots } from "../game/formation-assignment";
-import { formationSlotHeadings, formationSlots } from "../game/formations";
-import { clamp, distance, normalize } from "../game/math";
-import { spawnFleet, spawnShip } from "../game/ship-factory";
-import { moveShipWithBoids } from "../game/ship-movement";
+import {
+  assignNearestFormationSlots,
+  formationSlotHeadings,
+  formationSlots,
+} from "../game/formations";
+import { clamp, distance, normalize } from "../game/utils";
+import { spawnFleet, spawnShip } from "../game/ships";
+import { moveShipWithBoids } from "../game/movement";
 import {
   Battleship,
   BodyKind,

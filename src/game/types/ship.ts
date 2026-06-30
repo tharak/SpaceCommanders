@@ -2,7 +2,7 @@ import { ShipRole } from "./ship-role";
 import type { Side } from "./side";
 import type { SupplyMission } from "./supply-mission";
 import type { Vec } from "./vector";
-import type { Gun } from "../gun";
+import type { Gun } from "../combat";
 
 export class BaseShip {
   declare id: number;

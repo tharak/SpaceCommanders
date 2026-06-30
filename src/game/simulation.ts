@@ -1,11 +1,15 @@
 import { FORMATIONS, PLAYER_FLEET_COLORS, PLAYER_FLEET_IDS, PLAYER_FLEET_NAMES } from "./constants";
 import { applyGunSteering } from "./combat";
 import { DEFAULT_GAME_CONFIG, GAME_CONFIG } from "./config";
-import { assignStableFormationSlots } from "./formation-assignment";
-import { formationSlotHeadings, formationSlots, formationSpacing } from "./formations";
-import { spawnFleet, spawnShip } from "./ship-factory";
-import { moveShipWithBoids } from "./ship-movement";
-import { distance, randomBetween } from "./math";
+import {
+  assignStableFormationSlots,
+  formationSlotHeadings,
+  formationSlots,
+  formationSpacing,
+} from "./formations";
+import { spawnFleet, spawnShip } from "./ships";
+import { moveShipWithBoids } from "./movement";
+import { distance, randomBetween } from "./utils";
 import {
   Body,
   Battleship,

@@ -1,5 +1,5 @@
-import { clamp, distance, normalize } from "./math";
-import type { Body, Ship, Vec, Viewport } from "./types";
+import { clamp, distance, normalize } from "../utils";
+import type { Body, Ship, Vec, Viewport } from "../types";
 
 export type BoidsSimulationConfig = {
   arrivalDistance: number;

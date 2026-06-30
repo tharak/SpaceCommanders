@@ -1,8 +1,8 @@
-import { GAME_CONFIG } from "./config";
+import { GAME_CONFIG } from "../config";
 import { hasLineOfSight, isTargetForward } from "./combat";
-import { clamp, distance, normalize } from "./math";
-import { FireMode, Side } from "./types";
-import type { Battleship, GameState, GunConfig, Ship, Vec } from "./types";
+import { clamp, distance, normalize } from "../utils";
+import { FireMode, Side } from "../types";
+import type { Battleship, GameState, GunConfig, Ship, Vec } from "../types";
 
 export class Gun {
   attack: number;

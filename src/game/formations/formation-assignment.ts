@@ -1,5 +1,5 @@
-import { distance } from "./math";
-import type { Ship, Vec } from "./types";
+import { distance } from "../utils/math";
+import type { Ship, Vec } from "../types";
 
 export type FormationAssignment = {
   position: Vec;
