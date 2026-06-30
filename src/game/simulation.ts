@@ -133,19 +133,11 @@ export function setFleetSpeedMode(
 
 export function chargeSelectedFleet(state: GameState): boolean {
   const fleet = selectedFleetCommand(state);
-  if (!fleet || !fleet.destination) return false;
-  const battleships = state.ships.filter(
-    (ship) => ship.fleetId === fleet.id && ship.role === ShipRole.Battleship,
-  );
-  const center = fleetCenter(battleships) ?? fleet.command ?? fleet.destination;
+  if (!fleet || !fleet.command) return false;
   fleet.combatStage = "attacking";
   fleet.speedMode = "full";
-  fleet.command = { ...fleet.destination };
+  fleet.command = chargeTarget(fleet.command, fleet.formationRotation);
   fleet.destination = null;
-  fleet.formationRotation = Math.atan2(
-    fleet.command.y - center.y,
-    fleet.command.x - center.x,
-  );
   state.command = fleet.command;
   state.destination = fleet.destination;
   state.formationRotation = fleet.formationRotation;
@@ -611,8 +603,8 @@ export function issueFormationOrder(state: GameState, destination: Vec): void {
     destination.x - center.x,
   );
   fleet.cohesion = state.previewCohesion;
-  fleet.command = center;
-  fleet.destination = { ...destination };
+  fleet.command = { ...destination };
+  fleet.destination = null;
   fleet.speedMode = "normal";
   fleet.combatStage = "forming";
   state.formation = fleet.formation;
@@ -994,6 +986,14 @@ function assignFormationTargets(state: GameState): void {
       });
   }
 }
+function chargeTarget(origin: Vec, rotation: number): Vec {
+  const chargeDistance = 2000;
+  return {
+    x: origin.x + Math.cos(rotation) * chargeDistance,
+    y: origin.y + Math.sin(rotation) * chargeDistance,
+  };
+}
+
 function fleetCenter(ships: Ship[]): Vec | undefined {
   if (ships.length === 0) return undefined;
   const total = ships.reduce(
