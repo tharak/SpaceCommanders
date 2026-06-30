@@ -502,7 +502,7 @@ function moveFleetShip(
     [],
     viewport,
     elapsed,
-    INVADERS_CONFIG.fleet.steeringWeight,
+    INVADERS_CONFIG.fleet.arrivalDistance,
     formationHeading,
   );
 }
