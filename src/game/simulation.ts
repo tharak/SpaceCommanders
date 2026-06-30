@@ -597,10 +597,7 @@ export function issueFormationOrder(state: GameState, destination: Vec): void {
   if (!center) return;
 
   fleet.formation = fleet.selectedFormation;
-  fleet.formationRotation = Math.atan2(
-    destination.y - center.y,
-    destination.x - center.x,
-  );
+  fleet.formationRotation = state.previewRotation;
   fleet.cohesion = state.previewCohesion;
   fleet.command = { ...destination };
   fleet.destination = null;
