@@ -8,11 +8,21 @@ import type { Ship } from "./ship";
 import type { Side } from "./side";
 import type { Vec } from "./vector";
 
+export type ShipSpeedMode = "hold" | "normal" | "full";
+
+export type FleetCommand = {
+  id: string;
+  side: Side;
+  speedMode: ShipSpeedMode;
+};
+
 export type GameState = {
   config: Config;
   formation: Formation;
   selectedFormation: Formation;
   fireMode: FireMode;
+  selectedFleetId: string;
+  fleets: Record<string, FleetCommand>;
   command: Vec | null;
   destination: Vec | null;
   formationStage: FormationStage | null;

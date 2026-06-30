@@ -23,12 +23,17 @@ import {
   Viewport,
 } from "./types";
 
+export const PLAYER_MAIN_FLEET_ID = "player-main";
+export const ENEMY_MAIN_FLEET_ID = "enemy-main";
+
 export function createGameState(): GameState {
   return {
     config: { ...DEFAULT_GAME_CONFIG },
     formation: GAME_CONFIG.match.initialFormation,
     selectedFormation: GAME_CONFIG.match.initialFormation,
     fireMode: FireMode.AtWill,
+    selectedFleetId: PLAYER_MAIN_FLEET_ID,
+    fleets: createDefaultFleetCommands(),
     command: null,
     destination: null,
     formationStage: null,
@@ -44,6 +49,31 @@ export function createGameState(): GameState {
     captainFavorite: GAME_CONFIG.match.captainFavorite,
     winner: null,
   };
+}
+
+function createDefaultFleetCommands(): GameState["fleets"] {
+  return {
+    [PLAYER_MAIN_FLEET_ID]: {
+      id: PLAYER_MAIN_FLEET_ID,
+      side: Side.Player,
+      speedMode: "normal",
+    },
+    [ENEMY_MAIN_FLEET_ID]: {
+      id: ENEMY_MAIN_FLEET_ID,
+      side: Side.Enemy,
+      speedMode: "normal",
+    },
+  };
+}
+
+export function setFleetSpeedMode(
+  state: GameState,
+  fleetId: string,
+  speedMode: GameState["fleets"][string]["speedMode"],
+): void {
+  const fleet = state.fleets[fleetId];
+  if (!fleet) return;
+  fleet.speedMode = speedMode;
 }
 
 export function resetGame(
@@ -283,7 +313,7 @@ function advanceFormationFleet(
     ship.target = assignment.position;
     ship.targetHeading = headings[assignment.slotIndex];
   }
-  for (const ship of fleet) moveShip(state, ship, viewport, deltaTime);
+  for (const ship of fleet) moveShip(state, ship, viewport, deltaTime * shipSpeedMultiplier(state, ship));
 }
 
 function createFormationModeFleets(
@@ -455,7 +485,7 @@ export function updateGame(
     } else {
       collectPlanetSupplies(state, ship);
     }
-    moveShip(state, ship, viewport, deltaTime);
+    moveShip(state, ship, viewport, deltaTime * shipSpeedMultiplier(state, ship));
     if (ship instanceof Battleship) ship.gun.fire(state, ship);
   }
 
@@ -736,16 +766,22 @@ function findClosestLeastSuppliedBattleship(
 function assignFormationTargets(state: GameState): void {
   const playerBase = state.bodies.find((body) => body.base === Side.Player);
 
-  for (const side of [Side.Player, Side.Enemy] as const) {
+  for (const fleetCommand of Object.values(state.fleets)) {
+    const { id: fleetId, side, speedMode } = fleetCommand;
     const homeBase = state.bodies.find((body) => body.base === side);
     if (!homeBase) continue;
 
-    const fleet = state.ships.filter((ship) => ship.side === side);
+    const fleet = state.ships.filter((ship) => ship.fleetId === fleetId);
+    const battleships = fleet.filter(
+      (ship) => ship.role === ShipRole.Battleship,
+    );
     const enemyAdvancing =
       side === Side.Enemy && state.command !== null && playerBase;
     const center =
       side === Side.Player
-        ? (state.command ?? homeBase.pos)
+        ? speedMode === "hold"
+          ? fleetCenter(battleships) ?? homeBase.pos
+          : (state.command ?? homeBase.pos)
         : enemyAdvancing
           ? playerBase.pos
           : homeBase.pos;
@@ -755,21 +791,18 @@ function assignFormationTargets(state: GameState): void {
         : enemyAdvancing
           ? Formation.Arrow
           : Formation.Circle;
-    const battleships = fleet.filter(
-      (ship) => ship.role === ShipRole.Battleship,
-    );
     const spacing = GAME_CONFIG.formation.spacing;
     const rotation = side === Side.Player ? state.formationRotation : 0;
     const targets = formationSlots(
       center,
       formation,
-      state.config.ships,
+      battleships.length,
       spacing,
       rotation,
     );
     const headings = formationSlotHeadings(
       formation,
-      state.config.ships,
+      battleships.length,
       rotation,
     );
 
@@ -793,6 +826,22 @@ function assignFormationTargets(state: GameState): void {
         };
       });
   }
+}
+
+function fleetCenter(ships: Ship[]): Vec | undefined {
+  if (ships.length === 0) return undefined;
+  const total = ships.reduce(
+    (sum, ship) => ({
+      x: sum.x + ship.pos.x,
+      y: sum.y + ship.pos.y,
+    }),
+    { x: 0, y: 0 },
+  );
+  return { x: total.x / ships.length, y: total.y / ships.length };
+}
+
+function shipSpeedMultiplier(state: GameState, ship: Ship): number {
+  return state.fleets[ship.fleetId]?.speedMode === "full" ? 2 : 1;
 }
 
 function applyFireModeSteering(state: GameState): void {

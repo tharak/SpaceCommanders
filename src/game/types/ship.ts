@@ -18,6 +18,7 @@ export class BaseShip {
   declare sight: number;
   declare moral: number;
   declare supplies: number;
+  declare fleetId: string;
   declare target?: Vec;
   declare targetHeading?: Vec;
   declare steeringHeading?: Vec;

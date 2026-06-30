@@ -36,7 +36,7 @@ export const INVADERS_CONFIG = {
     initialCount: 5,
     capacity: 1,
     hp: 40,
-    speed: 78,
+    speed: 39,
     baseLoadingDistance: 12,
     deliveryDistance: 72,
     targetSupplyCapacity: 10,
@@ -57,7 +57,7 @@ type UpgradeConfig = {
 
 export const UPGRADE_CONFIG: Record<UpgradeType, UpgradeConfig> = {
   [UpgradeType.Damage]: { baseCost: 100, attack: 2 },
-  [UpgradeType.Speed]: { baseCost: 100, speed: 8 },
+  [UpgradeType.Speed]: { baseCost: 100, speed: 4 },
   [UpgradeType.Hull]: { baseCost: 100, hull: 10 },
   [UpgradeType.Range]: { baseCost: 100, range: 15 },
   [UpgradeType.SupplyShips]: { baseCost: 100, supplyShips: 1 },

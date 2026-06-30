@@ -3,12 +3,14 @@ import { getUpgradeCost } from "../invaders/config";
 import { TEXT } from "./strings";
 import { UpgradeType } from "../invaders/upgrade-type";
 import { FireMode, Formation } from "../game/types";
+import type { ShipSpeedMode } from "../game/types";
 import type { Config } from "../game/types";
 import { DEFAULT_GAME_CONFIG } from "../game/config";
 
 type Controls = {
   formationControls: HTMLElement;
   fireControls: HTMLElement;
+  speedControls: HTMLElement;
   upgradeControls: HTMLElement;
   moneyDisplay: HTMLElement;
   moneyAmount: HTMLElement;
@@ -17,6 +19,7 @@ type Controls = {
 type ControlCallbacks = {
   onFormationChange: (formation: Formation) => void;
   onFireModeChange: (mode: FireMode) => void;
+  onShipSpeedModeChange: (mode: ShipSpeedMode) => void;
   onUpgrade: (upgrade: UpgradeType) => void;
 };
 
@@ -24,6 +27,7 @@ export function getControls(): Controls {
   return {
     formationControls: requiredElement("#formation-controls"),
     fireControls: requiredElement("#fire-controls"),
+    speedControls: requiredElement("#speed-controls"),
     upgradeControls: requiredElement("#upgrade-controls"),
     moneyDisplay: requiredElement("#money-display"),
     moneyAmount: requiredElement("#money-amount"),
@@ -35,12 +39,15 @@ export function setupControls(
   callbacks: ControlCallbacks,
   initialFormation: Formation,
   initialFireMode: FireMode,
+  initialShipSpeedMode: ShipSpeedMode,
 ): void {
   createFormationButtons(controls, callbacks.onFormationChange);
   createFireModeButtons(controls, callbacks.onFireModeChange);
+  createShipSpeedModeButtons(controls, callbacks.onShipSpeedModeChange);
   createUpgradeButtons(controls, callbacks.onUpgrade);
   selectActive(controls.formationControls, initialFormation);
   selectActive(controls.fireControls, initialFireMode);
+  selectActive(controls.speedControls, initialShipSpeedMode);
   requiredElement("#debug-toggle").addEventListener("click", () =>
     document.body.classList.toggle("debug-open"),
   );
@@ -236,6 +243,28 @@ function createFireModeButtons(
       onChange(mode);
     });
     controls.fireControls.append(button);
+  }
+}
+
+function createShipSpeedModeButtons(
+  controls: Controls,
+  onChange: (mode: ShipSpeedMode) => void,
+): void {
+  const labels: Record<ShipSpeedMode, string> = {
+    hold: "HLD",
+    normal: "1X",
+    full: "2X",
+  };
+  for (const mode of ["hold", "normal", "full"] as const) {
+    const button = document.createElement("button");
+    button.ariaLabel = mode + " ship speed";
+    button.dataset.value = mode;
+    button.textContent = labels[mode];
+    button.addEventListener("click", () => {
+      selectActive(controls.speedControls, mode);
+      onChange(mode);
+    });
+    controls.speedControls.append(button);
   }
 }
 

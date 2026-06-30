@@ -18,11 +18,13 @@ export function spawnShip(
   role: ShipRole,
   position: Vec,
   id: number,
+  fleetId = side + "-main",
 ): Ship {
   const initial = {
     id,
     side,
     role,
+    fleetId,
     pos: { ...position },
     vel: {
       x: randomBetween(
@@ -71,8 +73,10 @@ export function spawnFleet(
   count: number,
   spacing: number,
   firstId: number,
+  fleetId = side + "-main",
 ): Ship[] {
   return formationSlots(center, formation, count, spacing).map(
-    (position, index) => spawnShip(side, role, position, firstId + index),
+    (position, index) =>
+      spawnShip(side, role, position, firstId + index, fleetId),
   );
 }

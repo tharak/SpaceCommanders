@@ -115,7 +115,7 @@ input {
 }
 .command-row {
   display: grid;
-  grid-template-columns: 5fr 3fr;
+  grid-template-columns: 5fr 3fr 2fr;
   gap: 20px;
 }
 .command-group {
@@ -177,14 +177,16 @@ input {
   gap: 4px;
 }
 #formation-controls,
-#fire-controls {
+#fire-controls,
+#speed-controls {
   display: grid;
   gap: 4px;
 }
 #formation-controls {
   grid-template-columns: repeat(5, 40px);
 }
-#fire-controls {
+#fire-controls,
+#speed-controls {
   grid-template-columns: repeat(3, 40px);
 }
 #formation-controls button:disabled {
@@ -192,7 +194,8 @@ input {
   opacity: 0.35;
 }
 #formation-controls button,
-#fire-controls button {
+#fire-controls button,
+#speed-controls button {
   width: 100%;
 }
 .icon-row button {
@@ -205,6 +208,10 @@ input {
 .icon-row svg {
   width: 33px;
   height: 27px;
+}
+#speed-controls button {
+  font: 700 11px/1 Barlow Condensed, sans-serif;
+  letter-spacing: 0.8px;
 }
 output {
   color: #74eaff;
@@ -258,6 +265,17 @@ input[type="range"] {
   }
   .icon-row svg {
     width: 28px;
+  }
+  .command-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  #formation-controls {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  #fire-controls,
+  #speed-controls {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   #status {
     font-size: 16px;

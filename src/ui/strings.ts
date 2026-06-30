@@ -12,6 +12,7 @@ export const TEXT = {
     money: "₿",
     formation: "FORMATION",
     shootMode: "SHOOT MODE",
+    speedMode: "SPEED",
     captainFormation: "CAPTAIN FORMATION",
     upgradePrice: (label: string, cost: number) => label + " " + cost + " ₿",
     upgradeLabels: {
@@ -52,6 +53,9 @@ export const TEXT = {
     weaponsHold: "WEAPONS HOLD",
     focusFire: "FOCUS FIRE — TAP AN ENEMY TO DESIGNATE",
     weaponsFree: "WEAPONS FREE — ENGAGING HOSTILES IN RANGE",
+    shipsHold: "HOLD POSITION — FLEET FORMING UP",
+    shipsNormal: "NORMAL SPEED",
+    shipsFull: "FULL SPEED",
     upgradesDefenseOnly: "UPGRADES ARE AVAILABLE IN BASE DEFENSE",
     upgradeNeeded: (cost: number, upgrade: string) =>
       `NEED ${cost} ₿ FOR ${upgrade.toUpperCase()}`,
@@ -72,6 +76,7 @@ export function applyStaticScreenText(): void {
     money: TEXT.controls.money,
     formation: TEXT.controls.formation,
     "shoot-mode": TEXT.controls.shootMode,
+    "speed-mode": TEXT.controls.speedMode,
     "captain-formation": TEXT.controls.captainFormation,
     battleships: TEXT.debug.battleships,
     planets: TEXT.debug.planets,

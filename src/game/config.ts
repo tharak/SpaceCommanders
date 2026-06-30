@@ -56,7 +56,7 @@ export const GAME_CONFIG = {
     hp: 50,
     initialVelocityRange: 12,
     defense: 3,
-    speed: 45,
+    speed: 22.5,
     sight: 260,
     morale: 70,
     startingSupplies: 10,
@@ -87,7 +87,7 @@ export const GAME_CONFIG = {
   supply: {
     shipCapacity: 1,
     shipHp: 40,
-    shipSpeed: 62,
+    shipSpeed: 31,
     targetSupplyCapacity: 10,
     transferDistance: 72,
     returnDistance: 36,

@@ -19,10 +19,12 @@ import {
   resetGame,
   resetFormations,
   setFormationModePlayerFormation,
+  setFleetSpeedMode,
   updateFormations,
   updateGame,
 } from "./game/simulation";
 import { FireMode, Formation } from "./game/types";
+import type { ShipSpeedMode } from "./game/types";
 import type { Vec, Viewport } from "./game/types";
 import { renderGame, resizeCanvas } from "./render/gameRenderer";
 import {
@@ -118,6 +120,16 @@ setupControls(
       }
       showReadout(controls, TEXT.readout.formationSelected(formation));
     },
+    onShipSpeedModeChange: (mode: ShipSpeedMode) => {
+      setFleetSpeedMode(commandState, commandState.selectedFleetId, mode);
+      const message =
+        mode === "hold"
+          ? TEXT.readout.shipsHold
+          : mode === "full"
+            ? TEXT.readout.shipsFull
+            : TEXT.readout.shipsNormal;
+      showReadout(controls, message);
+    },
     onFireModeChange: (mode) => {
       if (activeGame === "invaders") {
         setInvadersFireMode(invadersState, mode);
@@ -159,6 +171,7 @@ setupControls(
   },
   commandState.selectedFormation,
   commandState.fireMode,
+  selectedFleetSpeedMode(),
 );
 
 gameSelection
@@ -201,6 +214,7 @@ canvas.addEventListener("pointermove", (event) => {
     return;
   }
   commandState.pointer = point;
+  if (activeGame === "command" && selectedFleetSpeedMode() === "hold") return;
   if (!commandState.previewCenter) return;
   const offsetX = point.x - commandState.previewCenter.x;
   const offsetY = point.y - commandState.previewCenter.y;
@@ -221,6 +235,7 @@ canvas.addEventListener("pointerdown", (event) => {
     canvas.setPointerCapture(event.pointerId);
     return;
   }
+  if (activeGame === "command" && selectedFleetSpeedMode() === "hold") return;
   const point = mapPoint(event);
   canvas.setPointerCapture(event.pointerId);
   commandState.pointer = point;
@@ -262,7 +277,6 @@ function animationLoop(now: number): void {
 
 function updateActiveGame(deltaTime: number): void {
   if (activeGame === "command") {
-    if (!commandState.command) return;
     updateGame(commandState, viewport, deltaTime);
     if (commandState.winner) showSetup();
     return;
@@ -285,6 +299,10 @@ function updateActiveGame(deltaTime: number): void {
 function syncInvadersControls(): void {
   setMoneyDisplay(controls, invadersState.money);
   setUpgradeAvailability(controls, invadersState.upgrades, invadersState.money);
+}
+
+function selectedFleetSpeedMode(): ShipSpeedMode {
+  return commandState.fleets[commandState.selectedFleetId]?.speedMode ?? "normal";
 }
 
 function renderActiveGame(): void {

@@ -9,7 +9,7 @@ export type { Body } from "./body";
 export type { Config } from "./config";
 export type { GunConfig } from "./gun";
 export type { Projectile } from "./projectile";
-export type { GameState } from "./game-state";
+export type { FleetCommand, GameState, ShipSpeedMode } from "./game-state";
 export { BaseShip, Battleship, GuardShip, SupplyShip } from "./ship";
 export type { Ship } from "./ship";
 export type { Vec } from "./vector";
