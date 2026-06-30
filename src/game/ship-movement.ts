@@ -32,6 +32,8 @@ export function moveShipWithBoids(
       edgeClearance: GAME_CONFIG.movement.edgeClearance,
       edgeAvoidanceWeight: GAME_CONFIG.movement.edgeAvoidanceForceMultiplier,
       velocityResponseRate: GAME_CONFIG.movement.velocityResponseRate,
+      lateralVelocityMultiplier: GAME_CONFIG.movement.lateralVelocityMultiplier,
+      reverseVelocityMultiplier: GAME_CONFIG.movement.reverseVelocityMultiplier,
       headingVelocityThreshold: GAME_CONFIG.movement.headingVelocityThreshold,
       viewportPadding: GAME_CONFIG.movement.viewportPadding,
       turnRate: GAME_CONFIG.movement.turnRate,

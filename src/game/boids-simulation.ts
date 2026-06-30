@@ -13,6 +13,8 @@ export type BoidsSimulationConfig = {
   edgeClearance: number;
   edgeAvoidanceWeight: number;
   velocityResponseRate: number;
+  lateralVelocityMultiplier: number;
+  reverseVelocityMultiplier: number;
   headingVelocityThreshold: number;
   viewportPadding: number;
   turnRate: number;
@@ -55,11 +57,13 @@ export class BoidsSimulationManager {
     this.applyEdgeAvoidance(force, ship);
     this.applyHeadingForces(force, ship, order);
 
+    const directedForce = this.applyDirectionalVelocityLimits(force, ship);
+
     ship.vel.x +=
-      (force.x - ship.vel.x) *
+      (directedForce.x - ship.vel.x) *
       Math.min(1, deltaTime * config.velocityResponseRate);
     ship.vel.y +=
-      (force.y - ship.vel.y) *
+      (directedForce.y - ship.vel.y) *
       Math.min(1, deltaTime * config.velocityResponseRate);
 
     if (explicitHeading) {
@@ -141,6 +145,28 @@ export class BoidsSimulationManager {
       force.x += direction.x * ship.speed * config.steeringHeadingWeight;
       force.y += direction.y * ship.speed * config.steeringHeadingWeight;
     }
+  }
+
+  private applyDirectionalVelocityLimits(force: Vec, ship: Ship): Vec {
+    const { config } = this.setup;
+    const heading = normalize(ship.heading);
+    const lateral = { x: -heading.y, y: heading.x };
+    const forwardAmount = force.x * heading.x + force.y * heading.y;
+    const lateralAmount = force.x * lateral.x + force.y * lateral.y;
+    const limitedForwardAmount =
+      forwardAmount >= 0
+        ? forwardAmount
+        : forwardAmount * config.reverseVelocityMultiplier;
+    const limitedLateralAmount = lateralAmount * config.lateralVelocityMultiplier;
+
+    return {
+      x:
+        heading.x * limitedForwardAmount +
+        lateral.x * limitedLateralAmount,
+      y:
+        heading.y * limitedForwardAmount +
+        lateral.y * limitedLateralAmount,
+    };
   }
 
   private applyBodyAvoidance(force: Vec, ship: Ship): void {

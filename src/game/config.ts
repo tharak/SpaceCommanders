@@ -130,6 +130,8 @@ export const GAME_CONFIG = {
     formationDesiredPositionWeight: 0.85,
     chargeDesiredPositionWeight: 1.8,
     velocityResponseRate: 2.2,
+    lateralVelocityMultiplier: 0.35,
+    reverseVelocityMultiplier: 0.18,
     headingVelocityThreshold: 1,
     viewportPadding: 5,
     turnRate: 4,
