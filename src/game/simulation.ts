@@ -1,7 +1,7 @@
 import { FORMATIONS, PLAYER_FLEET_COLORS, PLAYER_FLEET_IDS, PLAYER_FLEET_NAMES } from "./constants";
 import { applyGunSteering } from "./combat";
 import { DEFAULT_GAME_CONFIG, GAME_CONFIG } from "./config";
-import { assignNearestFormationSlots } from "./formation-assignment";
+import { assignStableFormationSlots } from "./formation-assignment";
 import { formationSlotHeadings, formationSlots } from "./formations";
 import { spawnFleet, spawnShip } from "./ship-factory";
 import { moveShipWithBoids } from "./ship-movement";
@@ -426,7 +426,7 @@ function advanceFormationFleet(
     rotation,
   );
   const headings = formationSlotHeadings(formation, fleet.length, rotation);
-  for (const [ship, assignment] of assignNearestFormationSlots(fleet, slots)) {
+  for (const [ship, assignment] of assignStableFormationSlots(fleet, slots)) {
     ship.target = assignment.position;
     ship.targetHeading = headings[assignment.slotIndex];
   }
@@ -963,7 +963,7 @@ function assignFormationTargets(state: GameState): void {
       battleships.length,
       rotation,
     );
-    const assignments = assignNearestFormationSlots(battleships, targets);
+    const assignments = assignStableFormationSlots(battleships, targets);
 
     for (const [ship, assignment] of assignments) {
       ship.target = assignment.position;

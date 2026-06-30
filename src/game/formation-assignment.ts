@@ -32,3 +32,18 @@ export function assignNearestFormationSlots(
 
   return assignments;
 }
+
+export function assignStableFormationSlots(
+  ships: Ship[],
+  slots: Vec[],
+): Map<Ship, FormationAssignment> {
+  const assignments = new Map<Ship, FormationAssignment>();
+  [...ships]
+    .sort((first, second) => first.id - second.id)
+    .forEach((ship, slotIndex) => {
+      const position = slots[slotIndex];
+      if (position) assignments.set(ship, { position, slotIndex });
+    });
+
+  return assignments;
+}
