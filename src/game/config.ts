@@ -127,6 +127,8 @@ export const GAME_CONFIG = {
     bodyAvoidanceForceMultiplier: 5,
     edgeClearance: 30,
     edgeAvoidanceForceMultiplier: 4,
+    formationDesiredPositionWeight: 0.85,
+    chargeDesiredPositionWeight: 1.8,
     velocityResponseRate: 2.2,
     headingVelocityThreshold: 1,
     viewportPadding: 5,

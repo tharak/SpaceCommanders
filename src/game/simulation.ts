@@ -135,7 +135,6 @@ export function chargeSelectedFleet(state: GameState): boolean {
   const fleet = selectedFleetCommand(state);
   if (!fleet || !fleet.command) return false;
   fleet.combatStage = "attacking";
-  fleet.speedMode = "full";
   fleet.command = chargeTarget(fleet.command, fleet.formationRotation);
   fleet.destination = null;
   state.command = fleet.command;
@@ -1010,9 +1009,6 @@ function shipSpeedMultiplier(state: GameState, ship: Ship): number {
   const fleet = state.fleets[ship.fleetId];
   if (!fleet) return 1;
   if (fleet.speedMode === "hold") return 0;
-  if (ship.side === Side.Player && fleet.command) {
-    return fleet.combatStage === "attacking" ? 2 : 1;
-  }
   return fleet.speedMode === "full" ? 2 : 1;
 }
 
@@ -1056,6 +1052,14 @@ function fleetHeading(state: GameState, fleetId: string): Vec {
   return { x: Math.cos(rotation), y: Math.sin(rotation) };
 }
 
+function desiredPositionWeight(state: GameState, ship: Ship): number {
+  const fleet = state.fleets[ship.fleetId];
+  if (ship.side !== Side.Player || !fleet?.command) return 1;
+  return fleet.combatStage === "attacking"
+    ? GAME_CONFIG.movement.chargeDesiredPositionWeight
+    : GAME_CONFIG.movement.formationDesiredPositionWeight;
+}
+
 function moveShip(
   state: GameState,
   ship: Ship,
@@ -1072,5 +1076,6 @@ function moveShip(
     ship.side === Side.Player
       ? fleetHeading(state, ship.fleetId)
       : undefined,
+    { desiredPosition: desiredPositionWeight(state, ship) },
   );
 }

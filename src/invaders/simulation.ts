@@ -582,6 +582,7 @@ function moveFleetShip(
     elapsed,
     INVADERS_CONFIG.fleet.arrivalDistance,
     formationHeading,
+    { desiredPosition: 1 },
   );
 }
 
@@ -711,6 +712,9 @@ function updateSupplyShip(
     [],
     viewport,
     elapsed,
+    undefined,
+    undefined,
+    { desiredPosition: 1 },
   );
 }
 
