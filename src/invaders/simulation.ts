@@ -79,6 +79,7 @@ function createInvadersFleetCommands(): InvadersState["fleets"] {
       formationRotation: 0,
       cohesion: 1,
       speedMode: "normal",
+      combatStage: "forming",
     };
   }
   return fleets;

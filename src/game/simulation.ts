@@ -88,6 +88,7 @@ function createFleetCommand(
     formationRotation: 0,
     cohesion: GAME_CONFIG.match.initialCohesion,
     speedMode: "normal",
+    combatStage: "forming",
   };
 }
 
@@ -117,6 +118,35 @@ export function setSelectedFleetFormation(state: GameState, formation: Formation
   if (!fleet) return;
   fleet.selectedFormation = formation;
   state.selectedFormation = formation;
+}
+
+export function beginSelectedFleetAttackFormation(state: GameState): void {
+  const fleet = selectedFleetCommand(state);
+  if (!fleet) return;
+  const battleships = state.ships.filter(
+    (ship) => ship.fleetId === fleet.id && ship.role === ShipRole.Battleship,
+  );
+  const center = fleetCenter(battleships);
+  if (!center) return;
+  const enemyBase = state.bodies.find((body) => body.base === Side.Enemy);
+  const rotation = enemyBase
+    ? Math.atan2(enemyBase.pos.y - center.y, enemyBase.pos.x - center.x)
+    : -Math.PI / 2;
+  fleet.formation = fleet.selectedFormation;
+  fleet.command = center;
+  fleet.destination = null;
+  fleet.formationRotation = rotation;
+  fleet.cohesion = GAME_CONFIG.match.initialCohesion;
+  fleet.speedMode = "normal";
+  fleet.combatStage = "forming";
+  state.formation = fleet.formation;
+  state.selectedFormation = fleet.selectedFormation;
+  state.command = fleet.command;
+  state.destination = fleet.destination;
+  state.formationRotation = fleet.formationRotation;
+  state.cohesion = fleet.cohesion;
+  state.previewCenter = null;
+  state.pointer = null;
 }
 
 export function setFleetSpeedMode(
@@ -876,6 +906,7 @@ function findClosestLeastSuppliedBattleship(
 
 function assignFormationTargets(state: GameState): void {
   const playerBase = state.bodies.find((body) => body.base === Side.Player);
+  const enemyBase = state.bodies.find((body) => body.base === Side.Enemy);
 
   for (const fleetCommand of Object.values(state.fleets)) {
     const { id: fleetId, side, speedMode } = fleetCommand;
@@ -888,7 +919,9 @@ function assignFormationTargets(state: GameState): void {
     );
     const enemyAdvancing =
       side === Side.Enemy &&
-      playerFleetCommands(state).some((playerFleet) => playerFleet.command) &&
+      playerFleetCommands(state).some(
+        (playerFleet) => playerFleet.combatStage === "attacking",
+      ) &&
       playerBase;
     const center =
       side === Side.Player
@@ -917,14 +950,40 @@ function assignFormationTargets(state: GameState): void {
       battleships.length,
       rotation,
     );
+    const assignments = assignNearestFormationSlots(battleships, targets);
 
-    for (const [ship, assignment] of assignNearestFormationSlots(
-      battleships,
-      targets,
-    )) {
+    for (const [ship, assignment] of assignments) {
       ship.target = assignment.position;
       ship.targetHeading = headings[assignment.slotIndex];
     }
+
+    if (
+      side === Side.Player &&
+      fleetCommand.combatStage === "forming" &&
+      fleetCommand.command &&
+      enemyBase &&
+      assignments.size > 0 &&
+      Array.from(assignments).every(
+        ([ship, assignment]) =>
+          distance(ship.pos, assignment.position) <=
+          GAME_CONFIG.formation.arrivalDistance,
+      )
+    ) {
+      fleetCommand.combatStage = "attacking";
+      fleetCommand.speedMode = "full";
+      fleetCommand.command = { ...enemyBase.pos };
+      fleetCommand.destination = null;
+      fleetCommand.formationRotation = Math.atan2(
+        enemyBase.pos.y - center.y,
+        enemyBase.pos.x - center.x,
+      );
+      if (state.selectedFleetId === fleetCommand.id) {
+        state.command = fleetCommand.command;
+        state.destination = fleetCommand.destination;
+        state.formationRotation = fleetCommand.formationRotation;
+      }
+    }
+
     fleet
       .filter((ship) => ship.role === ShipRole.Captain)
       .forEach((ship, index) => {
@@ -952,7 +1011,13 @@ function fleetCenter(ships: Ship[]): Vec | undefined {
 }
 
 function shipSpeedMultiplier(state: GameState, ship: Ship): number {
-  return state.fleets[ship.fleetId]?.speedMode === "full" ? 2 : 1;
+  const fleet = state.fleets[ship.fleetId];
+  if (!fleet) return 1;
+  if (fleet.speedMode === "hold") return 0;
+  if (ship.side === Side.Player && fleet.command) {
+    return fleet.combatStage === "attacking" ? 2 : 1;
+  }
+  return fleet.speedMode === "full" ? 2 : 1;
 }
 
 function applyFireModeSteering(state: GameState): void {

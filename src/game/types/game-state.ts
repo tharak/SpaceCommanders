@@ -9,6 +9,7 @@ import type { Side } from "./side";
 import type { Vec } from "./vector";
 
 export type ShipSpeedMode = "hold" | "normal" | "full";
+export type FleetCombatStage = "forming" | "attacking";
 
 export type FleetCommand = {
   id: string;
@@ -22,6 +23,7 @@ export type FleetCommand = {
   formationRotation: number;
   cohesion: number;
   speedMode: ShipSpeedMode;
+  combatStage: FleetCombatStage;
 };
 
 export type GameState = {
