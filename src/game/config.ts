@@ -130,7 +130,6 @@ export const GAME_CONFIG = {
     edgeClearance: 30,
     edgeAvoidanceForceMultiplier: 4,
     formationDesiredPositionWeight: 0.95,
-    chargeDesiredPositionWeight: 1.55,
     velocityResponseRate: 1.55,
     headingVelocityThreshold: 1,
     arrivalTurnRate: 2.2,

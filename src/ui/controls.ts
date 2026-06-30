@@ -18,7 +18,6 @@ type Controls = {
   formationControls: HTMLElement;
   fireControls: HTMLElement;
   speedControls: HTMLElement;
-  chargeButton: HTMLButtonElement;
   upgradeControls: HTMLElement;
   moneyDisplay: HTMLElement;
   moneyAmount: HTMLElement;
@@ -29,7 +28,6 @@ type ControlCallbacks = {
   onFormationChange: (formation: Formation) => void;
   onFireModeChange: (mode: FireMode) => void;
   onShipSpeedModeChange: (mode: ShipSpeedMode) => void;
-  onChargeFleet: () => void;
   onUpgrade: (upgrade: UpgradeType) => void;
 };
 
@@ -39,7 +37,6 @@ export function getControls(): Controls {
     formationControls: requiredElement("#formation-controls"),
     fireControls: requiredElement("#fire-controls"),
     speedControls: requiredElement("#speed-controls"),
-    chargeButton: requiredButton("#charge-fleet"),
     upgradeControls: requiredElement("#upgrade-controls"),
     moneyDisplay: requiredElement("#money-display"),
     moneyAmount: requiredElement("#money-amount"),
@@ -59,7 +56,6 @@ export function setupControls(
   createFormationButtons(controls, callbacks.onFormationChange);
   createFireModeButtons(controls, callbacks.onFireModeChange);
   createShipSpeedModeButtons(controls, callbacks.onShipSpeedModeChange);
-  controls.chargeButton.addEventListener("click", callbacks.onChargeFleet);
   createUpgradeButtons(controls, callbacks.onUpgrade);
   selectActive(controls.formationControls, initialFormation);
   selectActive(controls.fireControls, initialFireMode);
@@ -176,10 +172,6 @@ export function setSelectedShipSpeedMode(
   mode: ShipSpeedMode,
 ): void {
   selectActive(controls.speedControls, mode);
-}
-
-export function setChargeEnabled(controls: Controls, enabled: boolean): void {
-  controls.chargeButton.disabled = !enabled;
 }
 
 export function setFormationSelectionEnabled(

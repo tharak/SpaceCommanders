@@ -17,7 +17,6 @@ import { getUpgradeCost } from "./invaders/config";
 import { UpgradeType } from "./invaders/upgrade-type";
 import { applyStaticScreenText, TEXT } from "./ui/strings";
 import {
-  chargeSelectedFleet,
   createGameState,
   playerFleetCommands,
   issueFormationOrder,
@@ -39,7 +38,6 @@ import {
   readConfig,
   setupControls,
   animateMoneySpent,
-  setChargeEnabled,
   setSelectedFormation,
   setFleetOptions,
   setFormationSelectionEnabled,
@@ -103,7 +101,6 @@ function selectActiveFleet(fleetId: string): void {
     setSelectedFleet(controls, commandState.selectedFleetId);
     setSelectedShipSpeedMode(controls, selectedFleetSpeedMode());
   }
-  syncChargeControl();
 }
 
 function reset(): void {
@@ -118,7 +115,6 @@ function reset(): void {
     setSelectedFormation(controls, invadersState.selectedFormation);
   }
   syncFleetControls();
-  syncChargeControl();
   setSelectedShipSpeedMode(controls, selectedFleetSpeedMode());
   setFormationSelectionEnabled(
     controls,
@@ -172,13 +168,6 @@ setupControls(
         return;
       }
       showReadout(controls, TEXT.readout.formationSelected(formation));
-    },
-    onChargeFleet: () => {
-      if (activeGame !== "command") return;
-      if (!chargeSelectedFleet(commandState, viewport)) return;
-      setSelectedShipSpeedMode(controls, selectedFleetSpeedMode());
-      syncChargeControl();
-      showReadout(controls, TEXT.readout.shipsFull);
     },
     onShipSpeedModeChange: (mode: ShipSpeedMode) => {
       if (activeGame === "invaders") {
@@ -321,7 +310,6 @@ canvas.addEventListener("pointerup", (event) => {
   if (!commandState.previewCenter) return;
   commandState.pointer = event.pointerType === "mouse" ? mapPoint(event) : null;
   issueFormationOrder(commandState, commandState.previewCenter);
-  syncChargeControl();
   commandState.previewCenter = null;
   if (canvas.hasPointerCapture(event.pointerId)) {
     canvas.releasePointerCapture(event.pointerId);
@@ -347,7 +335,6 @@ function animationLoop(now: number): void {
 function updateActiveGame(deltaTime: number): void {
   if (activeGame === "command") {
     updateGame(commandState, viewport, deltaTime);
-    syncChargeControl();
     if (commandState.winner) showSetup();
     return;
   }
@@ -364,10 +351,6 @@ function updateActiveGame(deltaTime: number): void {
   updateInvaders(invadersState, viewport, deltaTime);
   syncInvadersControls();
   if (invadersState.winner) showSetup();
-}
-
-function syncChargeControl(): void {
-  setChargeEnabled(controls, activeGame === "command");
 }
 
 function syncInvadersControls(): void {

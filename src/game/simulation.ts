@@ -88,7 +88,6 @@ function createFleetCommand(
     formationRotation: 0,
     cohesion: GAME_CONFIG.match.initialCohesion,
     speedMode: "normal",
-    combatStage: "forming",
   };
 }
 
@@ -129,21 +128,6 @@ export function setFleetSpeedMode(
   const fleet = state.fleets[fleetId];
   if (!fleet) return;
   fleet.speedMode = speedMode;
-}
-
-export function chargeSelectedFleet(
-  state: GameState,
-  viewport: Viewport,
-): boolean {
-  const fleet = selectedFleetCommand(state);
-  if (!fleet || !fleet.command) return false;
-  fleet.combatStage = "attacking";
-  fleet.command = chargeTarget(fleet.command, fleet.formationRotation, viewport);
-  fleet.destination = null;
-  state.command = fleet.command;
-  state.destination = fleet.destination;
-  state.formationRotation = fleet.formationRotation;
-  return true;
 }
 
 export function resetGame(
@@ -605,7 +589,6 @@ export function issueFormationOrder(state: GameState, destination: Vec): void {
   fleet.command = { ...destination };
   fleet.destination = null;
   fleet.speedMode = "normal";
-  fleet.combatStage = "forming";
   state.formation = fleet.formation;
   state.selectedFormation = fleet.selectedFormation;
   state.formationRotation = fleet.formationRotation;
@@ -918,7 +901,6 @@ function findClosestLeastSuppliedBattleship(
 }
 
 function assignFormationTargets(state: GameState): void {
-  const playerBase = state.bodies.find((body) => body.base === Side.Player);
   const enemyBase = state.bodies.find((body) => body.base === Side.Enemy);
 
   for (const fleetCommand of Object.values(state.fleets)) {
@@ -930,26 +912,16 @@ function assignFormationTargets(state: GameState): void {
     const battleships = fleet.filter(
       (ship) => ship.role === ShipRole.Battleship,
     );
-    const enemyAdvancing =
-      side === Side.Enemy &&
-      playerFleetCommands(state).some(
-        (playerFleet) => playerFleet.combatStage === "attacking",
-      ) &&
-      playerBase;
     const center =
       side === Side.Player
         ? speedMode === "hold"
           ? fleetCenter(battleships) ?? homeBase.pos
           : (fleetCommand.command ?? fleetCenter(battleships) ?? homeBase.pos)
-        : enemyAdvancing
-          ? playerBase.pos
-          : homeBase.pos;
+        : homeBase.pos;
     const formation =
       side === Side.Player
         ? fleetCommand.formation
-        : enemyAdvancing
-          ? Formation.Arrow
-          : Formation.Circle;
+        : Formation.Circle;
     const rotation = side === Side.Player ? fleetCommand.formationRotation : 0;
     const targets = formationSlots(
       center,
@@ -984,30 +956,6 @@ function assignFormationTargets(state: GameState): void {
         };
       });
   }
-}
-function chargeTarget(
-  origin: Vec,
-  rotation: number,
-  viewport: Viewport,
-): Vec {
-  const heading = formationHeading(rotation);
-  const padding = GAME_CONFIG.movement.viewportPadding;
-  const epsilon = 0.000001;
-  const distances = [
-    heading.x > epsilon
-      ? (viewport.width - padding - origin.x) / heading.x
-      : Infinity,
-    heading.x < -epsilon ? (padding - origin.x) / heading.x : Infinity,
-    heading.y > epsilon
-      ? (viewport.height - padding - origin.y) / heading.y
-      : Infinity,
-    heading.y < -epsilon ? (padding - origin.y) / heading.y : Infinity,
-  ].filter((value) => Number.isFinite(value) && value > 0);
-  const distanceToBorder = distances.length > 0 ? Math.min(...distances) : 0;
-  return {
-    x: origin.x + heading.x * distanceToBorder,
-    y: origin.y + heading.y * distanceToBorder,
-  };
 }
 
 function fleetCenter(ships: Ship[]): Vec | undefined {
@@ -1075,9 +1023,7 @@ function formationHeading(rotation: number): Vec {
 function desiredPositionWeight(state: GameState, ship: Ship): number {
   const fleet = state.fleets[ship.fleetId];
   if (ship.side !== Side.Player || !fleet?.command) return 1;
-  return fleet.combatStage === "attacking"
-    ? GAME_CONFIG.movement.chargeDesiredPositionWeight
-    : GAME_CONFIG.movement.formationDesiredPositionWeight;
+  return GAME_CONFIG.movement.formationDesiredPositionWeight;
 }
 
 function moveShip(
