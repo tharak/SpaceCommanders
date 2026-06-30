@@ -39,9 +39,15 @@ export class BoidsSimulationManager {
     const { config, viewport } = this.setup;
     const hasArrived =
       distance(ship.pos, order.desiredPosition) <= config.arrivalDistance;
-    const force = hasArrived
-      ? { x: 0, y: 0 }
-      : this.desiredPositionForce(ship, order);
+    if (hasArrived) {
+      ship.pos = { ...order.desiredPosition };
+      ship.vel = { x: 0, y: 0 };
+      const finalHeading = order.steeringHeading ?? order.desiredHeading;
+      if (finalHeading) ship.heading = normalize(finalHeading);
+      return;
+    }
+
+    const force = this.desiredPositionForce(ship, order);
     this.applyBoidForces(force, ship);
     this.applyBodyAvoidance(force, ship);
     this.applyEdgeAvoidance(force, ship);
