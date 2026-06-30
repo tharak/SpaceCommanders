@@ -131,6 +131,7 @@ export const GAME_CONFIG = {
     chargeDesiredPositionWeight: 2.2,
     velocityResponseRate: 2.2,
     headingVelocityThreshold: 1,
+    arrivalTurnRate: 5,
     viewportPadding: 5,
   },
 } as const;

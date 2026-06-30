@@ -14,6 +14,7 @@ export type BoidsSimulationConfig = {
   edgeAvoidanceWeight: number;
   velocityResponseRate: number;
   headingVelocityThreshold: number;
+  arrivalTurnRate: number;
   viewportPadding: number;
 };
 
@@ -43,7 +44,7 @@ export class BoidsSimulationManager {
       ship.pos = { ...order.desiredPosition };
       ship.vel = { x: 0, y: 0 };
       const finalHeading = order.steeringHeading ?? order.desiredHeading;
-      if (finalHeading) ship.heading = normalize(finalHeading);
+      if (finalHeading) this.steerHeading(ship, finalHeading, deltaTime);
       return;
     }
 
@@ -169,5 +170,24 @@ export class BoidsSimulationManager {
     if (right < 0) force.x -= -right * config.edgeAvoidanceWeight;
     if (top < 0) force.y += -top * config.edgeAvoidanceWeight;
     if (bottom < 0) force.y -= -bottom * config.edgeAvoidanceWeight;
+  }
+
+  private steerHeading(ship: Ship, targetHeading: Vec, deltaTime: number): void {
+    const target = normalize(targetHeading);
+    const currentAngle = Math.atan2(ship.heading.y, ship.heading.x);
+    const targetAngle = Math.atan2(target.y, target.x);
+    const turnStep = deltaTime * this.setup.config.arrivalTurnRate;
+    const delta = Math.atan2(
+      Math.sin(targetAngle - currentAngle),
+      Math.cos(targetAngle - currentAngle),
+    );
+
+    if (Math.abs(delta) <= turnStep) {
+      ship.heading = target;
+      return;
+    }
+
+    const nextAngle = currentAngle + Math.sign(delta) * turnStep;
+    ship.heading = { x: Math.cos(nextAngle), y: Math.sin(nextAngle) };
   }
 }

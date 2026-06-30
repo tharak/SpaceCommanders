@@ -33,6 +33,7 @@ export function moveShipWithBoids(
       edgeAvoidanceWeight: GAME_CONFIG.movement.edgeAvoidanceForceMultiplier,
       velocityResponseRate: GAME_CONFIG.movement.velocityResponseRate,
       headingVelocityThreshold: GAME_CONFIG.movement.headingVelocityThreshold,
+      arrivalTurnRate: GAME_CONFIG.movement.arrivalTurnRate,
       viewportPadding: GAME_CONFIG.movement.viewportPadding,
     },
   });
