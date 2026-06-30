@@ -125,6 +125,8 @@ export const GAME_CONFIG = {
     steeringHeadingForceMultiplier: 0.65,
     bodyClearance: 15,
     bodyAvoidanceForceMultiplier: 5,
+    edgeClearance: 30,
+    edgeAvoidanceForceMultiplier: 4,
     velocityResponseRate: 2.2,
     headingVelocityThreshold: 1,
     viewportPadding: 5,

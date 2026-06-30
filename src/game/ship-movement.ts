@@ -92,6 +92,8 @@ export function moveShipWithBoids(
       GAME_CONFIG.movement.bodyAvoidanceForceMultiplier;
   }
 
+  applyEdgeAvoidance(force, ship, viewport);
+
   ship.vel.x +=
     (force.x - ship.vel.x) *
     Math.min(1, deltaTime * GAME_CONFIG.movement.velocityResponseRate);
@@ -114,6 +116,20 @@ export function moveShipWithBoids(
     GAME_CONFIG.movement.viewportPadding,
     viewport.height - GAME_CONFIG.movement.viewportPadding,
   );
+}
+
+function applyEdgeAvoidance(force: Vec, ship: Ship, viewport: Viewport): void {
+  const clearance = GAME_CONFIG.movement.edgeClearance;
+  const multiplier = GAME_CONFIG.movement.edgeAvoidanceForceMultiplier;
+  const left = ship.pos.x - clearance;
+  const right = viewport.width - clearance - ship.pos.x;
+  const top = ship.pos.y - clearance;
+  const bottom = viewport.height - clearance - ship.pos.y;
+
+  if (left < 0) force.x += -left * multiplier;
+  if (right < 0) force.x -= -right * multiplier;
+  if (top < 0) force.y += -top * multiplier;
+  if (bottom < 0) force.y -= -bottom * multiplier;
 }
 
 function steeringForce(ship: Ship): Vec {
