@@ -2,7 +2,7 @@ import { FORMATIONS, PLAYER_FLEET_COLORS, PLAYER_FLEET_IDS, PLAYER_FLEET_NAMES }
 import { applyGunSteering } from "./combat";
 import { DEFAULT_GAME_CONFIG, GAME_CONFIG } from "./config";
 import { assignStableFormationSlots } from "./formation-assignment";
-import { formationSlotHeadings, formationSlots } from "./formations";
+import { formationSlotHeadings, formationSlots, formationSpacing } from "./formations";
 import { spawnFleet, spawnShip } from "./ship-factory";
 import { moveShipWithBoids } from "./ship-movement";
 import { distance, randomBetween } from "./math";
@@ -924,8 +924,9 @@ function assignFormationTargets(state: GameState): void {
         : Formation.Circle;
     const rotation = side === Side.Player ? fleetCommand.formationRotation : 0;
     const spacing =
-      GAME_CONFIG.formation.spacing *
-      (side === Side.Player ? fleetCommand.cohesion : 1);
+      side === Side.Player
+        ? formationSpacing(fleetCommand.cohesion)
+        : GAME_CONFIG.formation.spacing;
     const targets = formationSlots(
       center,
       formation,

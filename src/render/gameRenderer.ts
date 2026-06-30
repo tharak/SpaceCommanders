@@ -1,7 +1,7 @@
 import { GAME_CONFIG } from "../game/config";
 import { COLORS } from "../game/constants";
 import { TEXT } from "../ui/strings";
-import { formationSlotHeadings, formationSlots } from "../game/formations";
+import { formationSlotHeadings, formationSlots, formationSpacing } from "../game/formations";
 import { drawGameBackground } from "./backgroundRenderer";
 import { drawDesiredPositionMarkers, drawFiringRangeCones, drawShips } from "./shipRenderer";
 import { BodyKind, ShipRole, Side } from "../game/types";
@@ -164,7 +164,7 @@ function drawFormationPreview(
     center,
     state.selectedFormation,
     selectedFleetSize,
-    GAME_CONFIG.formation.spacing * cohesion,
+    formationSpacing(cohesion),
     rotation,
   );
   const headings = formationSlotHeadings(

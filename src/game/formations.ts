@@ -1,5 +1,22 @@
+import { GAME_CONFIG } from "./config";
 import { Formation } from "./types";
 import type { Vec } from "./types";
+
+export function formationSpacing(cohesion = 1): number {
+  return Math.max(
+    GAME_CONFIG.formation.spacing * cohesion,
+    minimumShipSpacing(),
+  );
+}
+
+function minimumShipSpacing(): number {
+  const render = GAME_CONFIG.ship.render;
+  const radius = Math.hypot(
+    Math.max(render.wingX, render.guardWingX, render.healthBarWidth / 2),
+    Math.max(Math.abs(render.noseY), render.tailY),
+  );
+  return radius * 2;
+}
 
 export function formationSlots(
   center: Vec,
