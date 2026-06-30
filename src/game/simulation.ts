@@ -984,9 +984,10 @@ function assignFormationTargets(state: GameState): void {
 }
 function chargeTarget(origin: Vec, rotation: number): Vec {
   const chargeDistance = 2000;
+  const heading = formationSlotHeadings(Formation.Line, 1, rotation)[0];
   return {
-    x: origin.x + Math.cos(rotation) * chargeDistance,
-    y: origin.y + Math.sin(rotation) * chargeDistance,
+    x: origin.x + heading.x * chargeDistance,
+    y: origin.y + heading.y * chargeDistance,
   };
 }
 
