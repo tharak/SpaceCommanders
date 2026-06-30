@@ -923,11 +923,14 @@ function assignFormationTargets(state: GameState): void {
         ? fleetCommand.formation
         : Formation.Circle;
     const rotation = side === Side.Player ? fleetCommand.formationRotation : 0;
+    const spacing =
+      GAME_CONFIG.formation.spacing *
+      (side === Side.Player ? fleetCommand.cohesion : 1);
     const targets = formationSlots(
       center,
       formation,
       battleships.length,
-      GAME_CONFIG.formation.spacing,
+      spacing,
       rotation,
     );
     const headings = formationSlotHeadings(

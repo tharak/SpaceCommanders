@@ -159,11 +159,12 @@ function drawFormationPreview(
     1,
     state.ships.filter((ship) => ship.fleetId === state.selectedFleetId).length,
   );
+  const cohesion = state.previewCenter ? state.previewCohesion : state.cohesion;
   const slots = formationSlots(
     center,
     state.selectedFormation,
     selectedFleetSize,
-    GAME_CONFIG.formation.spacing,
+    GAME_CONFIG.formation.spacing * cohesion,
     rotation,
   );
   const headings = formationSlotHeadings(
