@@ -905,11 +905,12 @@ function findClosestLeastSuppliedBattleship(
 }
 
 function assignFormationTargets(state: GameState): void {
-  const enemyBase = state.bodies.find((body) => body.base === Side.Enemy);
-
   for (const fleetCommand of Object.values(state.fleets)) {
     const { id: fleetId, side, speedMode } = fleetCommand;
     const homeBase = state.bodies.find((body) => body.base === side);
+    const opponentBase = state.bodies.find(
+      (body) => body.base === (side === Side.Player ? Side.Enemy : Side.Player),
+    );
     if (!homeBase) continue;
 
     const fleet = state.ships.filter((ship) => ship.fleetId === fleetId);
@@ -921,7 +922,7 @@ function assignFormationTargets(state: GameState): void {
         ? speedMode === "hold"
           ? fleetCenter(battleships) ?? homeBase.pos
           : (fleetCommand.command ?? fleetCenter(battleships) ?? homeBase.pos)
-        : homeBase.pos;
+        : (opponentBase?.pos ?? fleetCenter(battleships) ?? homeBase.pos);
     const formation =
       side === Side.Player
         ? fleetCommand.formation
