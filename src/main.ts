@@ -175,7 +175,7 @@ setupControls(
     },
     onChargeFleet: () => {
       if (activeGame !== "command") return;
-      if (!chargeSelectedFleet(commandState)) return;
+      if (!chargeSelectedFleet(commandState, viewport)) return;
       setSelectedShipSpeedMode(controls, selectedFleetSpeedMode());
       syncChargeControl();
       showReadout(controls, TEXT.readout.shipsFull);

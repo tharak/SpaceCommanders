@@ -131,11 +131,14 @@ export function setFleetSpeedMode(
   fleet.speedMode = speedMode;
 }
 
-export function chargeSelectedFleet(state: GameState): boolean {
+export function chargeSelectedFleet(
+  state: GameState,
+  viewport: Viewport,
+): boolean {
   const fleet = selectedFleetCommand(state);
   if (!fleet || !fleet.command) return false;
   fleet.combatStage = "attacking";
-  fleet.command = chargeTarget(fleet.command, fleet.formationRotation);
+  fleet.command = chargeTarget(fleet.command, fleet.formationRotation, viewport);
   fleet.destination = null;
   state.command = fleet.command;
   state.destination = fleet.destination;
@@ -982,12 +985,28 @@ function assignFormationTargets(state: GameState): void {
       });
   }
 }
-function chargeTarget(origin: Vec, rotation: number): Vec {
-  const chargeDistance = 2000;
-  const heading = formationSlotHeadings(Formation.Line, 1, rotation)[0];
+function chargeTarget(
+  origin: Vec,
+  rotation: number,
+  viewport: Viewport,
+): Vec {
+  const heading = formationHeading(rotation);
+  const padding = GAME_CONFIG.movement.viewportPadding;
+  const epsilon = 0.000001;
+  const distances = [
+    heading.x > epsilon
+      ? (viewport.width - padding - origin.x) / heading.x
+      : Infinity,
+    heading.x < -epsilon ? (padding - origin.x) / heading.x : Infinity,
+    heading.y > epsilon
+      ? (viewport.height - padding - origin.y) / heading.y
+      : Infinity,
+    heading.y < -epsilon ? (padding - origin.y) / heading.y : Infinity,
+  ].filter((value) => Number.isFinite(value) && value > 0);
+  const distanceToBorder = distances.length > 0 ? Math.min(...distances) : 0;
   return {
-    x: origin.x + heading.x * chargeDistance,
-    y: origin.y + heading.y * chargeDistance,
+    x: origin.x + heading.x * distanceToBorder,
+    y: origin.y + heading.y * distanceToBorder,
   };
 }
 
@@ -1046,8 +1065,11 @@ function collectPlanetSupplies(state: GameState, ship: Ship): void {
 }
 
 function fleetHeading(state: GameState, fleetId: string): Vec {
-  const rotation = state.fleets[fleetId]?.formationRotation ?? 0;
-  return { x: Math.cos(rotation), y: Math.sin(rotation) };
+  return formationHeading(state.fleets[fleetId]?.formationRotation ?? 0);
+}
+
+function formationHeading(rotation: number): Vec {
+  return formationSlotHeadings(Formation.Line, 1, rotation)[0];
 }
 
 function desiredPositionWeight(state: GameState, ship: Ship): number {
