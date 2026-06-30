@@ -2,8 +2,8 @@ import { COLORS } from "../game/constants";
 import { TEXT } from "../ui/strings";
 import { Side } from "../game/types";
 import { drawGameBackground } from "../render/backgroundRenderer";
+import { drawLaser } from "../render/projectileRenderer";
 import { drawDesiredPositionMarkers, drawFiringRangeCones, drawShips } from "../render/shipRenderer";
-import type { Vec } from "../game/types";
 import type { InvadersRenderContext, InvadersState } from "./types";
 
 export function renderInvaders(
@@ -34,22 +34,6 @@ function fleetColorMap(state: InvadersState): Record<string, string> {
   return Object.fromEntries(
     Object.values(state.fleets).map((fleet) => [fleet.id, fleet.color]),
   );
-}
-
-function drawLaser(
-  context: CanvasRenderingContext2D,
-  position: Vec,
-  velocity: Vec,
-  color: string,
-): void {
-  context.save();
-  context.translate(position.x, position.y);
-  context.rotate(Math.atan2(velocity.y, velocity.x));
-  context.fillStyle = color;
-  context.shadowColor = color;
-  context.shadowBlur = 8;
-  context.fillRect(-7, -1.5, 14, 3);
-  context.restore();
 }
 
 function drawBase(

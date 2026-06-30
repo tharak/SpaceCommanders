@@ -4,8 +4,9 @@ import { TEXT } from "../ui/strings";
 import { formationSlotHeadings, formationSlots, formationSpacing } from "../game/formations";
 import { drawGameBackground } from "./backgroundRenderer";
 import { drawDesiredPositionMarkers, drawFiringRangeCones, drawShips } from "./shipRenderer";
+import { drawLaser } from "./projectileRenderer";
 import { BodyKind, ShipRole, Side } from "../game/types";
-import type { Body, GameState, Ship, Vec, Viewport } from "../game/types";
+import type { Body, GameState, Ship, Viewport } from "../game/types";
 
 type RenderContext = {
   canvas: HTMLCanvasElement;
@@ -202,22 +203,6 @@ function drawProjectiles(
   for (const projectile of state.projectiles) {
     drawLaser(context, projectile.pos, projectile.vel, projectile.color);
   }
-}
-
-function drawLaser(
-  context: CanvasRenderingContext2D,
-  position: Vec,
-  velocity: Vec,
-  color: string,
-): void {
-  context.save();
-  context.translate(position.x, position.y);
-  context.rotate(Math.atan2(velocity.y, velocity.x));
-  context.fillStyle = color;
-  context.shadowColor = color;
-  context.shadowBlur = 8;
-  context.fillRect(-7, -1.5, 14, 3);
-  context.restore();
 }
 
 function updateStatus(status: HTMLElement, state: GameState): void {

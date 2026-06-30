@@ -32,7 +32,7 @@ export function drawShips(
   ships: Ship[],
   fleetColors: FleetColorMap = {},
 ): void {
-  const scale = mobileShipScale();
+  const scale = shipRenderScale();
   for (const ship of ships) {
     const render =
       ship.role === ShipRole.Supply
@@ -171,6 +171,6 @@ export function drawFiringRangeCones(
   }
 }
 
-function mobileShipScale(): number {
+export function shipRenderScale(): number {
   return Math.min(1, Math.max(0.65, window.innerWidth / 600));
 }
