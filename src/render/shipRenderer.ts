@@ -1,5 +1,5 @@
 import { FIRING_CONE_HALF_ANGLE } from "../game/combat";
-import { GAME_CONFIG } from "../game/config";
+import { GAME_CONFIG } from "../game/game-settings";
 import { COLORS } from "../game/constants";
 import { Battleship, ShipRole } from "../game/types";
 import type { Ship } from "../game/types";

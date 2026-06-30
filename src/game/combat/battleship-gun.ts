@@ -1,4 +1,4 @@
-import { GAME_CONFIG } from "../config";
+import { GAME_CONFIG } from "../game-settings";
 import { hasLineOfSight, isTargetForward } from "./combat";
 import { clamp, distance, normalize } from "../utils";
 import { FireMode, Side } from "../types";

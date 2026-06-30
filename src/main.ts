@@ -11,9 +11,9 @@ import {
   setInvadersFireMode,
   setInvadersFleetSpeedMode,
   updateInvaders,
-} from "./invaders/simulation";
+} from "./invaders/invaders-simulation";
 import { renderInvaders } from "./invaders/renderer";
-import { getUpgradeCost } from "./invaders/config";
+import { getUpgradeCost } from "./invaders/invaders-config";
 import { UpgradeType } from "./invaders/upgrade-type";
 import { applyStaticScreenText, TEXT } from "./ui/strings";
 import {
@@ -28,7 +28,7 @@ import {
   setFleetSpeedMode,
   updateFormations,
   updateGame,
-} from "./game/simulation";
+} from "./game/command-simulation";
 import { FireMode, Formation } from "./game/types";
 import type { ShipSpeedMode } from "./game/types";
 import type { Vec, Viewport } from "./game/types";

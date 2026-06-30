@@ -1,4 +1,4 @@
-import { GAME_CONFIG } from "../config";
+import { GAME_CONFIG } from "../game-settings";
 import { Formation } from "../types";
 import type { Vec } from "../types";
 

@@ -1,4 +1,4 @@
-import { GAME_CONFIG } from "../game/config";
+import { GAME_CONFIG } from "../game/game-settings";
 import { COLORS } from "../game/constants";
 import { TEXT } from "../ui/strings";
 import { formationSlotHeadings, formationSlots, formationSpacing } from "../game/formations";

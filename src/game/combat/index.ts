@@ -1,2 +1,2 @@
 export * from "./combat";
-export * from "./gun";
+export * from "./battleship-gun";

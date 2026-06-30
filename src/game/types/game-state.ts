@@ -1,5 +1,5 @@
 import type { Body } from "./body";
-import type { Config } from "./config";
+import type { Config } from "./game-config";
 import type { FireMode } from "./fire-mode";
 import type { Projectile } from "./projectile";
 import type { Formation } from "./formation";

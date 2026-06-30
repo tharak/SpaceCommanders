@@ -1,4 +1,4 @@
-import { GAME_CONFIG } from "../config";
+import { GAME_CONFIG } from "../game-settings";
 import { BoidsSimulationManager } from "./boids-simulation";
 import type { Body, Ship, Vec, Viewport } from "../types";
 

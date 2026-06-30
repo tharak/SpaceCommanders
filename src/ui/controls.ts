@@ -1,11 +1,11 @@
 import { FIRE_MODES, FORMATIONS } from "../game/constants";
-import { getUpgradeCost } from "../invaders/config";
+import { getUpgradeCost } from "../invaders/invaders-config";
 import { TEXT } from "./strings";
 import { UpgradeType } from "../invaders/upgrade-type";
 import { FireMode, Formation } from "../game/types";
 import type { ShipSpeedMode } from "../game/types";
 import type { Config } from "../game/types";
-import { DEFAULT_GAME_CONFIG } from "../game/config";
+import { DEFAULT_GAME_CONFIG } from "../game/game-settings";
 
 export type FleetControlOption = {
   id: string;

@@ -1,5 +1,5 @@
 import { formationSlots } from "../formations";
-import { GAME_CONFIG } from "../config";
+import { GAME_CONFIG } from "../game-settings";
 import { Gun } from "../combat";
 import { randomBetween } from "../utils";
 import {

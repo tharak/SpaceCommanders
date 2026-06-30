@@ -21,7 +21,7 @@ import {
   Side,
 } from "../game/types";
 import type { Formation as FormationType, Ship, Viewport } from "../game/types";
-import { getUpgradeCost, INVADERS_CONFIG, UPGRADE_CONFIG } from "./config";
+import { getUpgradeCost, INVADERS_CONFIG, UPGRADE_CONFIG } from "./invaders-config";
 import { UpgradeType } from "./upgrade-type";
 import type { InvadersState } from "./types";
 

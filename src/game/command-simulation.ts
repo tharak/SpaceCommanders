@@ -1,6 +1,6 @@
 import { FORMATIONS, PLAYER_FLEET_COLORS, PLAYER_FLEET_IDS, PLAYER_FLEET_NAMES } from "./constants";
 import { applyGunSteering } from "./combat";
-import { DEFAULT_GAME_CONFIG, GAME_CONFIG } from "./config";
+import { DEFAULT_GAME_CONFIG, GAME_CONFIG } from "./game-settings";
 import {
   assignStableFormationSlots,
   formationSlotHeadings,

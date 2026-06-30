@@ -1,5 +1,5 @@
 import { distance, distanceToSegment } from "../utils";
-import { GAME_CONFIG } from "../config";
+import { GAME_CONFIG } from "../game-settings";
 import { Battleship, FireMode } from "../types";
 
 export const FIRING_CONE_ANGLE =
