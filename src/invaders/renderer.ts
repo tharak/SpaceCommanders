@@ -2,7 +2,7 @@ import { COLORS } from "../game/constants";
 import { TEXT } from "../ui/strings";
 import { Side } from "../game/types";
 import { drawGameBackground } from "../render/backgroundRenderer";
-import { drawFiringRangeCones, drawShips } from "../render/shipRenderer";
+import { drawDesiredPositionMarkers, drawFiringRangeCones, drawShips } from "../render/shipRenderer";
 import type { Vec } from "../game/types";
 import type { InvadersRenderContext, InvadersState } from "./types";
 
@@ -14,6 +14,7 @@ export function renderInvaders(
   drawGameBackground(context, viewport, [state.base]);
   drawBase(context, state, viewport);
   const fleetColors = fleetColorMap(state);
+  drawDesiredPositionMarkers(context, [...state.ships, ...state.supplyShips, ...state.enemies], fleetColors);
   drawFiringRangeCones(context, [...state.ships, ...state.enemies], fleetColors);
   drawShips(context, state.ships, fleetColors);
   drawShips(context, state.supplyShips, fleetColors);

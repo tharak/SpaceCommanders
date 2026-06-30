@@ -6,6 +6,27 @@ import type { Ship } from "../game/types";
 
 type FleetColorMap = Record<string, string>;
 
+export function drawDesiredPositionMarkers(
+  context: CanvasRenderingContext2D,
+  ships: Ship[],
+  fleetColors: FleetColorMap = {},
+): void {
+  for (const ship of ships) {
+    if (!ship.target) continue;
+    const color = shipColor(ship, fleetColors);
+    context.save();
+    context.translate(ship.target.x, ship.target.y);
+    context.strokeStyle = color + "aa";
+    context.fillStyle = color + "1f";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.arc(0, 0, 4, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+    context.restore();
+  }
+}
+
 export function drawShips(
   context: CanvasRenderingContext2D,
   ships: Ship[],

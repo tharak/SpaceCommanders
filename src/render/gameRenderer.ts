@@ -3,7 +3,7 @@ import { COLORS } from "../game/constants";
 import { TEXT } from "../ui/strings";
 import { formationSlotHeadings, formationSlots } from "../game/formations";
 import { drawGameBackground } from "./backgroundRenderer";
-import { drawFiringRangeCones, drawShips } from "./shipRenderer";
+import { drawDesiredPositionMarkers, drawFiringRangeCones, drawShips } from "./shipRenderer";
 import { BodyKind, ShipRole, Side } from "../game/types";
 import type { Body, GameState, Ship, Vec, Viewport } from "../game/types";
 
@@ -36,6 +36,7 @@ export function renderGame(
   drawFormationPreview(context, state);
   drawProjectiles(context, state);
   const fleetColors = fleetColorMap(state);
+  drawDesiredPositionMarkers(context, state.ships, fleetColors);
   drawFiringRangeCones(context, state.ships, fleetColors);
   drawShips(context, state.ships, fleetColors);
   updateStatus(renderContext.status, state);
