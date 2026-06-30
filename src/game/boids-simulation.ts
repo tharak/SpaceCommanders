@@ -19,7 +19,6 @@ export type BoidsSimulationConfig = {
 
 export type BoidsSimulationOrder = {
   desiredPosition?: Vec;
-  desiredRadius?: number;
   desiredPositionWeight: number;
   desiredHeading?: Vec;
   steeringHeading?: Vec;
@@ -38,9 +37,8 @@ export class BoidsSimulationManager {
   update(ship: Ship, order: BoidsSimulationOrder, deltaTime: number): void {
     if (!order.desiredPosition) return;
     const { config, viewport } = this.setup;
-    const desiredDistance = distance(ship.pos, order.desiredPosition);
-    const desiredRadius = order.desiredRadius ?? config.arrivalDistance;
-    const hasArrived = desiredDistance <= desiredRadius;
+    const hasArrived =
+      distance(ship.pos, order.desiredPosition) <= config.arrivalDistance;
     const force = hasArrived
       ? { x: 0, y: 0 }
       : this.desiredPositionForce(ship, order);

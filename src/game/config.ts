@@ -44,7 +44,6 @@ export const GAME_CONFIG = {
   },
   formation: {
     arrivalDistance: 2,
-    targetAreaRadius: 6,
     spacing: 15,
     captainOffsetX: 10,
     captainOffsetY: 30,

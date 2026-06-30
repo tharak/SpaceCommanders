@@ -428,7 +428,6 @@ function advanceFormationFleet(
   const headings = formationSlotHeadings(formation, fleet.length, rotation);
   for (const [ship, assignment] of assignStableFormationSlots(fleet, slots)) {
     ship.target = assignment.position;
-    ship.targetRadius = GAME_CONFIG.formation.targetAreaRadius;
     ship.targetHeading = headings[assignment.slotIndex];
   }
   for (const ship of fleet) moveShip(state, ship, viewport, deltaTime * shipSpeedMultiplier(state, ship));
@@ -805,7 +804,6 @@ function spawnSupplyShip(
   ship.resupplyTargetId = target.id;
   ship.supplyMission = SupplyMission.Delivering;
   ship.target = { ...target.pos };
-  ship.targetRadius = undefined;
   return ship;
 }
 
@@ -818,7 +816,6 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
 
   if (ship.supplyMission === SupplyMission.Returning) {
     ship.target = { ...homePlanet.pos };
-    ship.targetRadius = undefined;
     if (
       distance(ship.pos, homePlanet.pos) <=
       homePlanet.radius + GAME_CONFIG.supply.returnDistance
@@ -831,7 +828,6 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
   if (ship.supplies <= 0) {
     ship.supplyMission = SupplyMission.Returning;
     ship.target = { ...homePlanet.pos };
-    ship.targetRadius = undefined;
     return;
   }
 
@@ -854,7 +850,6 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
     ) {
       ship.supplyMission = SupplyMission.Returning;
       ship.target = { ...homePlanet.pos };
-      ship.targetRadius = undefined;
       return;
     }
     ship.resupplyTargetId = replacementTarget.id;
@@ -877,17 +872,14 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
     ) {
       ship.resupplyTargetId = replacementTarget.id;
       ship.target = { ...replacementTarget.pos };
-      ship.targetRadius = undefined;
       return;
     }
     ship.supplyMission = SupplyMission.Returning;
     ship.target = { ...homePlanet.pos };
-    ship.targetRadius = undefined;
     return;
   }
 
   ship.target = { ...target.pos };
-  ship.targetRadius = undefined;
   if (distance(ship.pos, target.pos) > GAME_CONFIG.supply.transferDistance)
     return;
 
@@ -898,14 +890,12 @@ function updateSupplyMission(state: GameState, ship: Ship): void {
   if (transferred <= 0) {
     ship.supplyMission = SupplyMission.Returning;
     ship.target = { ...homePlanet.pos };
-    ship.targetRadius = undefined;
     return;
   }
   target.supplies += transferred;
   ship.supplies -= transferred;
   ship.supplyMission = SupplyMission.Returning;
   ship.target = { ...homePlanet.pos };
-  ship.targetRadius = undefined;
 }
 
 function findClosestLeastSuppliedBattleship(
@@ -977,7 +967,6 @@ function assignFormationTargets(state: GameState): void {
 
     for (const [ship, assignment] of assignments) {
       ship.target = assignment.position;
-      ship.targetRadius = GAME_CONFIG.formation.targetAreaRadius;
       ship.targetHeading = headings[assignment.slotIndex];
     }
 
@@ -993,7 +982,6 @@ function assignFormationTargets(state: GameState): void {
               : -GAME_CONFIG.formation.captainOffsetX),
           y: center.y + GAME_CONFIG.formation.captainOffsetY,
         };
-        ship.targetRadius = GAME_CONFIG.formation.targetAreaRadius;
       });
   }
 }

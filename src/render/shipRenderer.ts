@@ -20,7 +20,7 @@ export function drawDesiredPositionMarkers(
     context.fillStyle = color + "1f";
     context.lineWidth = 1;
     context.beginPath();
-    context.arc(0, 0, ship.targetRadius ?? 4, 0, Math.PI * 2);
+    context.arc(0, 0, 4, 0, Math.PI * 2);
     context.fill();
     context.stroke();
     context.restore();
