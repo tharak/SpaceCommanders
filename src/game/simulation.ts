@@ -964,11 +964,7 @@ function assignFormationTargets(state: GameState): void {
       fleetCommand.command &&
       fleetCommand.destination &&
       assignments.size > 0 &&
-      Array.from(assignments).every(
-        ([ship, assignment]) =>
-          distance(ship.pos, assignment.position) <=
-          GAME_CONFIG.formation.arrivalDistance,
-      )
+      shipsInFormation(assignments) >= Math.ceil(assignments.size * 0.5)
     ) {
       fleetCommand.combatStage = "attacking";
       fleetCommand.speedMode = "full";
@@ -999,6 +995,16 @@ function assignFormationTargets(state: GameState): void {
       });
   }
 }
+function shipsInFormation(
+  assignments: Map<Ship, { position: Vec; slotIndex: number }>,
+): number {
+  return Array.from(assignments).filter(
+    ([ship, assignment]) =>
+      distance(ship.pos, assignment.position) <=
+      GAME_CONFIG.formation.arrivalDistance,
+  ).length;
+}
+
 function fleetCenter(ships: Ship[]): Vec | undefined {
   if (ships.length === 0) return undefined;
   const total = ships.reduce(
