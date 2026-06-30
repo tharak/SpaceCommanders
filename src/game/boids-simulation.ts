@@ -15,6 +15,7 @@ export type BoidsSimulationConfig = {
   velocityResponseRate: number;
   lateralVelocityMultiplier: number;
   reverseVelocityMultiplier: number;
+  reverseSteeringDotThreshold: number;
   headingVelocityThreshold: number;
   viewportPadding: number;
   turnRate: number;
@@ -43,6 +44,12 @@ export class BoidsSimulationManager {
     const desiredHeading = order.desiredHeading;
     const steeringHeading = order.steeringHeading;
     const explicitHeading = steeringHeading ?? desiredHeading;
+    const movementHeading = this.desiredMovementHeading(ship, order);
+    const shouldSteerToMovement =
+      !!explicitHeading &&
+      movementHeading.x * explicitHeading.x +
+        movementHeading.y * explicitHeading.y <
+        config.reverseSteeringDotThreshold;
 
     if (distance(ship.pos, order.desiredPosition) <= config.arrivalDistance) {
       ship.pos = { ...order.desiredPosition };
@@ -55,7 +62,7 @@ export class BoidsSimulationManager {
     this.applyBoidForces(force, ship);
     this.applyBodyAvoidance(force, ship);
     this.applyEdgeAvoidance(force, ship);
-    this.applyHeadingForces(force, ship, order);
+    this.applyHeadingForces(force, ship, order, !shouldSteerToMovement);
 
     const directedForce = this.applyDirectionalVelocityLimits(force, ship);
 
@@ -66,8 +73,9 @@ export class BoidsSimulationManager {
       (directedForce.y - ship.vel.y) *
       Math.min(1, deltaTime * config.velocityResponseRate);
 
-    if (explicitHeading) {
-      this.steerHeading(ship, explicitHeading, deltaTime);
+    const targetHeading = shouldSteerToMovement ? movementHeading : explicitHeading;
+    if (targetHeading) {
+      this.steerHeading(ship, targetHeading, deltaTime);
     } else if (
       Math.hypot(ship.vel.x, ship.vel.y) > config.headingVelocityThreshold
     ) {
@@ -87,16 +95,20 @@ export class BoidsSimulationManager {
   }
 
   private desiredPositionForce(ship: Ship, order: BoidsSimulationOrder): Vec {
-    const target = order.desiredPosition;
-    if (!target) return { x: 0, y: 0 };
-    const direction = normalize({
-      x: target.x - ship.pos.x,
-      y: target.y - ship.pos.y,
-    });
+    const direction = this.desiredMovementHeading(ship, order);
     return {
       x: direction.x * ship.speed * order.desiredPositionWeight,
       y: direction.y * ship.speed * order.desiredPositionWeight,
     };
+  }
+
+  private desiredMovementHeading(ship: Ship, order: BoidsSimulationOrder): Vec {
+    const target = order.desiredPosition;
+    if (!target) return normalize(ship.heading);
+    return normalize({
+      x: target.x - ship.pos.x,
+      y: target.y - ship.pos.y,
+    });
   }
 
   private applyBoidForces(force: Vec, ship: Ship): void {
@@ -132,7 +144,9 @@ export class BoidsSimulationManager {
     force: Vec,
     ship: Ship,
     order: BoidsSimulationOrder,
+    shouldApplyHeadingForce: boolean,
   ): void {
+    if (!shouldApplyHeadingForce) return;
     const { config } = this.setup;
     if (order.desiredHeading) {
       const direction = normalize(order.desiredHeading);
