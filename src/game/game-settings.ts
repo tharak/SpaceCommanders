@@ -106,7 +106,7 @@ export const GAME_CONFIG = {
     stockCapacityRadiusDivisor: 1,
     supplyGenerationRate: 0.55,
     captureRange: 22.5,
-    captureRate: 0.12,
+    captureRate: 0.03,
   },
   projectile: {
     speed: 360,
