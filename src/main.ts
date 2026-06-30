@@ -319,11 +319,13 @@ canvas.addEventListener("pointerup", (event) => {
     return;
   }
   if (!commandState.previewCenter) return;
-  commandState.pointer = mapPoint(event);
+  commandState.pointer = event.pointerType === "mouse" ? mapPoint(event) : null;
   issueFormationOrder(commandState, commandState.previewCenter);
   syncChargeControl();
   commandState.previewCenter = null;
-  canvas.releasePointerCapture(event.pointerId);
+  if (canvas.hasPointerCapture(event.pointerId)) {
+    canvas.releasePointerCapture(event.pointerId);
+  }
 });
 canvas.addEventListener("pointercancel", () => {
   commandState.previewCenter = null;
