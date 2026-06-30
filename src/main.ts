@@ -17,7 +17,6 @@ import { getUpgradeCost } from "./invaders/config";
 import { UpgradeType } from "./invaders/upgrade-type";
 import { applyStaticScreenText, TEXT } from "./ui/strings";
 import {
-  beginSelectedFleetAttackFormation,
   createGameState,
   playerFleetCommands,
   issueFormationOrder,
@@ -162,12 +161,6 @@ setupControls(
         return;
       }
       setSelectedFleetFormation(commandState, formation);
-      if (activeGame === "command") {
-        beginSelectedFleetAttackFormation(commandState);
-        setSelectedShipSpeedMode(controls, selectedFleetSpeedMode());
-        showReadout(controls, TEXT.readout.formationSelected(formation));
-        return;
-      }
       if (activeGame === "formations") {
         setFormationModePlayerFormation(commandState, viewport, formation);
         setSelectedFormation(controls, formation);
@@ -276,7 +269,7 @@ canvas.addEventListener("pointermove", (event) => {
     return;
   }
   commandState.pointer = point;
-  if (activeGame === "command") return;
+  if (activeGame === "command" && selectedFleetSpeedMode() === "hold") return;
   if (!commandState.previewCenter) return;
   const offsetX = point.x - commandState.previewCenter.x;
   const offsetY = point.y - commandState.previewCenter.y;
@@ -297,7 +290,7 @@ canvas.addEventListener("pointerdown", (event) => {
     canvas.setPointerCapture(event.pointerId);
     return;
   }
-  if (activeGame === "command") return;
+  if (activeGame === "command" && selectedFleetSpeedMode() === "hold") return;
   const point = mapPoint(event);
   canvas.setPointerCapture(event.pointerId);
   commandState.pointer = point;

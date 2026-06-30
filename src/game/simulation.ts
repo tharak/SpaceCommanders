@@ -120,34 +120,6 @@ export function setSelectedFleetFormation(state: GameState, formation: Formation
   state.selectedFormation = formation;
 }
 
-export function beginSelectedFleetAttackFormation(state: GameState): void {
-  const fleet = selectedFleetCommand(state);
-  if (!fleet) return;
-  const battleships = state.ships.filter(
-    (ship) => ship.fleetId === fleet.id && ship.role === ShipRole.Battleship,
-  );
-  const center = fleetCenter(battleships);
-  if (!center) return;
-  const enemyBase = state.bodies.find((body) => body.base === Side.Enemy);
-  const rotation = enemyBase
-    ? Math.atan2(enemyBase.pos.y - center.y, enemyBase.pos.x - center.x)
-    : -Math.PI / 2;
-  fleet.formation = fleet.selectedFormation;
-  fleet.command = center;
-  fleet.destination = null;
-  fleet.formationRotation = rotation;
-  fleet.cohesion = GAME_CONFIG.match.initialCohesion;
-  fleet.speedMode = "normal";
-  fleet.combatStage = "forming";
-  state.formation = fleet.formation;
-  state.selectedFormation = fleet.selectedFormation;
-  state.command = fleet.command;
-  state.destination = fleet.destination;
-  state.formationRotation = fleet.formationRotation;
-  state.cohesion = fleet.cohesion;
-  state.previewCenter = null;
-  state.pointer = null;
-}
 
 export function setFleetSpeedMode(
   state: GameState,
@@ -588,11 +560,22 @@ function createAsteroidField(id: number, viewport: Viewport): Body {
 export function issueFormationOrder(state: GameState, destination: Vec): void {
   const fleet = selectedFleetCommand(state);
   if (!fleet) return;
+  const battleships = state.ships.filter(
+    (ship) => ship.fleetId === fleet.id && ship.role === ShipRole.Battleship,
+  );
+  const center = fleetCenter(battleships);
+  if (!center) return;
+
   fleet.formation = fleet.selectedFormation;
-  fleet.formationRotation = state.previewRotation;
+  fleet.formationRotation = Math.atan2(
+    destination.y - center.y,
+    destination.x - center.x,
+  );
   fleet.cohesion = state.previewCohesion;
-  fleet.command = { ...destination };
-  fleet.destination = null;
+  fleet.command = center;
+  fleet.destination = { ...destination };
+  fleet.speedMode = "normal";
+  fleet.combatStage = "forming";
   state.formation = fleet.formation;
   state.selectedFormation = fleet.selectedFormation;
   state.formationRotation = fleet.formationRotation;
@@ -961,7 +944,7 @@ function assignFormationTargets(state: GameState): void {
       side === Side.Player &&
       fleetCommand.combatStage === "forming" &&
       fleetCommand.command &&
-      enemyBase &&
+      fleetCommand.destination &&
       assignments.size > 0 &&
       Array.from(assignments).every(
         ([ship, assignment]) =>
@@ -971,11 +954,11 @@ function assignFormationTargets(state: GameState): void {
     ) {
       fleetCommand.combatStage = "attacking";
       fleetCommand.speedMode = "full";
-      fleetCommand.command = { ...enemyBase.pos };
+      fleetCommand.command = { ...fleetCommand.destination };
       fleetCommand.destination = null;
       fleetCommand.formationRotation = Math.atan2(
-        enemyBase.pos.y - center.y,
-        enemyBase.pos.x - center.x,
+        fleetCommand.command.y - center.y,
+        fleetCommand.command.x - center.x,
       );
       if (state.selectedFleetId === fleetCommand.id) {
         state.command = fleetCommand.command;
