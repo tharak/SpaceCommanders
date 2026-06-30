@@ -131,6 +131,32 @@ export function setFleetSpeedMode(
   fleet.speedMode = speedMode;
 }
 
+export function canChargeSelectedFleet(state: GameState): boolean {
+  const fleet = selectedFleetCommand(state);
+  return !!fleet && canChargeFleet(state, fleet.id);
+}
+
+export function chargeSelectedFleet(state: GameState): boolean {
+  const fleet = selectedFleetCommand(state);
+  if (!fleet || !canChargeFleet(state, fleet.id) || !fleet.destination) return false;
+  const battleships = state.ships.filter(
+    (ship) => ship.fleetId === fleet.id && ship.role === ShipRole.Battleship,
+  );
+  const center = fleetCenter(battleships) ?? fleet.command ?? fleet.destination;
+  fleet.combatStage = "attacking";
+  fleet.speedMode = "full";
+  fleet.command = { ...fleet.destination };
+  fleet.destination = null;
+  fleet.formationRotation = Math.atan2(
+    fleet.command.y - center.y,
+    fleet.command.x - center.x,
+  );
+  state.command = fleet.command;
+  state.destination = fleet.destination;
+  state.formationRotation = fleet.formationRotation;
+  return true;
+}
+
 export function resetGame(
   state: GameState,
   config: Config,
@@ -958,28 +984,6 @@ function assignFormationTargets(state: GameState): void {
       ship.targetHeading = headings[assignment.slotIndex];
     }
 
-    if (
-      side === Side.Player &&
-      fleetCommand.combatStage === "forming" &&
-      fleetCommand.command &&
-      fleetCommand.destination &&
-      assignments.size > 0 &&
-      shipsInFormation(assignments) >= Math.ceil(assignments.size * 0.5)
-    ) {
-      fleetCommand.combatStage = "attacking";
-      fleetCommand.speedMode = "full";
-      fleetCommand.command = { ...fleetCommand.destination };
-      fleetCommand.destination = null;
-      fleetCommand.formationRotation = Math.atan2(
-        fleetCommand.command.y - center.y,
-        fleetCommand.command.x - center.x,
-      );
-      if (state.selectedFleetId === fleetCommand.id) {
-        state.command = fleetCommand.command;
-        state.destination = fleetCommand.destination;
-        state.formationRotation = fleetCommand.formationRotation;
-      }
-    }
 
     fleet
       .filter((ship) => ship.role === ShipRole.Captain)
@@ -1003,6 +1007,26 @@ function shipsInFormation(
       distance(ship.pos, assignment.position) <=
       GAME_CONFIG.formation.arrivalDistance,
   ).length;
+}
+
+function canChargeFleet(state: GameState, fleetId: string): boolean {
+  const fleet = state.fleets[fleetId];
+  if (!fleet || fleet.combatStage !== "forming" || !fleet.command || !fleet.destination) return false;
+  const battleships = state.ships.filter(
+    (ship) => ship.fleetId === fleetId && ship.role === ShipRole.Battleship,
+  );
+  const slots = formationSlots(
+    fleet.command,
+    fleet.formation,
+    battleships.length,
+    GAME_CONFIG.formation.spacing,
+    fleet.formationRotation,
+  );
+  const assignments = assignNearestFormationSlots(battleships, slots);
+  return (
+    assignments.size > 0 &&
+    shipsInFormation(assignments) >= Math.ceil(assignments.size * 0.5)
+  );
 }
 
 function fleetCenter(ships: Ship[]): Vec | undefined {

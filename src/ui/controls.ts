@@ -18,6 +18,7 @@ type Controls = {
   formationControls: HTMLElement;
   fireControls: HTMLElement;
   speedControls: HTMLElement;
+  chargeButton: HTMLButtonElement;
   upgradeControls: HTMLElement;
   moneyDisplay: HTMLElement;
   moneyAmount: HTMLElement;
@@ -28,6 +29,7 @@ type ControlCallbacks = {
   onFormationChange: (formation: Formation) => void;
   onFireModeChange: (mode: FireMode) => void;
   onShipSpeedModeChange: (mode: ShipSpeedMode) => void;
+  onChargeFleet: () => void;
   onUpgrade: (upgrade: UpgradeType) => void;
 };
 
@@ -37,6 +39,7 @@ export function getControls(): Controls {
     formationControls: requiredElement("#formation-controls"),
     fireControls: requiredElement("#fire-controls"),
     speedControls: requiredElement("#speed-controls"),
+    chargeButton: requiredButton("#charge-fleet"),
     upgradeControls: requiredElement("#upgrade-controls"),
     moneyDisplay: requiredElement("#money-display"),
     moneyAmount: requiredElement("#money-amount"),
@@ -56,6 +59,7 @@ export function setupControls(
   createFormationButtons(controls, callbacks.onFormationChange);
   createFireModeButtons(controls, callbacks.onFireModeChange);
   createShipSpeedModeButtons(controls, callbacks.onShipSpeedModeChange);
+  controls.chargeButton.addEventListener("click", callbacks.onChargeFleet);
   createUpgradeButtons(controls, callbacks.onUpgrade);
   selectActive(controls.formationControls, initialFormation);
   selectActive(controls.fireControls, initialFireMode);
@@ -172,6 +176,10 @@ export function setSelectedShipSpeedMode(
   mode: ShipSpeedMode,
 ): void {
   selectActive(controls.speedControls, mode);
+}
+
+export function setChargeEnabled(controls: Controls, enabled: boolean): void {
+  controls.chargeButton.disabled = !enabled;
 }
 
 export function setFormationSelectionEnabled(
@@ -375,6 +383,13 @@ function fireModeIcon(mode: FireMode): string {
     return `<svg viewBox="0 0 32 30"><path d="M16 5l7 16-7-3-7 3zM13 14h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
   }
   return `<svg viewBox="0 0 32 30"><g class="at-will-ship"><path d="M16 5l7 16-7-3-7 3zM13 14h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></g><path d="M6 8l-2 3 2 3M26 8l2 3-2 3" fill="none" stroke="#80efff" stroke-width="1.5"/></svg>`;
+}
+
+function requiredButton(selector: string): HTMLButtonElement {
+  const element = document.querySelector(selector);
+  if (!(element instanceof HTMLButtonElement))
+    throw new Error(`Missing required button: ${selector}`);
+  return element;
 }
 
 function requiredElement(selector: string): HTMLElement {
