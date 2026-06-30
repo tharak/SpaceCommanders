@@ -11,7 +11,7 @@ export const DEFAULT_GAME_CONFIG = {
 
 export const GAME_CONFIG = {
   match: {
-    initialFormation: Formation.Circle,
+    initialFormation: Formation.Line,
     captainFavorite: Formation.Line,
     initialCohesion: 0.7,
   },
