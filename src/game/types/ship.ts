@@ -20,6 +20,7 @@ export class BaseShip {
   declare supplies: number;
   declare fleetId: string;
   declare target?: Vec;
+  declare targetRadius?: number;
   declare targetHeading?: Vec;
   declare steeringHeading?: Vec;
   declare homeBodyId?: number;

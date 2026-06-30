@@ -23,6 +23,7 @@ export type BoidsSimulationConfig = {
 
 export type BoidsSimulationOrder = {
   desiredPosition?: Vec;
+  desiredRadius?: number;
   desiredPositionWeight: number;
   desiredHeading?: Vec;
   steeringHeading?: Vec;
@@ -44,6 +45,9 @@ export class BoidsSimulationManager {
     const desiredHeading = order.desiredHeading;
     const steeringHeading = order.steeringHeading;
     const explicitHeading = steeringHeading ?? desiredHeading;
+    const desiredDistance = distance(ship.pos, order.desiredPosition);
+    const desiredRadius = order.desiredRadius ?? config.arrivalDistance;
+    const hasArrived = desiredDistance <= desiredRadius;
     const movementHeading = this.desiredMovementHeading(ship, order);
     const shouldSteerToMovement =
       !!explicitHeading &&
@@ -51,14 +55,9 @@ export class BoidsSimulationManager {
         movementHeading.y * explicitHeading.y <
         config.reverseSteeringDotThreshold;
 
-    if (distance(ship.pos, order.desiredPosition) <= config.arrivalDistance) {
-      ship.pos = { ...order.desiredPosition };
-      ship.vel = { x: 0, y: 0 };
-      if (explicitHeading) this.steerHeading(ship, explicitHeading, deltaTime);
-      return;
-    }
-
-    const force = this.desiredPositionForce(ship, order);
+    const force = hasArrived
+      ? { x: 0, y: 0 }
+      : this.desiredPositionForce(ship, order);
     this.applyBoidForces(force, ship);
     this.applyBodyAvoidance(force, ship);
     this.applyEdgeAvoidance(force, ship);

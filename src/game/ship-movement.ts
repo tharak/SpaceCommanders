@@ -45,6 +45,7 @@ export function moveShipWithBoids(
     ship,
     {
       desiredPosition: ship.target,
+      desiredRadius: ship.targetRadius,
       desiredPositionWeight: weights.desiredPosition ?? 1,
       desiredHeading: ship.targetHeading ?? formationHeading,
       steeringHeading: ship.steeringHeading,
