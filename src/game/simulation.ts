@@ -161,22 +161,23 @@ export function resetGame(
 
   let id = 0;
   for (const [fleetIndex, fleetId] of PLAYER_FLEET_IDS.entries()) {
-    const offset =
-      (fleetIndex - (PLAYER_FLEET_IDS.length - 1) / 2) *
-      GAME_CONFIG.formation.spacing *
-      3;
-    state.ships.push(
-      ...spawnFleet(
-        Side.Player,
-        ShipRole.Battleship,
-        { x: playerBase.x + offset, y: playerBase.y },
-        state.fleets[fleetId].formation,
-        config.ships,
-        GAME_CONFIG.formation.spacing,
-        id,
-        fleetId,
-      ),
+    const center = playerFleetStartCenter(playerBase, fleetIndex);
+    const ships = spawnFleet(
+      Side.Player,
+      ShipRole.Battleship,
+      center,
+      Formation.Line,
+      config.ships,
+      GAME_CONFIG.formation.spacing,
+      id,
+      fleetId,
     );
+    for (const ship of ships) {
+      ship.heading = { x: 0, y: -1 };
+      ship.target = { ...ship.pos };
+      ship.targetHeading = { ...ship.heading };
+    }
+    state.ships.push(...ships);
     id += config.ships;
   }
   state.ships.push(
@@ -191,6 +192,23 @@ export function resetGame(
       ENEMY_MAIN_FLEET_ID,
     ),
   );
+}
+
+function playerFleetStartCenter(playerBase: Vec, fleetIndex: number): Vec {
+  const fleetWidth = (DEFAULT_GAME_CONFIG.ships - 1) * GAME_CONFIG.formation.spacing;
+  const fleetGap = GAME_CONFIG.formation.spacing * 2;
+  const offset =
+    (fleetIndex - (PLAYER_FLEET_IDS.length - 1) / 2) *
+    (fleetWidth + fleetGap);
+  const shipLength =
+    GAME_CONFIG.ship.render.tailY - GAME_CONFIG.ship.render.noseY;
+  return {
+    x: playerBase.x + offset,
+    y:
+      playerBase.y -
+      GAME_CONFIG.map.basePlanet.radius -
+      shipLength * GAME_CONFIG.map.basePlanet.borderShipSpacing,
+  };
 }
 
 function createFormationDebugMap(state: GameState, viewport: Viewport): void {
