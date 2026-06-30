@@ -17,7 +17,6 @@ import { getUpgradeCost } from "./invaders/config";
 import { UpgradeType } from "./invaders/upgrade-type";
 import { applyStaticScreenText, TEXT } from "./ui/strings";
 import {
-  canChargeSelectedFleet,
   chargeSelectedFleet,
   createGameState,
   playerFleetCommands,
@@ -366,10 +365,7 @@ function updateActiveGame(deltaTime: number): void {
 }
 
 function syncChargeControl(): void {
-  setChargeEnabled(
-    controls,
-    activeGame === "command" && canChargeSelectedFleet(commandState),
-  );
+  setChargeEnabled(controls, activeGame === "command");
 }
 
 function syncInvadersControls(): void {
