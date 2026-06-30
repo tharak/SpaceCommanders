@@ -43,7 +43,9 @@ export const GAME_CONFIG = {
     },
   },
   formation: {
-    arrivalDistance: 2,
+    arrivalDistance: 4,
+    finalApproachDistance: 18,
+    finalApproachSeparationMultiplier: 0.15,
     spacing: 15,
     captainOffsetX: 10,
     captainOffsetY: 30,

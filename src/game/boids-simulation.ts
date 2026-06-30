@@ -3,6 +3,8 @@ import type { Body, Ship, Vec, Viewport } from "./types";
 
 export type BoidsSimulationConfig = {
   arrivalDistance: number;
+  finalApproachDistance: number;
+  finalApproachSeparationMultiplier: number;
   separationDistance: number;
   separationWeight: number;
   alignmentWeight: number;
@@ -49,7 +51,11 @@ export class BoidsSimulationManager {
     }
 
     const force = this.desiredPositionForce(ship, order);
-    this.applyBoidForces(force, ship);
+    this.applyBoidForces(
+      force,
+      ship,
+      this.finalApproachProgress(ship, order),
+    );
     this.applyBodyAvoidance(force, ship);
     this.applyEdgeAvoidance(force, ship);
     this.applyHeadingForces(force, ship, order, !hasArrived);
@@ -94,8 +100,17 @@ export class BoidsSimulationManager {
     });
   }
 
-  private applyBoidForces(force: Vec, ship: Ship): void {
+  private applyBoidForces(
+    force: Vec,
+    ship: Ship,
+    finalApproachProgress: number,
+  ): void {
     const { config, boids } = this.setup;
+    const separationWeight =
+      config.separationWeight *
+      (1 -
+        finalApproachProgress *
+          (1 - config.finalApproachSeparationMultiplier));
     let alignment = { x: 0, y: 0 };
     let alignmentCount = 0;
 
@@ -108,9 +123,9 @@ export class BoidsSimulationManager {
         y: ship.pos.y - other.pos.y,
       });
       force.x +=
-        direction.x * (config.separationDistance - separation) * config.separationWeight;
+        direction.x * (config.separationDistance - separation) * separationWeight;
       force.y +=
-        direction.y * (config.separationDistance - separation) * config.separationWeight;
+        direction.y * (config.separationDistance - separation) * separationWeight;
       alignment.x += other.heading.x;
       alignment.y += other.heading.y;
       alignmentCount++;
@@ -121,6 +136,22 @@ export class BoidsSimulationManager {
       force.x += direction.x * ship.speed * config.alignmentWeight;
       force.y += direction.y * ship.speed * config.alignmentWeight;
     }
+  }
+
+  private finalApproachProgress(ship: Ship, order: BoidsSimulationOrder): number {
+    const target = order.desiredPosition;
+    if (!target) return 0;
+    const distanceToTarget = distance(ship.pos, target);
+    const { arrivalDistance, finalApproachDistance } = this.setup.config;
+    if (distanceToTarget >= finalApproachDistance) return 0;
+    return Math.max(
+      0,
+      Math.min(
+        1,
+        (finalApproachDistance - distanceToTarget) /
+          Math.max(1, finalApproachDistance - arrivalDistance),
+      ),
+    );
   }
 
   private applyHeadingForces(

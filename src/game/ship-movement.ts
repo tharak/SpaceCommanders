@@ -12,7 +12,7 @@ export function moveShipWithBoids(
   bodies: Body[],
   viewport: Viewport,
   deltaTime: number,
-  arrivalDistance = GAME_CONFIG.formation.arrivalDistance,
+  arrivalDistance: number = GAME_CONFIG.formation.arrivalDistance,
   formationHeading?: Vec,
   weights: ShipBoidsWeights = {},
 ): void {
@@ -22,6 +22,9 @@ export function moveShipWithBoids(
     viewport,
     config: {
       arrivalDistance,
+      finalApproachDistance: GAME_CONFIG.formation.finalApproachDistance,
+      finalApproachSeparationMultiplier:
+        GAME_CONFIG.formation.finalApproachSeparationMultiplier,
       separationDistance: GAME_CONFIG.movement.separationDistance,
       separationWeight: GAME_CONFIG.movement.separationForceMultiplier,
       alignmentWeight: GAME_CONFIG.movement.alignmentForceMultiplier,
