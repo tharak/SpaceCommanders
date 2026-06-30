@@ -120,8 +120,8 @@ export const GAME_CONFIG = {
     maximumMorale: 100,
   },
   movement: {
-    separationDistance: 22,
-    separationForceMultiplier: 8,
+    separationDistance: 16,
+    separationForceMultiplier: 6.5,
     alignmentForceMultiplier: 0.18,
     desiredHeadingForceMultiplier: 0.25,
     steeringHeadingForceMultiplier: 0.45,
