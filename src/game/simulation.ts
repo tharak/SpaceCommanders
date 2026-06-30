@@ -320,20 +320,14 @@ type MatchMap = {
 };
 
 function createMatchMap(config: Config, viewport: Viewport): MatchMap {
-  const { baseMargin } = GAME_CONFIG.map;
+  const baseOffset = basePlanetBorderOffset();
   const playerBase = {
-    x: randomBetween(
-      baseMargin,
-      viewport.width * GAME_CONFIG.map.playerBaseMaxXRatio,
-    ),
-    y: randomBetween(baseMargin, viewport.height - baseMargin),
+    x: viewport.width / 2,
+    y: viewport.height - baseOffset,
   };
   const enemyBase = {
-    x: randomBetween(
-      viewport.width * GAME_CONFIG.map.enemyBaseMinXRatio,
-      viewport.width - baseMargin,
-    ),
-    y: randomBetween(baseMargin, viewport.height - baseMargin),
+    x: viewport.width / 2,
+    y: baseOffset,
   };
   const bodies: Body[] = [
     createBasePlanet(0, playerBase, Side.Player),
@@ -347,6 +341,15 @@ function createMatchMap(config: Config, viewport: Viewport): MatchMap {
     bodies.push(createAsteroidField(bodies.length, viewport));
   }
   return { bodies, playerBase, enemyBase };
+}
+
+function basePlanetBorderOffset(): number {
+  const shipLength =
+    GAME_CONFIG.ship.render.tailY - GAME_CONFIG.ship.render.noseY;
+  return (
+    GAME_CONFIG.map.basePlanet.radius +
+    shipLength * GAME_CONFIG.map.basePlanet.borderShipSpacing
+  );
 }
 
 function createBasePlanet(id: number, position: Vec, side: Side): Body {

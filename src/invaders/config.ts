@@ -2,17 +2,17 @@ import { UpgradeType } from "./upgrade-type";
 
 export const INVADERS_CONFIG = {
   fleet: {
-    spacing: 48,
+    spacing: 30,
     steeringWeight: 4,
   },
   player: {
-    fleetSize: 10,
+    fleetSize: 16,
     fleetBottomOffset: 340,
     weaponCooldown: 0.7,
     favoriteFormationDamageMultiplier: 1.25,
   },
   enemy: {
-    waveSize: 5,
+    waveSize: 10,
     fleetY: 105,
     destinationBottomOffset: 80,
     deploymentDelay: 2,

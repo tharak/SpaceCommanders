@@ -84,20 +84,31 @@ function drawSupplyMarkers(
   const supplyCount = Math.floor(ship.supplies);
   if (supplyCount <= 0) return;
 
-  const markerRadius = 18 * scale;
-  context.strokeStyle = ship.side === Side.Player ? "#9af4ff" : "#ffadc1";
-  context.lineWidth = 1.25;
+  const rear = { x: -ship.heading.x, y: -ship.heading.y };
+  const side = { x: -ship.heading.y, y: ship.heading.x };
+  const markerSize = Math.max(1, 1.5 * scale);
+  const markerGap = 2 * scale;
+  const trailOffset = 9 * scale;
+  const rowGap = 3 * scale;
+  const columns = Math.min(5, supplyCount);
+
+  context.fillStyle = ship.side === Side.Player ? "#9af4ff" : "#ffadc1";
+
   for (let index = 0; index < supplyCount; index++) {
-    const angle = (index / supplyCount) * Math.PI * 2 - Math.PI / 2;
-    context.beginPath();
-    context.arc(
-      ship.pos.x + Math.cos(angle) * markerRadius,
-      ship.pos.y + Math.sin(angle) * markerRadius,
-      2 * scale,
-      0,
-      Math.PI * 2,
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const lateral = (column - (columns - 1) / 2) * (markerSize + markerGap);
+    const trailing = trailOffset + row * rowGap;
+    const center = {
+      x: ship.pos.x + rear.x * trailing + side.x * lateral,
+      y: ship.pos.y + rear.y * trailing + side.y * lateral,
+    };
+    context.fillRect(
+      center.x - markerSize / 2,
+      center.y - markerSize / 2,
+      markerSize,
+      markerSize,
     );
-    context.stroke();
   }
 }
 

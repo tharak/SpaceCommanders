@@ -1,7 +1,7 @@
+import { GAME_CONFIG } from "../game/config";
 import { COLORS } from "../game/constants";
 import { TEXT } from "../ui/strings";
 import { formationSlotHeadings, formationSlots } from "../game/formations";
-import { clamp } from "../game/math";
 import { drawGameBackground } from "./backgroundRenderer";
 import { drawFiringRangeCones, drawShips } from "./shipRenderer";
 import { BodyKind, ShipRole, Side } from "../game/types";
@@ -152,11 +152,7 @@ function drawFormationPreview(
     center,
     state.selectedFormation,
     state.config.ships,
-    clamp(
-      80 - (state.previewCenter ? state.previewCohesion : state.cohesion) * 50,
-      25,
-      70,
-    ),
+    GAME_CONFIG.formation.spacing,
     rotation,
   );
   const headings = formationSlotHeadings(

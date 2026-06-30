@@ -226,11 +226,22 @@ input[type="range"] {
   box-shadow: 0 12px 28px #0009;
   display: none;
 }
-.debug-open #debug-panel {
+.debug-open #debug-panel,
+.setup-open #debug-panel {
   display: grid;
   gap: 11px;
 }
-(max-width: 650px) {
+.setup-open #debug-panel {
+  left: 50%;
+  right: auto;
+  top: 50%;
+  width: min(320px, calc(100vw - 32px));
+  transform: translate(-50%, -50%);
+}
+.setup-open #command-deck {
+  display: none;
+}
+@media (max-width: 650px) {
   #command-deck {
     width: calc(100% - 18px);
     left: 9px;
