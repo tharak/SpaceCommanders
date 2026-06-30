@@ -23,7 +23,7 @@ export const INVADERS_CONFIG = {
     hitRadius: 5,
   },
   base: {
-    bottomOffset: 90,
+    bottomOffset: 150,
     maxHp: 1000,
     radius: 20,
     hue: 195,

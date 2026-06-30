@@ -503,6 +503,7 @@ function basePlanetBorderOffset(): number {
   const shipLength =
     GAME_CONFIG.ship.render.tailY - GAME_CONFIG.ship.render.noseY;
   return (
+    GAME_CONFIG.map.basePlanet.edgeClearance +
     GAME_CONFIG.map.basePlanet.radius +
     shipLength * GAME_CONFIG.map.basePlanet.borderShipSpacing
   );

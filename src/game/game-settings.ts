@@ -23,6 +23,7 @@ export const GAME_CONFIG = {
         enemy: 350,
       },
       weight: 2.5,
+      edgeClearance: 120,
       borderShipSpacing: 2,
     },
     neutralPlanet: {
