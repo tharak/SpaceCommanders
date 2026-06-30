@@ -34,12 +34,22 @@ export function formationSlots(
     let y = 0;
 
     switch (formation) {
-      case Formation.Line:
-        x = (index - (count - 1) / 2) * spacing;
+      case Formation.Line: {
+        const columns = Math.ceil(count / 2);
+        const column = Math.floor(index / 2);
+        const row = index % 2;
+        x = (column - (columns - 1) / 2) * spacing;
+        y = (row - 0.5) * spacing;
         break;
-      case Formation.Column:
-        y = (index - (count - 1) / 2) * spacing;
+      }
+      case Formation.Column: {
+        const rows = Math.ceil(count / 2);
+        const row = Math.floor(index / 2);
+        const column = index % 2;
+        x = (column - 0.5) * spacing;
+        y = (row - (rows - 1) / 2) * spacing;
         break;
+      }
       case Formation.Arrow: {
         const row = Math.floor((Math.sqrt(8 * index + 1) - 1) / 2);
         const rowStart = (row * (row + 1)) / 2;
