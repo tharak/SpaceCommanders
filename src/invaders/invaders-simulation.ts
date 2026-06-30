@@ -3,7 +3,13 @@ import {
   hasLineOfSight,
   isTargetForward,
 } from "../game/combat";
-import { FORMATIONS, PLAYER_FLEET_COLORS, PLAYER_FLEET_IDS, PLAYER_FLEET_NAMES } from "../game/constants";
+import {
+  COLORS,
+  FORMATIONS,
+  PLAYER_FLEET_COLORS,
+  PLAYER_FLEET_IDS,
+  PLAYER_FLEET_NAMES,
+} from "../game/constants";
 import {
   assignNearestFormationSlots,
   formationSlotHeadings,
@@ -536,6 +542,7 @@ function spawnProjectile(
       y: direction.y * INVADERS_CONFIG.projectile.speed,
     },
     side: ship.side,
+    color: state.fleets[ship.fleetId]?.color ?? COLORS[ship.side],
     sourceShipId: ship.id,
   });
 }

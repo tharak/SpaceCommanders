@@ -20,7 +20,7 @@ export function renderInvaders(
   drawShips(context, state.supplyShips, fleetColors);
   drawShips(context, state.enemies, fleetColors);
   for (const projectile of state.projectiles) {
-    drawLaser(context, projectile.pos, projectile.vel, COLORS[projectile.side]);
+    drawLaser(context, projectile.pos, projectile.vel, projectile.color);
   }
   status.innerHTML = TEXT.status.defense(Math.floor(state.score));
   countdown.innerHTML =

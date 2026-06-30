@@ -5,5 +5,6 @@ export type Projectile = {
   pos: Vec;
   vel: Vec;
   side: Side;
+  color: string;
   sourceShipId: number;
 };

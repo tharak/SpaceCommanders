@@ -1,4 +1,5 @@
 import { GAME_CONFIG } from "../game-settings";
+import { COLORS } from "../constants";
 import { hasLineOfSight, isTargetForward } from "./combat";
 import { clamp, distance, normalize } from "../utils";
 import { FireMode, Side } from "../types";
@@ -110,6 +111,7 @@ export class Gun {
         y: direction.y * GAME_CONFIG.projectile.speed,
       },
       side: ship.side,
+      color: state.fleets[ship.fleetId]?.color ?? COLORS[ship.side],
       sourceShipId: ship.id,
     });
   }
