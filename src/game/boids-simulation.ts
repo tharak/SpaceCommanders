@@ -40,12 +40,12 @@ export class BoidsSimulationManager {
     const { config, viewport } = this.setup;
     const desiredHeading = order.desiredHeading;
     const steeringHeading = order.steeringHeading;
+    const explicitHeading = steeringHeading ?? desiredHeading;
 
     if (distance(ship.pos, order.desiredPosition) <= config.arrivalDistance) {
       ship.pos = { ...order.desiredPosition };
       ship.vel = { x: 0, y: 0 };
-      const arrivalHeading = steeringHeading ?? desiredHeading;
-      if (arrivalHeading) this.steerHeading(ship, arrivalHeading, deltaTime);
+      if (explicitHeading) this.steerHeading(ship, explicitHeading, deltaTime);
       return;
     }
 
@@ -53,7 +53,7 @@ export class BoidsSimulationManager {
     this.applyBoidForces(force, ship);
     this.applyBodyAvoidance(force, ship);
     this.applyEdgeAvoidance(force, ship);
-    this.applyHeadingForces(force, ship, order, deltaTime);
+    this.applyHeadingForces(force, ship, order);
 
     ship.vel.x +=
       (force.x - ship.vel.x) *
@@ -62,7 +62,11 @@ export class BoidsSimulationManager {
       (force.y - ship.vel.y) *
       Math.min(1, deltaTime * config.velocityResponseRate);
 
-    if (Math.hypot(ship.vel.x, ship.vel.y) > config.headingVelocityThreshold) {
+    if (explicitHeading) {
+      this.steerHeading(ship, explicitHeading, deltaTime);
+    } else if (
+      Math.hypot(ship.vel.x, ship.vel.y) > config.headingVelocityThreshold
+    ) {
       ship.heading = normalize(ship.vel);
     }
 
@@ -124,7 +128,6 @@ export class BoidsSimulationManager {
     force: Vec,
     ship: Ship,
     order: BoidsSimulationOrder,
-    deltaTime: number,
   ): void {
     const { config } = this.setup;
     if (order.desiredHeading) {
@@ -134,9 +137,9 @@ export class BoidsSimulationManager {
     }
 
     if (order.steeringHeading) {
-      this.steerHeading(ship, order.steeringHeading, deltaTime);
-      force.x += ship.heading.x * ship.speed * config.steeringHeadingWeight;
-      force.y += ship.heading.y * ship.speed * config.steeringHeadingWeight;
+      const direction = normalize(order.steeringHeading);
+      force.x += direction.x * ship.speed * config.steeringHeadingWeight;
+      force.y += direction.y * ship.speed * config.steeringHeadingWeight;
     }
   }
 
