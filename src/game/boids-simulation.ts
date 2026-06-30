@@ -17,6 +17,7 @@ export type BoidsSimulationConfig = {
   reverseVelocityMultiplier: number;
   reverseSteeringDotThreshold: number;
   headingVelocityThreshold: number;
+  headingSnapDotThreshold: number;
   viewportPadding: number;
   turnRate: number;
 };
@@ -50,6 +51,7 @@ export class BoidsSimulationManager {
     const hasArrived = desiredDistance <= desiredRadius;
     const movementHeading = this.desiredMovementHeading(ship, order);
     const shouldSteerToMovement =
+      !hasArrived &&
       !!explicitHeading &&
       movementHeading.x * explicitHeading.x +
         movementHeading.y * explicitHeading.y <
@@ -61,7 +63,7 @@ export class BoidsSimulationManager {
     this.applyBoidForces(force, ship);
     this.applyBodyAvoidance(force, ship);
     this.applyEdgeAvoidance(force, ship);
-    this.applyHeadingForces(force, ship, order, !shouldSteerToMovement);
+    this.applyHeadingForces(force, ship, order, !hasArrived && !shouldSteerToMovement);
 
     const directedForce = this.applyDirectionalVelocityLimits(force, ship);
 
@@ -211,10 +213,21 @@ export class BoidsSimulationManager {
   }
 
   private steerHeading(ship: Ship, targetHeading: Vec, deltaTime: number): void {
+    const normalizedTarget = normalize(targetHeading);
+    const currentHeading = normalize(ship.heading);
+    if (
+      currentHeading.x * normalizedTarget.x +
+        currentHeading.y * normalizedTarget.y >=
+      this.setup.config.headingSnapDotThreshold
+    ) {
+      ship.heading = normalizedTarget;
+      return;
+    }
+
     const turnAmount = Math.min(1, deltaTime * this.setup.config.turnRate);
     ship.heading = normalize({
-      x: ship.heading.x + (targetHeading.x - ship.heading.x) * turnAmount,
-      y: ship.heading.y + (targetHeading.y - ship.heading.y) * turnAmount,
+      x: ship.heading.x + (normalizedTarget.x - ship.heading.x) * turnAmount,
+      y: ship.heading.y + (normalizedTarget.y - ship.heading.y) * turnAmount,
     });
   }
 }

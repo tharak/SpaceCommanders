@@ -36,6 +36,7 @@ export function moveShipWithBoids(
       reverseVelocityMultiplier: GAME_CONFIG.movement.reverseVelocityMultiplier,
       reverseSteeringDotThreshold: GAME_CONFIG.movement.reverseSteeringDotThreshold,
       headingVelocityThreshold: GAME_CONFIG.movement.headingVelocityThreshold,
+      headingSnapDotThreshold: GAME_CONFIG.movement.headingSnapDotThreshold,
       viewportPadding: GAME_CONFIG.movement.viewportPadding,
       turnRate: GAME_CONFIG.movement.turnRate,
     },

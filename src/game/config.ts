@@ -135,6 +135,7 @@ export const GAME_CONFIG = {
     reverseVelocityMultiplier: 0.18,
     reverseSteeringDotThreshold: -0.15,
     headingVelocityThreshold: 1,
+    headingSnapDotThreshold: 0.999,
     viewportPadding: 5,
     turnRate: 4,
   },
