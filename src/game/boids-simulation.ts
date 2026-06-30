@@ -13,13 +13,8 @@ export type BoidsSimulationConfig = {
   edgeClearance: number;
   edgeAvoidanceWeight: number;
   velocityResponseRate: number;
-  lateralVelocityMultiplier: number;
-  reverseVelocityMultiplier: number;
-  reverseSteeringDotThreshold: number;
   headingVelocityThreshold: number;
-  headingSnapDotThreshold: number;
   viewportPadding: number;
-  turnRate: number;
 };
 
 export type BoidsSimulationOrder = {
@@ -43,43 +38,25 @@ export class BoidsSimulationManager {
   update(ship: Ship, order: BoidsSimulationOrder, deltaTime: number): void {
     if (!order.desiredPosition) return;
     const { config, viewport } = this.setup;
-    const desiredHeading = order.desiredHeading;
-    const steeringHeading = order.steeringHeading;
-    const explicitHeading = steeringHeading ?? desiredHeading;
     const desiredDistance = distance(ship.pos, order.desiredPosition);
     const desiredRadius = order.desiredRadius ?? config.arrivalDistance;
     const hasArrived = desiredDistance <= desiredRadius;
-    const movementHeading = this.desiredMovementHeading(ship, order);
-    const shouldSteerToMovement =
-      !hasArrived &&
-      !!explicitHeading &&
-      movementHeading.x * explicitHeading.x +
-        movementHeading.y * explicitHeading.y <
-        config.reverseSteeringDotThreshold;
-
     const force = hasArrived
       ? { x: 0, y: 0 }
       : this.desiredPositionForce(ship, order);
     this.applyBoidForces(force, ship);
     this.applyBodyAvoidance(force, ship);
     this.applyEdgeAvoidance(force, ship);
-    this.applyHeadingForces(force, ship, order, !hasArrived && !shouldSteerToMovement);
-
-    const directedForce = this.applyDirectionalVelocityLimits(force, ship);
+    this.applyHeadingForces(force, ship, order, !hasArrived);
 
     ship.vel.x +=
-      (directedForce.x - ship.vel.x) *
+      (force.x - ship.vel.x) *
       Math.min(1, deltaTime * config.velocityResponseRate);
     ship.vel.y +=
-      (directedForce.y - ship.vel.y) *
+      (force.y - ship.vel.y) *
       Math.min(1, deltaTime * config.velocityResponseRate);
 
-    const targetHeading = shouldSteerToMovement ? movementHeading : explicitHeading;
-    if (targetHeading) {
-      this.steerHeading(ship, targetHeading, deltaTime);
-    } else if (
-      Math.hypot(ship.vel.x, ship.vel.y) > config.headingVelocityThreshold
-    ) {
+    if (Math.hypot(ship.vel.x, ship.vel.y) > config.headingVelocityThreshold) {
       ship.heading = normalize(ship.vel);
     }
 
@@ -162,28 +139,6 @@ export class BoidsSimulationManager {
     }
   }
 
-  private applyDirectionalVelocityLimits(force: Vec, ship: Ship): Vec {
-    const { config } = this.setup;
-    const heading = normalize(ship.heading);
-    const lateral = { x: -heading.y, y: heading.x };
-    const forwardAmount = force.x * heading.x + force.y * heading.y;
-    const lateralAmount = force.x * lateral.x + force.y * lateral.y;
-    const limitedForwardAmount =
-      forwardAmount >= 0
-        ? forwardAmount
-        : forwardAmount * config.reverseVelocityMultiplier;
-    const limitedLateralAmount = lateralAmount * config.lateralVelocityMultiplier;
-
-    return {
-      x:
-        heading.x * limitedForwardAmount +
-        lateral.x * limitedLateralAmount,
-      y:
-        heading.y * limitedForwardAmount +
-        lateral.y * limitedLateralAmount,
-    };
-  }
-
   private applyBodyAvoidance(force: Vec, ship: Ship): void {
     const { config, bodies } = this.setup;
     for (const body of bodies) {
@@ -210,24 +165,5 @@ export class BoidsSimulationManager {
     if (right < 0) force.x -= -right * config.edgeAvoidanceWeight;
     if (top < 0) force.y += -top * config.edgeAvoidanceWeight;
     if (bottom < 0) force.y -= -bottom * config.edgeAvoidanceWeight;
-  }
-
-  private steerHeading(ship: Ship, targetHeading: Vec, deltaTime: number): void {
-    const normalizedTarget = normalize(targetHeading);
-    const currentHeading = normalize(ship.heading);
-    if (
-      currentHeading.x * normalizedTarget.x +
-        currentHeading.y * normalizedTarget.y >=
-      this.setup.config.headingSnapDotThreshold
-    ) {
-      ship.heading = normalizedTarget;
-      return;
-    }
-
-    const turnAmount = Math.min(1, deltaTime * this.setup.config.turnRate);
-    ship.heading = normalize({
-      x: ship.heading.x + (normalizedTarget.x - ship.heading.x) * turnAmount,
-      y: ship.heading.y + (normalizedTarget.y - ship.heading.y) * turnAmount,
-    });
   }
 }
